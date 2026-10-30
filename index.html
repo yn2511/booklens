@@ -381,7 +381,7 @@
           <!-- Scanned Book Title -->
           <div>
             <div class="font-mono text-[10px] font-bold text-charcoal/60 uppercase">IDENTIFIED TITLE</div>
-            <div id="reportTitle" class="text-lg font-black text-charcoal">달 샤베트 (백희나)</div>
+            <div id="reportTitle" class="text-lg font-black text-charcoal">달빛 산책 (이현지)</div>
           </div>
 
           <!-- Book MBTI Persona Box -->
@@ -400,11 +400,11 @@
           <div class="space-y-2 text-xs">
             <div>
               <span class="font-mono font-bold text-charcoal/70">핵심 테마:</span>
-              <span id="reportTheme" class="font-bold text-charcoal ml-1">달빛 샤베트로 나누는 이웃 간의 온기와 여름밤의 환상적 연대</span>
+              <span id="reportTheme" class="font-bold text-charcoal ml-1">푸른 달빛 숲길을 곰과 함께 거닐며 나누는 자연의 온기와 서정적 위로</span>
             </div>
             <div>
               <span class="font-mono font-bold text-charcoal/70">추천 대상:</span>
-              <span id="reportTarget" class="font-bold text-charcoal ml-1">환상 동화와 서정적 일러스트를 사랑하는 모든 어린이 및 어른이</span>
+              <span id="reportTarget" class="font-bold text-charcoal ml-1">동화 속 몽환적 서사와 따스한 힐링 일러스트를 사랑하는 모든 감성 독자</span>
             </div>
           </div>
 
@@ -470,7 +470,7 @@
           <div class="space-y-2 text-xs font-mono">
             <div class="flex justify-between">
               <span class="text-charcoal/70">BOOK TITLE:</span>
-              <span id="ticketTitle" class="font-black text-charcoal">달 샤베트 (그림책)</span>
+              <span id="ticketTitle" class="font-black text-charcoal">달빛 산책 (그림책)</span>
             </div>
             <div class="flex justify-between">
               <span class="text-charcoal/70">CLASSIFICATION:</span>
@@ -531,6 +531,9 @@
 
     // Inline asset replacement for zero-dependency standalone execution
     document.addEventListener('DOMContentLoaded', () => {
+      const logoEl = document.getElementById("headerLogoImg");
+      if (logoEl && ASSET_DATA["lens-ring-outer"]) logoEl.src = ASSET_DATA["lens-ring-outer"];
+
       document.querySelectorAll('img').forEach(img => {
         const src = img.getAttribute('src');
         if (!src) return;
@@ -552,7 +555,7 @@
         theme: '푸른 달빛 숲길을 곰과 함께 거닐며 나누는 자연의 온기와 서정적 위로',
         target: '동화 속 몽환적 서사와 따스한 힐링 일러스트를 사랑하는 모든 감성 독자',
         similar: [
-          { title: '1. 달 샤베트 (백희나)', desc: '달빛으로 빚어낸 이웃의 온기와 환상' },
+          { title: '1. 달빛 산책 (이현지)', desc: '달빛으로 빚어낸 이웃의 온기와 환상' },
           { title: '2. 구름빵 (백희나)', desc: '하늘을 날아오르는 아침의 마법' },
           { title: '3. 수박 수영장 (안녕달)', desc: '시원하고 포근한 여름 마을 이야기' }
         ],
