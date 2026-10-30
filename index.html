@@ -1353,6 +1353,7 @@
       const coverUrl = isCustom ? cvResult.customImgUrl : ASSET_DATA[data.coverKey];
       const categoryLabel = isCustom ? `${cvResult.winnerLabel} (${cvResult.winner === 'picture' ? 'Picture Book' : (cvResult.winner === 'text' ? 'Text Book' : 'Comic Book')})` : data.subCategory;
 
+      const category = isCustom ? cvResult.winner : (data.category === '그림책' ? 'picture' : (data.category === '줄글책' ? 'text' : 'comic'));
       document.getElementById('genreBadgeLabel').innerText = categoryLabel;
       const badgeImg = document.getElementById('genreBadgeImg');
       const badgeMap = { picture: 'badge_genre_picture', text: 'badge_genre_text', comic: 'badge_genre_comic' };
