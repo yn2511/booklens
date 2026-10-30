@@ -197,6 +197,42 @@
         </div>
       </div>
 
+      
+      <!-- OOD (Out-of-Distribution) / Non-Book Floor Detection Alert Box -->
+      <div id="nonBookAlertBox" class="hidden bg-coral/20 border-3 border-charcoal rounded-2xl p-4 brutal-card flex flex-col gap-2.5 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="font-black text-sm text-charcoal flex items-center gap-1.5">
+            <span class="text-coral text-base">🚫</span> 도서 표지 미감지 (바닥/배경 감지됨)
+          </span>
+          <span class="font-mono text-[10px] bg-charcoal text-cream font-bold px-2 py-0.5 rounded">OOD REJECT</span>
+        </div>
+        
+        <p class="text-xs text-charcoal/90 font-bold leading-relaxed">
+          카메라에 비친 화면이 <span class="text-coral underline underline-offset-2">바닥, 벽 또는 평면 배경</span>으로 감지되었습니다.<br>
+          우리 모델은 책이 아닌 배경을 도서로 억지 분류하지 않도록 차단 필터가 작동 중입니다.
+        </p>
+
+        <div class="bg-cream/90 p-2.5 rounded-xl border-2 border-charcoal/30 text-[11px] font-bold text-charcoal flex flex-col gap-1">
+          <div class="flex justify-between font-mono text-[10px] text-charcoal/70">
+            <span>• 측정 휘도 대비도: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (도서 기준: 30 이상)</span>
+            <span>• 엣지 밀도: <b id="nonBookEdge" class="text-charcoal font-black">1.1%</b> (도서 기준: 2.5% 이상)</span>
+          </div>
+          <div class="text-charcoal/80 mt-0.5">
+            💡 <strong>가이드:</strong> 뷰파인더 십자선 안에 <strong>실제 책 표지</strong>를 맞추고 다시 셔터를 눌러주세요!
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="dismissNonBookAlert()" class="flex-1 brutal-btn bg-mustard text-charcoal font-black text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1">
+            <span>↺</span>
+            <span>책 표지 다시 맞추기</span>
+          </button>
+          <button onclick="forceProceedAnalysis()" class="brutal-btn bg-stage text-charcoal/70 font-bold text-[11px] py-2.5 px-3 rounded-xl border-2 border-charcoal">
+            그래도 강제 분석
+          </button>
+        </div>
+      </div>
+
       <!-- Main Shutter & Input Controls -->
       <div class="flex items-center gap-2">
         <button id="shutterBtn" onclick="triggerWebcamOrScan()" class="flex-1 brutal-btn bg-mustard hover:bg-mustard/90 text-charcoal font-black text-base py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2">
@@ -753,7 +789,95 @@
     let isTtsPlaying = false;
     let searchedBookMetadata = null;
 
-    // REAL-TIME COMPUTER VISION INFERENCE ENGINE (CANVAS PIXEL FEATURE EXTRACTOR)
+    // REAL-TIME COMPUTER VISION INFERENCE ENGINE WITH OOD (NON-BOOK / FLOOR) FILTER
+    let cachedLastCvResult = null;
+
+    function checkIsBookPresent(gray, width, height, avgSat, blackRatio) {
+      let sum = 0;
+      const numPixels = width * height;
+      for (let i = 0; i < numPixels; i++) sum += gray[i];
+      const mean = sum / numPixels;
+
+      let varianceSum = 0;
+      for (let i = 0; i < numPixels; i++) {
+        const diff = gray[i] - mean;
+        varianceSum += diff * diff;
+      }
+      const stdDev = Math.sqrt(varianceSum / numPixels);
+
+      // Quadrants luminance variance (Spatial Structure)
+      const halfW = Math.floor(width / 2);
+      const halfH = Math.floor(height / 2);
+      let qSums = [0, 0, 0, 0];
+      let qCounts = [0, 0, 0, 0];
+
+      for (let y = 0; y < height; y++) {
+        const isBottom = y >= halfH ? 2 : 0;
+        for (let x = 0; x < width; x++) {
+          const qIdx = isBottom + (x >= halfW ? 1 : 0);
+          qSums[qIdx] += gray[y * width + x];
+          qCounts[qIdx]++;
+        }
+      }
+      const qMeans = qSums.map((s, idx) => s / qCounts[idx]);
+      const maxQ = Math.max(...qMeans);
+      const minQ = Math.min(...qMeans);
+      const quadrantSpread = maxQ - minQ;
+
+      // Calculate edge density
+      let edgeCount = 0;
+      let textPeriodicityScore = 0;
+      for (let y = 1; y < height - 1; y++) {
+        let rowEdges = 0;
+        for (let x = 1; x < width - 1; x++) {
+          const idx = y * width + x;
+          const gx = -gray[idx - width - 1] - 2 * gray[idx - 1] - gray[idx + width - 1] +
+                      gray[idx - width + 1] + 2 * gray[idx + 1] + gray[idx + width + 1];
+          const gy = -gray[idx - width - 1] - 2 * gray[idx - width] - gray[idx - width + 1] +
+                      gray[idx + width - 1] + 2 * gray[idx + width] + gray[idx + width + 1];
+          const mag = Math.abs(gx) + Math.abs(gy);
+          if (mag > 105) {
+            edgeCount++;
+            rowEdges++;
+          }
+        }
+        if (rowEdges > 15 && rowEdges < 80) textPeriodicityScore++;
+      }
+      const edgeDensity = edgeCount / ((width - 2) * (height - 2));
+      const textScore = textPeriodicityScore / (height - 2);
+
+      // OOD / Floor Detection Logic:
+      // A floor or plain surface has low stdDev (< 25), low quadrantSpread (< 16), or very low edge density (< 0.022)
+      // A book has title, artwork, borders: stdDev >= 28 OR (edgeDensity >= 0.028 && quadrantSpread >= 14)
+      const isFlatSurface = (stdDev < 26 && quadrantSpread < 18) || (edgeDensity < 0.020);
+      const isUniformNoise = (edgeDensity > 0.40 && quadrantSpread < 12);
+      const isBook = !isFlatSurface && !isUniformNoise && (stdDev >= 24 || edgeDensity >= 0.028);
+
+      return {
+        isBook,
+        stdDev: stdDev.toFixed(1),
+        quadrantSpread: quadrantSpread.toFixed(1),
+        edgeDensity: (edgeDensity * 100).toFixed(1) + '%',
+        rawEdgeDensity: edgeDensity,
+        textScore,
+        rawStdDev: stdDev
+      };
+    }
+
+    function dismissNonBookAlert() {
+      document.getElementById('nonBookAlertBox').classList.add('hidden');
+      document.getElementById('scanStatusText').innerText = 'CAMERA READY · 대상 도서 대기';
+      document.getElementById('scanStatusBadge').classList.remove('bg-coral');
+      document.getElementById('scanStatusBadge').classList.add('bg-charcoal');
+      document.getElementById('viewfinderFaceImg').src = ASSET_DATA['face-basic'];
+    }
+
+    function forceProceedAnalysis() {
+      if (!cachedLastCvResult) return;
+      document.getElementById('nonBookAlertBox').classList.add('hidden');
+      cachedLastCvResult.isForced = true;
+      startAnalysis(cachedLastCvResult.winner, cachedLastCvResult);
+    }
     function analyzeImageCanvas(sourceElement) {
       const canvas = document.createElement('canvas');
       canvas.width = 224;
@@ -835,6 +959,8 @@
 
       const customImgUrl = canvas.toDataURL('image/jpeg', 0.85);
 
+      const oodCheck = checkIsBookPresent(gray, 224, 224, avgSat, blackRatio);
+
       return {
         winner: winner.type,
         winnerLabel: winner.label,
@@ -847,7 +973,8 @@
         confidence: (winner.prob * 100).toFixed(1) + '%',
         isAmbiguous,
         margin: (margin * 100).toFixed(1) + '%p',
-        customImgUrl
+        customImgUrl,
+        oodCheck
       };
     }
 
@@ -970,6 +1097,30 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+        function handleScanResult(cvResult) {
+      cachedLastCvResult = cvResult;
+
+      // OOD Floor / Non-Book Guard
+      if (cvResult.oodCheck && !cvResult.oodCheck.isBook) {
+        document.getElementById('nonBookAlertBox').classList.remove('hidden');
+        document.getElementById('nonBookContrast').innerText = cvResult.oodCheck.stdDev;
+        document.getElementById('nonBookEdge').innerText = cvResult.oodCheck.edgeDensity;
+        
+        const statusBadge = document.getElementById('scanStatusBadge');
+        statusBadge.className = 'bg-coral text-white text-[10px] font-mono px-3 py-1 rounded-full font-bold shadow-sm flex items-center gap-1.5';
+        document.getElementById('scanStatusText').innerText = '🚫 도서 미감지 (바닥/배경 감지됨)';
+        
+        // Puzzled face on book
+        document.getElementById('viewfinderFaceImg').src = ASSET_DATA['face-scanning'];
+
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+        return;
+      }
+
+      document.getElementById('nonBookAlertBox').classList.add('hidden');
+      startAnalysis(cvResult.winner, cvResult);
+    }
+
     async function triggerWebcamOrScan() {
       const video = document.getElementById('webcamVideo');
       const idleStage = document.getElementById('viewfinderIdleStage');
@@ -997,7 +1148,7 @@
         laser.classList.add('hidden');
         const cvResult = analyzeImageCanvas(video);
         stopWebcam();
-        startAnalysis(cvResult.winner, cvResult);
+        handleScanResult(cvResult);
       }
     }
 
@@ -1036,8 +1187,8 @@
         img.onload = () => {
           const cvResult = analyzeImageCanvas(img);
           setTimeout(() => {
-            startAnalysis(cvResult.winner, cvResult);
-          }, 400);
+            handleScanResult(cvResult);
+          }, 300);
         };
         img.src = e.target.result;
       };
