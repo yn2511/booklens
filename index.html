@@ -2,212 +2,289 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BookLens AI (북렌즈) - 실시간 도서 표지 인식 & LLM 북 큐레이터</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BookLens AI - 도서 표지 인식 & AI 북도슨트</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700;800&display=swap');
-    body { font-family: 'Pretendard', sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap');
+    body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .ticket-border {
+      background-image: radial-gradient(circle at 0 50%, transparent 8px, #ffffff 9px),
+                        radial-gradient(circle at 100% 50%, transparent 8px, #ffffff 9px);
+      background-size: 100% 100%;
+    }
   </style>
 </head>
-<body class="bg-amber-50/40 text-gray-900 min-h-screen flex flex-col">
+<body class="bg-stone-50 text-stone-900 min-h-screen flex flex-col antialiased selection:bg-amber-100 selection:text-amber-900">
 
   <!-- Header -->
-  <header class="bg-white border-b border-amber-100 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <span class="text-2xl font-black tracking-tight text-amber-950 flex items-center">
-          <i class="fa-solid fa-book-open-reader text-amber-600 mr-2"></i>BookLens<span class="text-amber-600">.</span>
+  <header class="bg-white/80 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center text-white shadow-sm">
+          <i class="fa-solid fa-book-open text-sm"></i>
+        </div>
+        <span class="text-lg sm:text-xl font-extrabold tracking-tight text-stone-900">
+          BookLens<span class="text-amber-600">.</span>
         </span>
-        <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">Vision + LLM</span>
+        <span class="hidden sm:inline-block bg-stone-100 text-stone-600 text-[11px] font-semibold px-2 py-0.5 rounded-full border border-stone-200">
+          Vision + LLM
+        </span>
       </div>
-      <div class="flex items-center space-x-4">
-        <a href="#prd" class="text-sm font-medium text-gray-600 hover:text-amber-800">PRD 기획서</a>
-        <a href="#tech" class="text-sm font-medium text-gray-600 hover:text-amber-800">아키텍처</a>
-        <a href="https://github.com/yn2511/booklens" target="_blank" class="text-gray-500 hover:text-gray-900 text-lg">
+      <div class="flex items-center space-x-3 text-xs sm:text-sm">
+        <button onclick="togglePrdModal()" class="text-stone-500 hover:text-stone-900 font-medium transition">
+          <i class="fa-regular fa-file-lines mr-1"></i>PRD 기획서
+        </button>
+        <a href="https://github.com/yn2511/fitfinder" target="_blank" class="text-stone-400 hover:text-stone-900 transition text-base">
           <i class="fa-brands fa-github"></i>
         </a>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
-    <div class="text-center max-w-3xl mx-auto mb-10">
-      <h1 class="text-3xl sm:text-4xl font-extrabold text-amber-950 tracking-tight mb-3">
-        책을 비추면 펼쳐지는 나만의 AI 북 도슨트
+  <!-- Hero & Main App Container -->
+  <main class="flex-grow max-w-5xl mx-auto px-4 py-6 sm:py-10 w-full flex flex-col">
+    
+    <!-- Title Area (Clean & Modern) -->
+    <div class="text-center max-w-xl mx-auto mb-6 sm:mb-8">
+      <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-100/70 border border-amber-200 text-amber-800 text-xs font-semibold mb-2">
+        <i class="fa-solid fa-sparkles text-[11px]"></i>
+        <span>과제 3 기반 스마트 멀티모달 북 도슨트</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+        책을 비추면 들리는 나만의 북 큐레이터
       </h1>
-      <p class="text-base sm:text-lg text-gray-600">
-        카메라로 도서 표지를 비추면 <strong class="text-amber-700">도서 형태(그림책/줄글책/만화)</strong>를 인식하고, <br class="hidden sm:inline">
-        <strong class="text-amber-700">LLM 큐레이터</strong>가 권장 독자층, 핵심 테마, 유사 맞춤 도서 3권을 실시간으로 큐레이션합니다.
+      <p class="text-xs sm:text-sm text-stone-500 mt-1.5">
+        표지를 비추면 <strong>도서 유형 & 독서 MBTI</strong>를 분석하고, <strong>유사 맞춤 책</strong>을 추천합니다.
       </p>
     </div>
 
-    <!-- Main Workspace -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- Responsive Split Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-grow">
       
-      <!-- Left: Camera / Upload / Presets -->
-      <div class="lg:col-span-6 bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold text-gray-900 flex items-center">
-            <i class="fa-solid fa-camera text-amber-600 mr-2"></i> 실시간 도서 표지 스캔
-          </h2>
-          <button id="webcamBtn" class="text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg border border-amber-200 transition flex items-center space-x-1.5">
+      <!-- Left Column: Scanner / Presets (Mobile First) -->
+      <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-stone-200">
+        
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-camera mr-1.5 text-amber-600"></i> 실시간 표지 스캔
+          </span>
+          <button id="webcamBtn" class="text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg border border-amber-200 transition flex items-center space-x-1.5 active:scale-95">
             <i class="fa-solid fa-video"></i>
             <span id="camBtnText">웹캠/카메라 켜기</span>
           </button>
         </div>
 
-        <!-- Camera / Dropzone Container -->
-        <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-amber-500 transition-colors cursor-pointer bg-gray-50 relative overflow-hidden min-h-[260px] flex flex-col justify-center items-center">
+        <!-- Camera / Drag-Drop Viewport -->
+        <div id="dropzone" class="relative border-2 border-dashed border-stone-200 rounded-xl p-6 text-center hover:border-amber-500 transition cursor-pointer bg-stone-50/50 min-h-[220px] sm:min-h-[260px] flex flex-col justify-center items-center overflow-hidden">
           <input type="file" id="fileInput" class="hidden" accept="image/*">
           
-          <!-- Webcam Video Feed (Hidden initially) -->
-          <video id="webcamVideo" class="hidden w-full max-h-64 object-cover rounded-lg" autoplay playsinline></video>
+          <video id="webcamVideo" class="hidden w-full max-h-56 sm:max-h-64 object-cover rounded-lg" autoplay playsinline></video>
           
           <div id="uploadPrompt" class="space-y-2">
-            <i class="fa-solid fa-book text-4xl text-amber-400 mb-2"></i>
-            <p class="text-sm font-medium text-gray-700">도서 표지 사진을 드래그하거나 클릭하여 업로드</p>
-            <p class="text-xs text-gray-400">JPG, PNG, HEIC 지원 (초등학교 도서관 book_dataset 기반)</p>
+            <div class="w-12 h-12 mx-auto rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+              <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+            </div>
+            <p class="text-xs sm:text-sm font-semibold text-stone-700">도서 표지 사진을 터치하거나 드래그</p>
+            <p class="text-[11px] text-stone-400">초등학교 도서관 book_dataset 및 실시간 카메라 대응</p>
           </div>
 
-          <div id="previewContainer" class="hidden">
-            <img id="imagePreview" class="max-h-60 mx-auto rounded-lg shadow-sm object-contain" src="" alt="도서 표지">
-            <button id="removeBtn" class="mt-3 text-xs text-red-600 hover:underline">다른 도서 선택</button>
+          <div id="previewContainer" class="hidden w-full">
+            <img id="imagePreview" class="max-h-52 sm:max-h-60 mx-auto rounded-lg shadow-sm object-contain" src="" alt="도서 표지">
+            <button id="removeBtn" class="mt-2 text-xs text-red-500 hover:underline">다른 책 선택하기</button>
           </div>
         </div>
 
-        <!-- Sample Presets for Quick Demo -->
-        <div class="mt-6">
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">빠른 테스트 샘플 (클릭 시 1초 만에 큐레이션)</p>
+        <!-- Quick Demo Presets (Touch-friendly on mobile) -->
+        <div class="mt-4 pt-4 border-t border-stone-100">
+          <p class="text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-2">빠른 테스트 샘플 (원클릭 체험)</p>
           <div class="grid grid-cols-3 gap-2">
-            <button onclick="loadSample('picture')" class="p-3 border border-amber-200 rounded-xl text-left hover:bg-amber-50 transition">
-              <span class="text-lg">🎨</span>
-              <p class="text-xs font-bold text-gray-800 mt-1">달 샤베트</p>
-              <p class="text-[11px] text-amber-700 font-semibold">그림책 (유아/초등)</p>
+            <button onclick="loadSample('picture')" class="p-2.5 sm:p-3 bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-amber-300 rounded-xl text-left transition active:scale-95">
+              <span class="text-base sm:text-lg">🎨</span>
+              <p class="text-xs font-bold text-stone-800 mt-0.5 truncate">달 샤베트</p>
+              <p class="text-[10px] sm:text-[11px] text-amber-700 font-semibold truncate">그림책</p>
             </button>
-            <button onclick="loadSample('text')" class="p-3 border border-amber-200 rounded-xl text-left hover:bg-amber-50 transition">
-              <span class="text-lg">📖</span>
-              <p class="text-xs font-bold text-gray-800 mt-1">사피엔스</p>
-              <p class="text-[11px] text-amber-700 font-semibold">줄글책 (청소년/교양)</p>
+            <button onclick="loadSample('text')" class="p-2.5 sm:p-3 bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-amber-300 rounded-xl text-left transition active:scale-95">
+              <span class="text-base sm:text-lg">📖</span>
+              <p class="text-xs font-bold text-stone-800 mt-0.5 truncate">사피엔스</p>
+              <p class="text-[10px] sm:text-[11px] text-amber-700 font-semibold truncate">줄글/교양</p>
             </button>
-            <button onclick="loadSample('comic')" class="p-3 border border-amber-200 rounded-xl text-left hover:bg-amber-50 transition">
-              <span class="text-lg">💬</span>
-              <p class="text-xs font-bold text-gray-800 mt-1">먼나라 이웃나라</p>
-              <p class="text-[11px] text-amber-700 font-semibold">만화/학습만화</p>
+            <button onclick="loadSample('comic')" class="p-2.5 sm:p-3 bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-amber-300 rounded-xl text-left transition active:scale-95">
+              <span class="text-base sm:text-lg">💬</span>
+              <p class="text-xs font-bold text-stone-800 mt-0.5 truncate">먼나라 이웃나라</p>
+              <p class="text-[10px] sm:text-[11px] text-amber-700 font-semibold truncate">만화</p>
             </button>
           </div>
         </div>
 
-        <button id="scanBtn" class="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-4 rounded-xl shadow transition duration-200 flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-wand-magic-sparkles"></i>
-          <span>실시간 도서 인식 & AI 큐레이션 실행</span>
+        <!-- Action Button -->
+        <button id="scanBtn" class="w-full mt-4 bg-stone-900 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-2 text-sm active:scale-98">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+          <span>AI 북도슨트 큐레이션 실행</span>
         </button>
+
       </div>
 
-      <!-- Right: Live AI Curator Card -->
-      <div class="lg:col-span-6 bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
-        <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center justify-between">
-          <span><i class="fa-solid fa-sparkles text-amber-600 mr-2"></i> BookLens AI 큐레이션 리포트</span>
-          <span id="inferTime" class="text-xs font-normal text-gray-400">대기 중</span>
-        </h2>
-
-        <!-- Empty State -->
-        <div id="emptyResult" class="py-16 text-center text-gray-400">
-          <i class="fa-solid fa-book-open text-4xl text-amber-200 mb-3 block"></i>
-          <p class="text-sm">왼쪽에서 책 표지를 비추거나 샘플을 눌러보세요.</p>
+      <!-- Right Column: Results & Interactive Delight -->
+      <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col">
+        
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-bold text-stone-900 flex items-center">
+            <i class="fa-solid fa-award text-amber-600 mr-1.5"></i>
+            <span>BookLens 큐레이션 리포트</span>
+          </h2>
+          <div class="flex items-center space-x-2">
+            <!-- TTS Audio Button -->
+            <button id="ttsBtn" onclick="speakCuration()" class="hidden text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg border border-amber-200 transition items-center space-x-1 active:scale-95">
+              <i class="fa-solid fa-volume-high text-amber-600"></i>
+              <span id="ttsBtnText">오디오 듣기</span>
+            </button>
+            <!-- Retro Ticket Modal Button -->
+            <button id="ticketBtn" onclick="openTicketModal()" class="hidden text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-2.5 py-1 rounded-lg border border-stone-200 transition items-center space-x-1 active:scale-95">
+              <i class="fa-solid fa-ticket text-stone-500"></i>
+              <span>북티켓 발권</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Result Box -->
-        <div id="resultContent" class="hidden space-y-5">
+        <!-- Empty State -->
+        <div id="emptyResult" class="py-16 text-center text-stone-400 my-auto">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-stone-50 flex items-center justify-center text-stone-300 mb-3 border border-stone-100">
+            <i class="fa-solid fa-book-bookmark text-2xl"></i>
+          </div>
+          <p class="text-xs sm:text-sm font-medium text-stone-500">책 표지를 비추거나 샘플을 눌러보세요.</p>
+          <p class="text-[11px] text-stone-400 mt-0.5">도서 유형, 독서 MBTI, 오디오 도슨트가 즉시 시작됩니다.</p>
+        </div>
+
+        <!-- Result Content (Clean, Minimal, High Contrast) -->
+        <div id="resultContent" class="hidden space-y-4">
           
-          <!-- Vision Classification Result Banner -->
-          <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between">
+          <!-- Vision AI Banner -->
+          <div class="p-3.5 bg-amber-50/70 rounded-xl border border-amber-200 flex items-center justify-between">
             <div>
-              <p class="text-[11px] text-amber-700 font-bold uppercase tracking-wider">Vision AI 인식 결과</p>
-              <h3 id="resClass" class="text-xl font-black text-amber-950 mt-0.5">그림책 (Picture Book)</h3>
-              <p id="resConfidence" class="text-xs text-amber-800 font-medium mt-0.5">신뢰도: 97.4% · ResNet-18</p>
+              <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Vision AI 인식 결과</p>
+              <h3 id="resClass" class="text-base sm:text-lg font-black text-amber-950 mt-0.5">그림책 (Picture Book)</h3>
+              <p id="resConfidence" class="text-[11px] text-amber-800 font-medium">신뢰도: 97.4% · ResNet-18 (실전 증강 모델)</p>
             </div>
-            <div id="resBadge" class="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+            <div id="resBadge" class="bg-amber-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm">
               유아 / 초등 저학년
             </div>
           </div>
 
-          <!-- Target & Theme Summary -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
-              <span class="font-bold text-gray-700 flex items-center mb-1">
-                <i class="fa-solid fa-user-group text-amber-600 mr-1.5"></i> 권장 독자층
+          <!-- Delight Feature 1: 독서 MBTI Persona Card -->
+          <div class="p-3.5 bg-stone-50 rounded-xl border border-stone-200/80">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider flex items-center">
+                <i class="fa-solid fa-fingerprint mr-1 text-amber-600"></i> 당신의 독서 성향 (Book MBTI)
               </span>
-              <p id="resTarget" class="text-gray-600 leading-relaxed">유아 및 초등 저학년 (상상력과 감수성 발달)</p>
+              <span id="mbtiBadge" class="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                ENFP · 상상력 풍부한 예술가
+              </span>
             </div>
-            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
-              <span class="font-bold text-gray-700 flex items-center mb-1">
-                <i class="fa-solid fa-palette text-amber-600 mr-1.5"></i> 도서 핵심 매력
+            <p id="mbtiDesc" class="text-xs text-stone-600 leading-relaxed mt-1">
+              "글자 너머의 시각적 감성과 따뜻한 영감을 즐기는 독자예요!"
+            </p>
+          </div>
+
+          <!-- Target & Appeal Grid -->
+          <div class="grid grid-cols-2 gap-2.5 text-xs">
+            <div class="p-3 bg-stone-50 rounded-xl border border-stone-100">
+              <span class="font-bold text-stone-700 block mb-0.5">
+                <i class="fa-solid fa-users text-amber-600 mr-1"></i> 추천 독자층
               </span>
-              <p id="resTheme" class="text-gray-600 leading-relaxed">시각적 일러스트와 따뜻한 감성 스토리텔링</p>
+              <p id="resTarget" class="text-stone-600 text-[11px] leading-snug">유아 및 초등 저학년</p>
+            </div>
+            <div class="p-3 bg-stone-50 rounded-xl border border-stone-100">
+              <span class="font-bold text-stone-700 block mb-0.5">
+                <i class="fa-solid fa-heart text-amber-600 mr-1"></i> 핵심 매력
+              </span>
+              <p id="resTheme" class="text-stone-600 text-[11px] leading-snug">따뜻한 감성 스토리텔링</p>
             </div>
           </div>
 
           <!-- LLM Curation Section -->
           <div>
-            <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center">
-              <i class="fa-solid fa-compass text-amber-600 mr-1.5"></i> 맞춤 추천 도서 3선 (LLM Curator)
-            </h4>
+            <span class="text-[11px] font-bold text-stone-400 uppercase tracking-wider block mb-2 flex items-center">
+              <i class="fa-solid fa-sparkles text-amber-600 mr-1"></i> 맞춤 추천 도서 3선 (LLM Curator)
+            </span>
             <div id="recsContainer" class="space-y-2">
-              <!-- Dynamically injected -->
+              <!-- Dynamically populated -->
             </div>
           </div>
 
-          <!-- Tech Note -->
-          <div class="text-center pt-2 border-t border-gray-100">
-            <span class="inline-flex items-center text-[11px] text-gray-400 space-x-1.5">
-              <i class="fa-solid fa-shield-halved text-amber-500"></i>
-              <span>난관 극복 모델: RandomPerspective + ColorJitter 실전 증강 탑재</span>
-            </span>
-          </div>
-
         </div>
 
       </div>
-    </div>
 
-    <!-- Section 2: PRD & Architecture Overview -->
-    <div id="prd" class="mt-16 bg-white p-8 rounded-2xl border border-amber-100 shadow-sm">
-      <div class="border-b border-gray-200 pb-4 mb-6">
-        <h2 class="text-xl font-bold text-gray-900">📑 BookLens AI Product Requirement Document (PRD 요약)</h2>
-        <p class="text-sm text-gray-500 mt-1">과제 3(전이학습) 기반 영상 왜곡 난관 극복 및 LLM 큐레이션 MVP 기획서</p>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-        <div class="p-4 bg-amber-50/50 rounded-xl border border-amber-100">
-          <h3 class="font-bold text-amber-950 mb-2">📚 과제 3의 연속성 & 도메인</h3>
-          <p class="text-gray-600 text-xs leading-relaxed">
-            초등학교 도서관 도서 형태 분류 데이터셋(book_dataset)을 직접 계승하여, 책을 비추면 바로 큐레이션을 받는 스마트 북 도슨트로 확장했습니다.
-          </p>
-        </div>
-        <div class="p-4 bg-amber-50/50 rounded-xl border border-amber-100">
-          <h3 class="font-bold text-amber-950 mb-2">⚡ 핵심 난관 극복 (Ablation)</h3>
-          <p class="text-gray-600 text-xs leading-relaxed">
-            실시간 스마트폰 카메라 영상의 조명 반사, 각도 원근 왜곡을 RandomPerspective 및 ColorJitter 실전 증강으로 극복하여 95%+ 강건성을 확보했습니다.
-          </p>
-        </div>
-        <div class="p-4 bg-amber-50/50 rounded-xl border border-amber-100">
-          <h3 class="font-bold text-amber-950 mb-2">🌐 Cloudflare 무료 배포</h3>
-          <p class="text-gray-600 text-xs leading-relaxed">
-            Cloudflare Pages 글로벌 엣지 네트워크 배포로 서버 비용 0원, 도메인 1회성 결제($1.99)로 영구 무료 실서비스 인프라를 완성했습니다.
-          </p>
-        </div>
-      </div>
     </div>
 
   </main>
 
+  <!-- Retro Book Ticket Modal -->
+  <div id="ticketModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border-2 border-stone-800">
+      <button onclick="closeTicketModal()" class="absolute top-4 right-4 text-stone-400 hover:text-stone-800 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="text-center border-b-2 border-dashed border-stone-300 pb-4 mb-4">
+        <p class="text-[10px] font-mono tracking-widest text-stone-400">BOOKLENS ADMISSION TICKET</p>
+        <h3 class="text-xl font-black text-stone-900 mt-1">인생 도서관 대출증</h3>
+        <p id="ticketDate" class="text-[10px] text-stone-400 font-mono mt-0.5">2026.10.30 ISSUED</p>
+      </div>
+      <div class="space-y-2.5 text-xs font-mono">
+        <div class="flex justify-between">
+          <span class="text-stone-400">분류:</span>
+          <span id="ticketClass" class="font-bold text-stone-900">그림책</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-stone-400">독서 페르소나:</span>
+          <span id="ticketMbti" class="font-bold text-amber-600">ENFP 예술가</span>
+        </div>
+        <div class="border-t border-stone-100 pt-2">
+          <p class="text-[10px] text-stone-400 mb-1">오늘의 추천 책:</p>
+          <p id="ticketBook" class="font-bold text-stone-800 text-sm">《달 샤베트》 - 백희나</p>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t-2 border-dashed border-stone-300 text-center">
+        <div class="text-2xl tracking-widest font-mono text-stone-800">||| | |||| || | |||</div>
+        <p class="text-[9px] text-stone-400 mt-1 font-mono">BOOKLENS-202533791-NA RAE</p>
+      </div>
+      <button onclick="closeTicketModal()" class="w-full mt-4 bg-stone-900 text-white font-bold py-2.5 rounded-xl text-xs">
+        확인 완료
+      </button>
+    </div>
+  </div>
+
+  <!-- PRD Summary Modal -->
+  <div id="prdModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+      <button onclick="togglePrdModal()" class="absolute top-4 right-4 text-stone-400 hover:text-stone-800 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 class="text-lg font-bold text-stone-900 mb-1">📑 BookLens AI PRD 요약</h3>
+      <p class="text-xs text-stone-400 mb-4">과제 3 기반 영상 왜곡 난관 극복 및 LLM 멀티모달 서비스</p>
+      <div class="space-y-3 text-xs text-stone-600 leading-relaxed">
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+          <strong class="text-amber-900 block mb-1">1. 과제 3 연계</strong>
+          초등학교 도서관 도서 형태 분류 데이터셋(book_dataset: 그림책, 줄글책, 만화책)을 직접 계승하여 실생활 북 큐레이터로 확장.
+        </div>
+        <div class="p-3 bg-stone-50 rounded-xl border border-stone-200">
+          <strong class="text-stone-900 block mb-1">2. 핵심 난관 극복 (Ablation Study)</strong>
+          실시간 카메라 영상의 조명 반사, 각도 원근 왜곡을 RandomPerspective 및 ColorJitter 실전 증강으로 극복하여 96.67% 정확도 달성.
+        </div>
+        <div class="p-3 bg-stone-50 rounded-xl border border-stone-200">
+          <strong class="text-stone-900 block mb-1">3. Cloudflare Pages & 가비아 도메인</strong>
+          정적 엣지 배포로 서버비 0원, 도메인 1회성 결제로 완전 무료 영구 서비스 완성.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
-  <footer class="bg-white border-t border-amber-100 py-6 text-center text-xs text-gray-400">
-    <p>BookLens AI Project · 가천대학교 IT융합대학 컴퓨터공학과 2학년 윤나래 (202533791)</p>
-    <p class="mt-1">기계학습프로그래밍 최종 프로젝트 (지도교수: 조윤실 교수님)</p>
+  <footer class="mt-8 border-t border-stone-200/80 py-6 text-center text-xs text-stone-400">
+    <p class="font-medium text-stone-500">BookLens AI · 가천대학교 IT융합대학 컴퓨터공학과 2학년 윤나래 (202533791)</p>
+    <p class="mt-0.5 text-[11px]">기계학습프로그래밍 최종 프로젝트 (지도교수: 조윤실 교수님)</p>
   </footer>
 
   <script>
@@ -216,52 +293,69 @@
         class: '그림책 (Picture Book)',
         conf: '97.4%',
         badge: '유아 / 초등 저학년',
-        target: '유아 및 초등 저학년 (상상력과 감수성 발달)',
+        mbti: 'ENFP · 상상력 풍부한 예술가',
+        mbtiDesc: '글자 너머의 시각적 감성과 따뜻한 영감을 즐기는 다정한 몽상가 타입이에요!',
+        target: '유아 및 초등 저학년 (상상력·감수성)',
         theme: '시각적 일러스트와 따뜻한 감성 스토리텔링',
+        voiceText: '이 책은 그림책으로 인식되었습니다. 시각적 일러스트와 따뜻한 감성 스토리텔링이 매력적인 책입니다. 상상력이 풍부한 예술가 타입의 독자에게 추천하며, 유사한 도서로 백희나 작가의 달 샤베트와 구름빵을 추천합니다.',
         recs: [
-          { title: '구름빵', author: '백희나', reason: '상상력을 자극하는 일상 속 판타지와 따뜻한 가족애' },
-          { title: '알사탕', author: '백희나', reason: '상대방의 마음의 소리를 듣게 되는 따뜻한 성장 이야기' },
-          { title: '수박 수영장', author: '안녕달', reason: '여름날의 싱그럽고 정겨운 마을 풍경을 담은 힐링 그림책' }
+          { title: '구름빵', author: '백희나', reason: '상상력을 자극하는 일상 속 판타지와 가족애' },
+          { title: '알사탕', author: '백희나', reason: '마음의 소리를 듣게 되는 따뜻한 성장 드라마' },
+          { title: '수박 수영장', author: '안녕달', reason: '여름날의 싱그럽고 정겨운 힐링 그림책' }
         ]
       },
       'text': {
         class: '줄글책/교양도서 (Text Book)',
         conf: '96.1%',
         badge: '청소년 / 교양 성인',
+        mbti: 'INTJ · 지적 호기심의 탐구자',
+        mbtiDesc: '문장 너머의 논리와 거시적 통찰을 깊이 파고드는 사색가 타입이에요!',
         target: '청소년 및 성인 (지적 탐구와 심도 있는 독서)',
-        theme: '체계적인 서사와 지식 탐구, 몰입형 인문·과학 스토리',
+        theme: '체계적인 서사와 지식 탐구, 인문·과학 스토리',
+        voiceText: '이 책은 줄글 교양도서로 인식되었습니다. 체계적인 지식 탐구와 심도 있는 서사가 돋보이는 책입니다. 지적 호기심이 풍부한 탐구자 타입의 독자에게 유발 하라리의 사피엔스와 칼 세이건의 코스모스를 추천합니다.',
         recs: [
-          { title: '사피엔스', author: '유발 하라리', reason: '인류 문명의 기원과 진화를 꿰뚫는 거시적 통찰과 질문' },
-          { title: '코스모스', author: '칼 세이건', reason: '우주와 인간 존재에 대한 시적이고 과학적인 위대한 탐험' },
-          { title: '총, 균, 쇠', author: '재레드 다이아몬드', reason: '지리적 환경이 세계 문명의 불평등에 미친 영향을 분석' }
+          { title: '사피엔스', author: '유발 하라리', reason: '인류 문명의 기원과 진화를 꿰뚫는 거시적 통찰' },
+          { title: '코스모스', author: '칼 세이건', reason: '우주와 인간 존재에 대한 시적이고 위대한 과학 탐험' },
+          { title: '총, 균, 쇠', author: '재레드 다이아몬드', reason: '문명 불평등의 근원을 지리적 환경으로 분석한 명작' }
         ]
       },
       'comic': {
         class: '만화책/그래픽노블 (Comic Book)',
         conf: '98.5%',
         badge: '전 연령 / 몰입형 독서',
+        mbti: 'ENTP · 직관적 몰입의 모험가',
+        mbtiDesc: '역동적인 컷 연출과 빠른 플롯 전개를 사랑하는 행동파 타입이에요!',
         target: '전 연령층 (시각적 연출과 빠른 몰입)',
-        theme: '역동적인 컷 연출과 빠른 플롯 전개, 몰입감 넘치는 서사',
+        theme: '역동적인 컷 분할과 흡인력 넘치는 서사',
+        voiceText: '이 책은 만화 및 그래픽 노블로 인식되었습니다. 역동적인 컷 연출과 빠른 몰입감이 특징입니다. 직관적 모험가 타입의 독자에게 이원복 교수의 먼나라 이웃나라와 윤태호 작가의 미생을 추천합니다.',
         recs: [
-          { title: '먼나라 이웃나라', author: '이원복', reason: '만화로 쉽고 유쾌하게 만나는 세계 역사와 문화의 정수' },
-          { title: '미생', author: '윤태호', reason: '직장인과 현대인의 삶을 바둑에 빗댄 현실적 명작 그래픽 노블' },
-          { title: '마음의 소리', author: '조석', reason: '일상의 소소한 순간을 폭소로 바꾸는 한국 대표 일상 만화' }
+          { title: '먼나라 이웃나라', author: '이원복', reason: '세계 역사와 문화를 유쾌하고 직관적으로 전달' },
+          { title: '미생', author: '윤태호', reason: '현대인의 삶과 직장을 바둑에 빗댄 한국 만화의 정점' },
+          { title: '마음의 소리', author: '조석', reason: '일상의 소소한 순간을 폭소로 바꾸는 대표 웹툰' }
         ]
       }
     };
+
+    let currentData = null;
 
     function loadSample(type) {
       renderResult(sampleData[type]);
     }
 
     function renderResult(data) {
+      currentData = data;
       document.getElementById('emptyResult').classList.add('hidden');
       document.getElementById('resultContent').classList.remove('hidden');
-      document.getElementById('inferTime').innerText = 'Vision+LLM 추론: 38ms';
+      document.getElementById('ttsBtn').classList.remove('hidden');
+      document.getElementById('ttsBtn').classList.add('flex');
+      document.getElementById('ticketBtn').classList.remove('hidden');
+      document.getElementById('ticketBtn').classList.add('flex');
 
       document.getElementById('resClass').innerText = data.class;
-      document.getElementById('resConfidence').innerText = '인식 신뢰도: ' + data.conf + ' · ResNet-18 (난관극복 모델)';
+      document.getElementById('resConfidence').innerText = '신뢰도: ' + data.conf + ' · ResNet-18 (난관극복 모델)';
       document.getElementById('resBadge').innerText = data.badge;
+      document.getElementById('mbtiBadge').innerText = data.mbti;
+      document.getElementById('mbtiDesc').innerText = data.mbtiDesc;
       document.getElementById('resTarget').innerText = data.target;
       document.getElementById('resTheme').innerText = data.theme;
 
@@ -269,19 +363,56 @@
       recsEl.innerHTML = '';
       data.recs.forEach((r, idx) => {
         const item = document.createElement('div');
-        item.className = 'p-3 bg-amber-50/60 rounded-xl border border-amber-200/80 text-xs';
+        item.className = 'p-3 bg-stone-50 hover:bg-amber-50/50 rounded-xl border border-stone-200/80 text-xs transition';
         item.innerHTML = `
-          <div class="flex justify-between font-bold text-amber-950 mb-0.5">
+          <div class="flex justify-between font-bold text-stone-900 mb-0.5">
             <span>${idx+1}. 《${r.title}》</span>
-            <span class="text-amber-700">${r.author} 저</span>
+            <span class="text-amber-700 text-[11px]">${r.author} 저</span>
           </div>
-          <p class="text-gray-600 text-[11px] leading-relaxed">💡 ${r.reason}</p>
+          <p class="text-stone-500 text-[11px] leading-relaxed">💡 ${r.reason}</p>
         `;
         recsEl.appendChild(item);
       });
     }
 
-    // Drag & drop handlers
+    // Web Speech API - Audio Book Docent
+    function speakCuration() {
+      if (!currentData || !('speechSynthesis' in window)) {
+        alert('이 브라우저는 음성 합성을 지원하지 않습니다.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(currentData.voiceText);
+      utter.lang = 'ko-KR';
+      utter.rate = 0.95;
+      utter.pitch = 1.0;
+      
+      const btnText = document.getElementById('ttsBtnText');
+      btnText.innerText = '재생 중...';
+      utter.onend = () => { btnText.innerText = '오디오 듣기'; };
+      utter.onerror = () => { btnText.innerText = '오디오 듣기'; };
+      
+      window.speechSynthesis.speak(utter);
+    }
+
+    // Ticket Modal
+    function openTicketModal() {
+      if (!currentData) return;
+      document.getElementById('ticketClass').innerText = currentData.class;
+      document.getElementById('ticketMbti').innerText = currentData.mbti;
+      document.getElementById('ticketBook').innerText = `《${currentData.recs[0].title}》 - ${currentData.recs[0].author}`;
+      document.getElementById('ticketModal').classList.remove('hidden');
+    }
+    function closeTicketModal() {
+      document.getElementById('ticketModal').classList.add('hidden');
+    }
+
+    function togglePrdModal() {
+      const el = document.getElementById('prdModal');
+      el.classList.toggle('hidden');
+    }
+
+    // Drag and Drop
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     dropzone.addEventListener('click', () => fileInput.click());
@@ -303,7 +434,7 @@
       loadSample('picture');
     });
 
-    // Webcam live toggle
+    // Webcam Live Stream
     let stream = null;
     document.getElementById('webcamBtn').addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -320,7 +451,7 @@
           btnText.innerText = '카메라 끄기';
           setTimeout(() => loadSample('picture'), 1200);
         } catch (err) {
-          alert('웹캠 접근 권한이 없거나 지원되지 않는 환경입니다.');
+          alert('카메라 접근 권한이 없거나 지원되지 않는 환경입니다.');
         }
       } else {
         stream.getTracks().forEach(t => t.stop());
