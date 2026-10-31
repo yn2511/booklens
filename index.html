@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>BookLens AI - 3단계 모바일 스마트 북 렌즈</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -120,9 +120,9 @@
       </div>
     </div>
     
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 shrink-0">
       <!-- Library Silent Mode: Sound Mute Toggle -->
-      <button id="soundToggleBtn" onclick="toggleMute()" class="brutal-btn bg-white hover:bg-archive text-charcoal font-black text-xs p-1.5 rounded-xl flex items-center justify-center border-2 border-charcoal shadow-brutal-sm w-8 h-8" title="소리 토글">
+      <button id="btn-sound-toggle" onclick="toggleMute()" class="brutal-btn bg-white hover:bg-archive text-charcoal font-black text-xs px-2 h-8 rounded-lg flex items-center justify-center gap-1 border-2 border-charcoal shadow-brutal-sm shrink-0" title="소리 토글">
         <img id="soundToggleIcon" src="" alt="Sound" class="w-5 h-5 object-contain hidden">
         <svg id="soundSvgOn" class="w-4 h-4 text-charcoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -134,27 +134,24 @@
           <line x1="23" y1="9" x2="17" y2="15"></line>
           <line x1="17" y1="9" x2="23" y2="15"></line>
         </svg>
+        <span class="hidden sm:inline">소리 ON</span>
       </button>
 
       <!-- Library Guide Onboarding Trigger -->
-      <button onclick="openOnboardingModal()" class="brutal-btn bg-navy text-cream font-black text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-brutal-sm" title="도서관 탐험 가이드">
+      <button onclick="openOnboardingModal()" class="brutal-btn bg-navy text-cream font-black text-xs px-2 h-8 rounded-lg flex items-center gap-1 shrink-0 shadow-brutal-sm" title="가이드">
         <img id="headerGuideIcon" src="" alt="Guide" class="w-4 h-4 object-contain hidden">
         <svg id="guideSvg" class="w-3.5 h-3.5 text-cream" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
-        <span>가이드</span>
+        <span class="hidden sm:inline">가이드</span>
       </button>
 
       <!-- Academic Benchmark Modal Trigger -->
-      <button onclick="openBenchmarkModal()" class="brutal-btn bg-coral text-white font-black text-xs px-2 py-1.5 rounded-xl flex items-center gap-1 shadow-brutal-sm">
+      <button id="btn-open-bench" onclick="openBenchmarkModal()" class="brutal-btn bg-coral text-white font-black text-xs px-2.5 h-8 rounded-lg flex items-center gap-1 shrink-0 shadow-brutal-sm" title="연구노트">
         <img id="headerChartIcon" src="" alt="Chart" class="w-3.5 h-3.5 object-contain">
-        <span class="hidden sm:inline">성능표</span>
+        <span>연구노트</span>
       </button>
-
-      <div class="bg-archive text-charcoal font-bold text-[10px] px-1.5 py-1.5 rounded-xl border-2 border-charcoal">
-        가천대
-      </div>
     </div>
   </header>
 
@@ -460,12 +457,28 @@
     <!-- ========================================== -->
     <section id="stepView-3" class="hidden w-full flex flex-col gap-3">
       
-      <div class="flex items-center justify-between">
-        <button onclick="goToStep(1)" class="brutal-btn bg-cream hover:bg-archive text-charcoal font-black text-xs py-2 px-3 rounded-xl flex items-center gap-1.5">
-          <img id="rescanTopIcon" src="" alt="Reset" class="w-4 h-4 object-contain">
-          <span>다른 책 스캔하기</span>
+      <!-- 상단 액션 바 컨테이너 (모바일 겹침 방지) -->
+      <div class="flex items-center justify-between gap-2 pb-1">
+        <!-- 좌측: 다시 스캔 버튼 (크기 고정) -->
+        <button id="btn-back-to-scan" onclick="goToStep(1)" class="brutal-btn bg-cream hover:bg-archive text-charcoal h-8 px-2.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 border-2 border-charcoal shadow-brutal-sm">
+          ← 다시 스캔
         </button>
+        
+        <!-- 우측: 모바일에서는 아이콘 중심으로 축소 -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btn-audio-docent" onclick="toggleTtsSpeech()" class="brutal-btn bg-mustard text-charcoal h-8 px-2 rounded-lg text-[11px] font-bold border-2 border-charcoal shadow-brutal-sm flex items-center gap-1" title="음성 도슨트">
+            🔊 <span class="hidden sm:inline">음성</span>
+          </button>
+          <button id="btn-save-bookmark" onclick="stampTicket()" class="brutal-btn bg-white hover:bg-stage text-charcoal h-8 px-2 rounded-lg text-[11px] border-2 border-charcoal shadow-brutal-sm flex items-center justify-center" title="대출증 보관">
+            ⭐
+          </button>
+          <button id="btn-copy-report" onclick="copyDocentReport()" class="brutal-btn bg-white hover:bg-stage text-charcoal h-8 px-2 rounded-lg text-[11px] border-2 border-charcoal shadow-brutal-sm flex items-center justify-center" title="리포트 복사">
+            📋
+          </button>
+        </div>
+      </div>
 
+      <div class="flex items-center justify-between">
         <div id="resultCategoryPill" class="bg-coral text-white font-black text-xs py-1.5 px-3 rounded-xl border-2 border-charcoal shadow-brutal-sm flex items-center gap-1.5">
           <img id="genreBadgeImg" src="" alt="Badge" class="w-5 h-5 object-contain">
           <span id="genreBadgeLabel">그림책 (Picture Book)</span>
@@ -799,6 +812,18 @@
               </tbody>
             </table>
           </div>
+
+          <!-- 교수님용 핵심 연구노트 박스 -->
+          <div class="mt-3 p-3 rounded-xl bg-amber-50 text-amber-950 text-xs border border-amber-200 leading-relaxed shadow-brutal-sm">
+            <p class="font-bold mb-1">💡 부분 미세조정(Partial Tuning)의 우수성 고찰:</p>
+            <p class="text-[11px] text-amber-900">
+              소규모 도서관 데이터셋 환경에서 전체 1,100만 개 파라미터를 전부 학습할 경우 과적합과 사전학습 특징의 파국적 망각(Catastrophic Forgetting)이 발생합니다. 하위 모서리 층은 동결하고 상위 Layer 4와 FC 분류기만 선별 튜닝하여 96.67% 최고 성능을 달성했습니다.
+            </p>
+            <p class="font-bold text-stone-900 mt-2 mb-0.5">🔍 오답 분석 (Error Analysis):</p>
+            <p class="text-[11px] text-stone-600">
+              표지 전면에 화려한 캐릭터 삽화가 들어간 줄글책이 그림책으로 오인식되는 한계가 발견되어, 확신도 70% 미만 시 재촬영을 유도하는 신뢰도 임계값 가드를 적용했습니다.
+            </p>
+          </div>
         </div>
 
         <div class="bg-stage rounded-xl p-3 border-2 border-charcoal">
@@ -1064,7 +1089,7 @@
     }
 
     function updateMuteUI() {
-      const btn = document.getElementById('soundToggleBtn');
+      const btn = document.getElementById('btn-sound-toggle') || document.getElementById('soundToggleBtn');
       const icon = document.getElementById('soundToggleIcon');
       const svgOn = document.getElementById('soundSvgOn');
       const svgOff = document.getElementById('soundSvgOff');
@@ -1970,9 +1995,29 @@
       playSparkleSound();
       const btn = document.getElementById('stampActionBtn');
       const seal = document.getElementById('ticketSealImg');
-      btn.classList.add('hidden');
-      seal.classList.remove('hidden');
-      seal.classList.add('animate-stamp');
+      if (btn) btn.classList.add('hidden');
+      if (seal) {
+        seal.classList.remove('hidden');
+        seal.classList.add('animate-stamp');
+      }
+    }
+
+    function copyDocentReport() {
+      playPopSound();
+      const title = document.getElementById('reportTitle')?.innerText || '도서';
+      const author = document.getElementById('reportAuthor')?.innerText || '';
+      const genre = document.getElementById('genreBadgeLabel')?.innerText || '';
+      const mbti = document.getElementById('reportMbti')?.innerText || '';
+      const text = `[BookLens AI 도슨트 리포트]\n• 도서명: ${title}\n• 저자: ${author}\n• 도서 형태: ${genre}\n• 독서 성향: ${mbti}\n\nhttps://booklens.cloud`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('도슨트 리포트 요약이 클립보드에 복사되었습니다! 📋');
+        }).catch(() => {
+          alert('클립보드 복사에 실패했습니다.');
+        });
+      } else {
+        alert('이 브라우저는 클립보드 복사를 지원하지 않습니다.');
+      }
     }
 
     function toggleTtsSpeech() {
