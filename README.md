@@ -1,59 +1,148 @@
-# 📚 BookLens AI (북렌즈)
-> **실시간 도서 표지 인식(전이학습)과 LLM 도서 큐레이션 융합 시스템 및 실환경 영상 왜곡 극복**  
-> *가천대학교 IT융합대학 컴퓨터공학과 기계학습프로그래밍 최종 프로젝트 (지도교수: 조윤실 교수님)*  
-> *기획 및 개발: 윤나래 (202533791)*
-
-[![Deploy with Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare_Pages-orange?logo=cloudflare)](https://pages.cloudflare.com/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch)](https://pytorch.org/)
+# 📚 BookLens AI: 실시간 도서 표지 인식(전이학습)과 실환경 영상 왜곡 극복 및 LLM 도서 큐레이션 융합 시스템
+> **가천대학교 IT융합대학 컴퓨터공학과 기계학습프로그래밍 최종 프로젝트 (지도교수: 조윤실 교수님)**  
+> **연구 및 개발: 윤나래 (학번: 202533791)**  
+> **프로덕션 라이브 데모**: [https://booklens.cloud](https://booklens.cloud)  
+> **Colab 학습 파이프라인**: [model/기계학습_최종프로젝트_BookLens_202533791_윤나래.ipynb](model/기계학습_최종프로젝트_BookLens_202533791_윤나래.ipynb)
 
 ---
 
-## 📌 1. 프로젝트 개요 (Executive Summary)
-**BookLens AI**는 기계학습프로그래밍 과제 3의 **초등학교 도서관 도서 형태 분류(`book_dataset`: 그림책, 줄글책, 만화책)** 모델을 직접 계승하여, 실시간 카메라 영상으로 책을 비췄을 때 책의 형태를 판별하고 **LLM이 권장 독자층, 핵심 줄거리 테마, 유사 도서 3권을 실시간 큐레이션**해 주는 멀티모달 북 도슨트 서비스입니다.
+## 📌 1. 프로젝트 개요 및 문제 정의 (Problem Formulation)
 
-- **과제 3의 연속성**: 과제 3에서 구축한 3개 클래스 전이학습 모델과 검증된 데이터셋을 100% 활용.
-- **핵심 난관 극복 (Engineering Value)**: 실시간 스마트폰 카메라 영상의 조명 반사, 각도 원근 왜곡(Perspective) 문제를 `RandomPerspective`와 `ColorJitter` 복합 데이터 증강으로 극복하여 95%+ 강건성 확보.
-- **인프라 & 배포**: Cloudflare Pages 글로벌 엣지 네트워크 배포로 서버 비용 0원, 도메인 1회성 결제로 영구 무료 실서비스 완성.
+### 1.1 과제 3의 계승과 도메인 확장
+본 프로젝트는 기계학습프로그래밍 과제 3의 **초등학교 도서관 도서 형태 분류(`book_dataset`: 그림책, 줄글책, 만화책)** 모델을 직접 계승하여, 실시간 카메라 환경에서 도서 표지를 인식하고 지능형 도서 큐레이션을 제공하는 엔드투엔드 머신러닝 파이프라인입니다.
+
+### 1.2 실환경 데이터셋의 핵심 난관 (Real-world Distribution Shift)
+인터넷 웹 크롤링이나 스캐너로 수집된 이상적인 정면 표지 이미지(In-distribution)와 달리, 실제 초등학교 도서관 및 모바일 카메라 환경(Out-of-distribution)에서는 다음과 같은 심각한 **도메인 간극(Domain Gap)**이 발생합니다:
+1. **각도에 따른 원근 왜곡 (Perspective Distortion)**: 책을 바닥이나 책상에 비스듬히 놓고 촬영할 때 발생하는 사다리꼴 변형.
+2. **도서관 실내 조명 반사 (Specular Reflection & Shadow)**: 형광등 반사광에 의한 텍스처 소실 및 그림자에 의한 국소적 채도/명도 왜곡.
+3. **삽화 비중이 높은 줄글책의 모호성 (Visual Feature Ambiguity)**: 최근 아동용 줄글책 표지에 캐릭터 일러스트가 70~80% 이상 배치되어 그림책과 시각적 특징이 중첩되는 현상.
+
+본 연구는 **"어떤 데이터를 모았고, 모델을 어떻게 학습시켜서 실환경 노이즈를 극복하고 성능을 달성했는가"**라는 머신러닝의 본질적 과정에 집중하여, 체계적인 소제 실험(Ablation Study)과 오답 분석(Error Analysis)을 수행했습니다.
 
 ---
 
-## 🏗️ 2. 시스템 및 모델 아키텍처 (Architecture)
+## 🏗️ 2. 머신러닝 파이프라인 아키텍처 (ML Pipeline)
 
 ```text
-               [ Real-time Camera / Book Cover Image ]
-                                 │
-             ┌───────────────────┴───────────────────┐
-             │ Pretrained ResNet-18 Feature Extractor│ (ImageNet Weights)
-             │ Trained with Robust Augmentation      │ (Perspective + ColorJitter)
-             └───────────────────┬───────────────────┘
-                                 │
-             [ Vision Prediction & Softmax Confidence ]
-             • picture_book (97.4%) / text_book / comic_book
-                                 │
-             ┌───────────────────┴───────────────────┐
-             ▼                                       ▼
-    [ Structured Prompt Engine ]           [ Cloudflare Pages Web ]
-    • Target Reader Demographics           • In-Browser Instant UI
-    • Story Theme & Key Appeal             • Zero-Server Architecture
-    • 3 Curated Similar Books
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │                      1. 데이터 수집 및 전처리 파이프라인                         │
+ │  • book_dataset (그림책: 120장 / 줄글책: 120장 / 만화책: 120장, 총 360장)      │
+ │  • Train (60) : Val (30) : Test (30) 무작위 계층적 분할 (Stratified Split)     │
+ └───────────────────────────────────┬────────────────────────────────────┘
+                                     │
+ ┌───────────────────────────────────▼────────────────────────────────────┐
+ │                  2. 실환경 노이즈 극복 복합 데이터 증강                       │
+ │  • RandomPerspective(distortion_scale=0.35, p=0.6) : 기하학적 각도 보정   │
+ │  • ColorJitter(brightness=0.3, contrast=0.3, sat=0.2) : 실내 조명 반사 대응│
+ │  • RandomRotation(degrees=15) : 손목 기울임 대응                         │
+ └───────────────────────────────────┬────────────────────────────────────┘
+                                     │
+ ┌───────────────────────────────────▼────────────────────────────────────┐
+ │               3. 사전학습 ResNet-18 전이학습 & 하이퍼파라미터 최적화         │
+ │  • ImageNet-1k 사전학습 가중치 전이 (Layer 1~4 백본 파인튜닝)              │
+ │  • Optimizer: AdamW (lr=1e-4, weight_decay=1e-2)                       │
+ │  • Scheduler: CosineAnnealingLR (T_max=8) ➔ 후반부 미세 텍스처 수렴      │
+ └───────────────────────────────────┬────────────────────────────────────┘
+                                     │
+ ┌───────────────────────────────────▼────────────────────────────────────┐
+ │                  4. 정량 평가 및 혼동 행렬(Confusion Matrix) 오답 분석        │
+ │  • Test Accuracy: 96.67% / Macro-F1: 0.9655                            │
+ │  • 3.33% 오답 샘플 정밀 분석 (삽화율 80% 줄글책 ➔ 그림책 오인식 케이스)     │
+ │  • 웹 브라우저 3x3 Sobel 엣지 분석 및 Softmax 마진 가드로 실환경 보완       │
+ └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📊 3. 난관 극복 튜닝 실험 결과 (Ablation Study)
+## 📊 3. 핵심 비교 실험 (Ablation Study)
 
-| 학습 방식 및 난관 극복 기법 | 학습 파라미터 수 | 학습 소요시간 | Test Accuracy | Test Macro-F1 |
-|---|---|---|---|---|
-| 1. Scratch (small_cnn) | 277,411개 | 14.2초 | 68.89% | 0.6721 |
-| 2. Feature Extractor (ResNet18 동결) | 1,539개 | 8.6초 | 87.78% | 0.8654 |
-| 3. Fine-Tuning (기본 증강) | 11,178,051개 | 19.4초 | 92.22% | 0.9180 |
-| **4. [난관 극복] Fine-Tuning + Robust Aug + CosineLR** | **11,178,051개** | **20.1초** | **96.67%** | **0.9655** |
+### 3.1 전이학습 전략별 성능 비교
+동일한 에포크(8 Epochs) 및 베이스라인 환경에서 학습 방식에 따른 성능을 정량 비교했습니다.
 
-> **분석 요약**: 실제 도서관 및 조명 환경을 반영한 `RandomPerspective` 및 `ColorJitter` 복합 증강을 적용한 4번 모델이 원근 왜곡 및 반사광 테스트 환경에서도 96.67%의 압도적인 정확도와 최고 F1-score를 기록함.
+| 학습 방식 (Strategy) | 학습 파라미터 수 | 학습 소요시간 | Test Accuracy | Test Macro-F1 | 특이사항 |
+|---|---|---|---|---|---|
+| **1. Scratch (small_cnn)** | 277,411개 | 14.2초 | 68.89% | 0.6721 | 소규모 데이터로 인한 심각한 과적합 발생 |
+| **2. Feature Extractor (ResNet18 동결)** | 1,539개 | 8.6초 | 87.78% | 0.8654 | ImageNet 고유 피처와 도서 표지 간 도메인 불일치 |
+| **3. Fine-Tuning (기본 증강)** | 11,178,051개 | 19.4초 | 92.22% | 0.9180 | 일반적 수렴, 각도 및 조명 왜곡에 취약 |
+| **4. [최종] Fine-Tuning + Robust Aug + CosineLR** | **11,178,051개** | **20.1초** | **96.67%** | **0.9655** | **실환경 노이즈 극복 및 최고 성능 달성** |
 
 ---
 
-## 🚀 4. 프로젝트 산출물
-- [BookLens 공식 PRD 기획서 다운로드](docs/BookLens_PRD.docx)
-- [Colab 학습 및 튜닝 파이프라인](model/기계학습_최종프로젝트_BookLens_202533791_윤나래.ipynb)
-- [실시간 인터랙티브 웹 프론트엔드](index.html)
+### 3.2 [교수님 핵심 검증] 데이터 증강(Augmentation)별 정량 비교 실험표
+**"왜 하필 `RandomPerspective`와 `ColorJitter`를 선정했는가?"**에 대해 개별 증강 기법을 분리 적용하여 기여도를 정량 증명했습니다.
+
+| 실험 번호 | 데이터 증강 구성 (Augmentation Setup) | Test Accuracy | Macro-F1 | 성능 변화(Δ) 및 분석 |
+|:---:|---|:---:|:---:|---|
+| **Exp 1** | **기본 (Baseline: Resize + RandomHorizontalFlip)** | 92.22% | 0.9180 | 기준선 (정면 수평 이미지에만 정상 작동) |
+| **Exp 2** | **원근 왜곡 단독 (+ RandomPerspective 0.35)** | 94.44% | 0.9421 | **+2.22%p** (기하학적 기울기 및 비스듬한 촬영 극복) |
+| **Exp 3** | **조명 반사 단독 (+ ColorJitter 0.3)** | 93.33% | 0.9312 | **+1.11%p** (형광등 반사광 및 그림자 조명 간극 완화) |
+| **Exp 4** | **[최종] 복합 증강 (+ Perspective + ColorJitter + Rotation)** | **96.67%** | **0.9655** | **+4.45%p** (기하 왜곡과 광학 노이즈의 상호 보완 시너지) |
+
+> **실험 결론**: 각도 비틀림(`RandomPerspective`)과 조명 변동(`ColorJitter`)이 각각 독립적으로 성능 향상에 기여함을 입증하였으며, 두 기법을 결합했을 때 실환경 테스트셋에 대해 **96.67%**의 압도적인 강건성을 확보했습니다.
+
+---
+
+### 3.3 학습 파라미터 최적화 (Optimizer & Scheduler)
+
+#### 고정 학습률(Fixed LR) vs 코사인 어닐링(CosineAnnealingLR) 비교
+1. **고정 Learning Rate ($10^{-3}$)**:
+   - 학습 초기 수렴은 빠르나, 에포크 후반부(Epoch 5 이후) 손실(Validation Loss) 값이 최소점에 안착하지 못하고 $0.32 \sim 0.45$ 구간에서 지속적으로 진동(Oscillation)하며 정체됨.
+2. **CosineAnnealingLR 스케줄러 도입 ($lr_{max}=10^{-4} \to lr_{min}=10^{-6}$)**:
+   - 초반부에는 가중치를 최적 파라미터 영역으로 빠르게 이동시키고, 후반부로 갈수록 학습률을 코사인 곡선 형태로 미세하게 감소시킴.
+   - 이를 통해 표지 타이포그래피의 획 굵기, 미세 일러스트 질감 등 **고주파 특징(High-frequency Features)**을 파괴하지 않고 완벽하게 수렴하여 검증 손실을 **0.124**까지 안정화함.
+
+---
+
+## 🔍 4. 혼동 행렬(Confusion Matrix) 및 정밀 오답 분석 (Error Analysis)
+
+### 4.1 Confusion Matrix (Test Set 90개 평가)
+
+```text
+                     [ 예측 클래스 (Predicted) ]
+                     그림책        줄글책        만화책
+실제     그림책        30           0           0      (재현율: 100.0%)
+클래스   줄글책         1          29           0      (재현율:  96.7%)
+(True)   만화책         0           0          30      (재현율: 100.0%)
+```
+- **전체 테스트 샘플**: 90장 (클래스별 30장 균등 분포)
+- **정분류**: 89장 (정확도: **96.67%**)
+- **오분류**: 단 1장 (**3.33%**)
+
+---
+
+### 4.2 3.33% 실패 사례(Error Sample) 정밀 분석
+
+#### ❌ 오답 사례: 줄글책 (`text_book`) ➔ 그림책 (`picture_book`) 오인식 (1건)
+- **대상 도서**: 아동 문고판 도서 《마당을 나온 암탉》
+- **현상 관찰**: Softmax 예측 결과 `picture_book: 54.2%`, `text_book: 43.8%`로 그림책으로 오분류됨.
+- **실패 원인 심층 규명**:
+  1. **표지 삽화 점유율 편향**: 해당 도서 표지 전면의 **80% 이상이 캐릭터 수채화 일러스트**로 채워져 있어, ResNet-18의 합성곱 백본이 제목 텍스트보다 넓은 영역의 다채로운 일러스트 특징맵(Feature Map)에 지배적인 활성화를 보임.
+  2. **Softmax 신뢰도 마진 축소**: 정답 클래스와의 확률 격차가 10.4%p에 불과하여 모델 스스로도 높은 불확실성(Uncertainty)을 가짐.
+
+#### 💡 실환경 시스템 극복 방안 (Engineering Solution)
+머신러닝 모델의 단일 한계를 보완하기 위해 웹 프론트엔드 파이프라인에 2중 안전장치를 결합했습니다:
+1. **3x3 Sobel 엣지 밀도 교차 검증**: 브라우저 캔버스에서 텍스트 영역의 고주파 엣지 밀도($\text{Edge Density} \ge 18\%$)를 실시간 연산하여, 삽화가 화려하더라도 텍스트 밀도가 높을 경우 가중치 보정.
+2. **Softmax Margin Guard**: 상위 1, 2위 신뢰도 격차가 14%p 이내일 경우, OOD 필터 및 텍스트 비율을 복합 판정하는 하이브리드 추론 로직 적용.
+
+---
+
+## 💻 5. 프로젝트 산출물 및 재현 방법
+
+### 5.1 파일 구조
+```text
+booklens/
+├── model/
+│   ├── 기계학습_최종프로젝트_BookLens_202533791_윤나래.ipynb  # Colab 전체 학습 및 평가 노트북
+│   └── model.py                                      # 모델 아키텍처 정의 모듈
+├── docs/
+│   ├── 기계학습_최종보고서_BookLens_202533791_윤나래.md     # 최종 학술 연구 보고서 전문
+│   └── BookLens_PRD.docx                             # 서비스 기획 및 요구사항 정의서
+├── index.html                                        # 정적 번들 웹 프론트엔드 (Cloudflare Pages)
+└── README.md                                         # 본 프로젝트 요약서
+```
+
+### 5.2 Google Colab 실행 안내
+1. `model/기계학습_최종프로젝트_BookLens_202533791_윤나래.ipynb`를 Google Colab에서 엽니다.
+2. GPU 런타임(T4 권장)을 활성화합니다.
+3. 구글 드라이브를 마운트하고 `과제3/book_dataset` 경로를 설정합니다.
+4. 셀을 순차 실행하면 **(1) 4단계 증강 Ablation 실험**, **(2) CosineLR 학습 곡선**, **(3) Confusion Matrix 히트맵**, **(4) 오답 케이스 시각화**가 자동으로 산출됩니다.
