@@ -90,6 +90,13 @@
       background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
       background-size: 1rem 1rem;
     }
+    
+    #webcamVideo {
+      aspect-ratio: 4/3 !important;
+      object-fit: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-3 sm:p-5 select-none">
@@ -161,7 +168,7 @@
         <div id="laserBeam" class="hidden absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-coral to-transparent z-30 pointer-events-none animate-laser"></div>
 
         <!-- Live Video Element -->
-        <video id="webcamVideo" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover z-10"></video>
+        <video id="webcamVideo" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover z-10" style="aspect-ratio: 4/3; object-fit: cover; width: 100%; height: 100%;"></video>
         <!-- Shutter Aperture & Flash Overlays -->
         <div id="shutterFlashOverlay" class="hidden absolute inset-0 bg-white z-40 pointer-events-none transition-opacity duration-150"></div>
         <div id="shutterApertureOverlay" class="hidden absolute inset-0 flex items-center justify-center z-35 pointer-events-none">
@@ -519,9 +526,9 @@
             <span class="text-[11px] font-mono text-charcoal/60 font-bold">AI 독서 페르소나</span>
             <span class="text-[10px] font-mono bg-charcoal text-cream font-bold px-1.5 py-0.5 rounded">MATCHED</span>
           </div>
-          <div id="reportMbti" class="font-black text-sm text-coral mb-1">ENFP 예술가형 독서가</div>
+          <div id="reportMbti" class="font-black text-sm text-coral mb-1">숲속의 감성 탐험가 (ENFP형 독서가)</div>
           <p id="reportMbtiDesc" class="text-xs text-charcoal/80 font-bold leading-relaxed mb-2">
-            풍부한 상상력과 따뜻한 감성으로 시각적 서사를 깊이 음미하는 창의적 독서 유형
+            풍부한 상상력과 따뜻한 감성으로 시각적 서사를 깊이 음미하는 창의적 탐험가 유형
           </p>
           <div class="pt-2 border-t border-charcoal/20 flex flex-col gap-1 text-[11px]">
             <div><span class="font-black text-charcoal">권장 연령:</span> <span id="reportTarget">초등 전학년 및 성인 감성 독자</span></div>
@@ -560,7 +567,10 @@
 
         <!-- Section 4: AI 연계 추천 도서 3선 -->
         <div>
-          <div class="text-xs font-black text-charcoal mb-2">AI 연계 추천 도서 3선</div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-black text-charcoal">AI 연계 추천 도서 3선</span>
+            <span class="font-mono text-[10px] bg-mustard/30 text-charcoal px-2 py-0.5 rounded font-bold border border-charcoal/30">초등 권장 · 성장 문학</span>
+          </div>
           <div id="reportSimilarBooks" class="flex flex-col gap-1.5"></div>
         </div>
 
@@ -619,79 +629,129 @@
         </button>
       </div>
 
-      <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="font-black text-xs text-charcoal">4단계 성능 비교 실험 (Ablation Study)</span>
-          <span class="font-mono text-[10px] bg-coral text-white font-bold px-1.5 rounded">1위 달성</span>
+      <!-- Benchmark Tabs: 정량 지표 vs 학술 연구 노트 -->
+      <div class="flex items-center gap-2 border-b-2 border-charcoal/30 pb-2">
+        <button id="tabBtnMetrics" onclick="switchBenchmarkTab('metrics')" class="brutal-btn bg-coral text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-brutal-sm transition-all">
+          정량 성능 지표
+        </button>
+        <button id="tabBtnNotes" onclick="switchBenchmarkTab('notes')" class="brutal-btn bg-stage text-charcoal font-black text-xs px-3 py-1.5 rounded-xl border border-charcoal transition-all">
+          학술 연구 노트
+        </button>
+      </div>
+
+      <!-- TAB 1: 정량 성능 지표 -->
+      <div id="benchmarkTabMetrics" class="flex flex-col gap-4">
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-black text-xs text-charcoal">4단계 성능 비교 실험 (Ablation Study)</span>
+            <span class="font-mono text-[10px] bg-coral text-white font-bold px-1.5 rounded">1위 달성</span>
+          </div>
+
+          <div class="border-2 border-charcoal rounded-xl overflow-hidden">
+            <table class="w-full text-left text-[11px]">
+              <thead class="bg-stage border-b-2 border-charcoal font-black">
+                <tr>
+                  <th class="p-2">실험 모델</th>
+                  <th class="p-2">학습 기법</th>
+                  <th class="p-2 text-right">정확도</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-charcoal/20 font-bold">
+                <tr class="bg-white">
+                  <td class="p-2">1. Base CNN</td>
+                  <td class="p-2 text-charcoal/70">Scratch 3-Conv</td>
+                  <td class="p-2 text-right font-mono">68.89%</td>
+                </tr>
+                <tr class="bg-stage/40">
+                  <td class="p-2">2. Transfer</td>
+                  <td class="p-2 text-charcoal/70">ResNet-18 동결</td>
+                  <td class="p-2 text-right font-mono">87.78%</td>
+                </tr>
+                <tr class="bg-white">
+                  <td class="p-2">3. Fine-Tune</td>
+                  <td class="p-2 text-charcoal/70">전체 계층 미세조정</td>
+                  <td class="p-2 text-right font-mono">92.22%</td>
+                </tr>
+                <tr class="bg-coral/15 font-black text-charcoal">
+                  <td class="p-2 flex items-center gap-1">
+                    <span class="text-coral">★</span> 제안 모델
+                  </td>
+                  <td class="p-2 text-coral">복합 증강 + CosineLR</td>
+                  <td class="p-2 text-right font-mono text-coral text-xs font-black">96.67%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="border-2 border-charcoal rounded-xl overflow-hidden">
-          <table class="w-full text-left text-[11px]">
-            <thead class="bg-stage border-b-2 border-charcoal font-black">
-              <tr>
-                <th class="p-2">실험 모델</th>
-                <th class="p-2">학습 기법</th>
-                <th class="p-2 text-right">정확도</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-charcoal/20 font-bold">
-              <tr class="bg-white">
-                <td class="p-2">1. Base CNN</td>
-                <td class="p-2 text-charcoal/70">Scratch 3-Conv</td>
-                <td class="p-2 text-right font-mono">68.89%</td>
-              </tr>
-              <tr class="bg-stage/40">
-                <td class="p-2">2. Transfer</td>
-                <td class="p-2 text-charcoal/70">ResNet-18 동결</td>
-                <td class="p-2 text-right font-mono">87.78%</td>
-              </tr>
-              <tr class="bg-white">
-                <td class="p-2">3. Fine-Tune</td>
-                <td class="p-2 text-charcoal/70">전체 계층 미세조정</td>
-                <td class="p-2 text-right font-mono">92.22%</td>
-              </tr>
-              <tr class="bg-coral/15 font-black text-charcoal">
-                <td class="p-2 flex items-center gap-1">
-                  <span class="text-coral">★</span> 제안 모델
-                </td>
-                <td class="p-2 text-coral">복합 증강 + CosineLR</td>
-                <td class="p-2 text-right font-mono text-coral text-xs font-black">96.67%</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="bg-stage rounded-xl p-3 border-2 border-charcoal">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-black text-xs text-charcoal">검증 세트 혼동 행렬 (Confusion Matrix)</span>
+            <span class="font-mono text-[10px] text-charcoal/60">N = 90 (각 30장)</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5 text-center font-mono text-[10px]">
+            <div class="bg-white p-1.5 rounded border border-charcoal">
+              <div class="text-[9px] text-charcoal/60 font-sans font-bold">그림책 예측</div>
+              <div class="text-coral font-black text-xs">29 / 30</div>
+              <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
+            </div>
+            <div class="bg-white p-1.5 rounded border border-charcoal">
+              <div class="text-[9px] text-charcoal/60 font-sans font-bold">줄글책 예측</div>
+              <div class="text-crayon font-black text-xs">29 / 30</div>
+              <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
+            </div>
+            <div class="bg-white p-1.5 rounded border border-charcoal">
+              <div class="text-[9px] text-charcoal/60 font-sans font-bold">만화책 예측</div>
+              <div class="text-mustard font-black text-xs">29 / 30</div>
+              <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] font-bold text-charcoal/80 flex flex-col gap-1.5 bg-archive/50 p-3 rounded-xl border border-charcoal/30">
+          <div><span class="font-black text-charcoal">• 데이터 증강:</span> RandomPerspective(0.35, p=0.8) + ColorJitter(0.3, 0.3)</div>
+          <div><span class="font-black text-charcoal">• 옵티마이저:</span> AdamW (lr=1e-4, weight_decay=1e-2)</div>
+          <div><span class="font-black text-charcoal">• 스케줄러:</span> CosineAnnealingLR (T_max=15, eta_min=1e-6)</div>
+          <div><span class="font-black text-charcoal">• 배포 환경:</span> Cloudflare Workers Static Assets (서버비 0원 엣지 서빙)</div>
         </div>
       </div>
 
-      <div class="bg-stage rounded-xl p-3 border-2 border-charcoal">
-        <div class="flex items-center justify-between mb-2">
-          <span class="font-black text-xs text-charcoal">검증 세트 혼동 행렬 (Confusion Matrix)</span>
-          <span class="font-mono text-[10px] text-charcoal/60">N = 90 (각 30장)</span>
+      <!-- TAB 2: 학술 연구 노트 (조윤실 교수님 핵심 평가 포인트) -->
+      <div id="benchmarkTabNotes" class="hidden flex flex-col gap-3">
+        <!-- 1. 부분 미세조정(Partial Tuning)의 우수성 -->
+        <div class="bg-stage rounded-xl p-3.5 border-2 border-charcoal flex flex-col gap-2 shadow-brutal-sm">
+          <div class="flex items-center justify-between border-b border-charcoal/20 pb-1.5">
+            <span class="font-black text-xs text-coral">1. 부분 미세조정(Partial Tuning)의 우수성</span>
+            <span class="font-mono text-[9px] bg-charcoal text-cream px-1.5 py-0.5 rounded font-bold">과적합 & 망각 방지</span>
+          </div>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">소규모 데이터셋 한계 극복:</span> 도서관 현장 데이터셋(클래스당 수십 장) 환경에서 ResNet-18 전체 1,100만 개 파라미터를 전부 갱신(Full Fine-tuning)할 경우 심각한 과적합(Overfitting)이 발생합니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">파국적 망각(Catastrophic Forgetting) 차단:</span> ImageNet에서 사전 학습된 범용 저수준 시각 특징(Low-level Visual Features: 엣지, 질감, 코너)을 보존하기 위해 하위 특징 추출 계층(Conv1~Layer3)을 동결(Freeze)했습니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">상위 층 선별 튜닝:</span> 고수준 도서 도메인 의미론(High-level Semantics)을 학습하는 Layer4 및 FC Head만 선별 학습시켜, 계산 비용을 대폭 줄이면서도 최고 정확도 96.67%를 달성했습니다.
+          </p>
         </div>
 
-        <div class="grid grid-cols-3 gap-1.5 text-center font-mono text-[10px]">
-          <div class="bg-white p-1.5 rounded border border-charcoal">
-            <div class="text-[9px] text-charcoal/60 font-sans font-bold">그림책 예측</div>
-            <div class="text-coral font-black text-xs">29 / 30</div>
-            <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
+        <!-- 2. 오답 사례 분석(Error Analysis) & 신뢰도 가드 -->
+        <div class="bg-stage rounded-xl p-3.5 border-2 border-charcoal flex flex-col gap-2 shadow-brutal-sm">
+          <div class="flex items-center justify-between border-b border-charcoal/20 pb-1.5">
+            <span class="font-black text-xs text-crayon">2. 오답 사례 분석(Error Analysis) & 가드 로직</span>
+            <span class="font-mono text-[9px] bg-charcoal text-cream px-1.5 py-0.5 rounded font-bold">Selective Classification</span>
           </div>
-          <div class="bg-white p-1.5 rounded border border-charcoal">
-            <div class="text-[9px] text-charcoal/60 font-sans font-bold">줄글책 예측</div>
-            <div class="text-crayon font-black text-xs">29 / 30</div>
-            <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
-          </div>
-          <div class="bg-white p-1.5 rounded border border-charcoal">
-            <div class="text-[9px] text-charcoal/60 font-sans font-bold">만화책 예측</div>
-            <div class="text-mustard font-black text-xs">29 / 30</div>
-            <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
-          </div>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">화려한 줄글책 오분류 난관:</span> 텍스트북 중에서도 표지에 화려한 삽화나 캐릭터 일러스트가 전면에 크게 배치된 경우, 표준 CNN이 텍스트보다 고채도 일러스트 특징에 과도하게 반응하여 그림책으로 오인식하는 한계가 관측되었습니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">신뢰도 임계값(Margin 14%p) 가드:</span> 상위 1위와 2위 클래스 간 Softmax 확률 격차가 14%p 미만인 경계 케이스는 복합 표지 경고(Ambiguity Alert)로 실시간 격리하여 오답 확산을 방지합니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">고주파 텍스트 엣지 밀도 교차 검증:</span> 3x3 Sobel 필터로 텍스트 주기성 엣지 밀도와 채도 분산을 브라우저 캔버스에서 병렬 산출하여, 시각 모델의 판단을 이중으로 보정하는 안전 파이프라인을 구축했습니다.
+          </p>
         </div>
-      </div>
-
-      <div class="text-[11px] font-bold text-charcoal/80 flex flex-col gap-1.5 bg-archive/50 p-3 rounded-xl border border-charcoal/30">
-        <div><span class="font-black text-charcoal">• 데이터 증강:</span> RandomPerspective(0.35, p=0.8) + ColorJitter(0.3, 0.3)</div>
-        <div><span class="font-black text-charcoal">• 옵티마이저:</span> AdamW (lr=1e-4, weight_decay=1e-2)</div>
-        <div><span class="font-black text-charcoal">• 스케줄러:</span> CosineAnnealingLR (T_max=15, eta_min=1e-6)</div>
-        <div><span class="font-black text-charcoal">• 배포 환경:</span> Cloudflare Workers Static Assets (서버비 0원 엣지 서빙)</div>
       </div>
 
       <button onclick="closeBenchmarkModal()" class="w-full brutal-btn bg-charcoal text-white font-black text-sm py-2.5 rounded-xl">
@@ -830,16 +890,16 @@
         coverKey: 'book-cover-picture',
         confidence: '97.4%',
         probs: { picture: '97.4%', text: '1.8%', comic: '0.8%' },
-        mbti: 'ENFP 예술가형 독서가',
-        mbtiDesc: '풍부한 상상력과 따뜻한 감성으로 시각적 서사를 깊이 음미하는 창의적 독서 유형',
-        target: '초등 전학년 및 성인 감성 독자',
+        mbti: '숲속의 감성 탐험가 (ENFP형 독서가)',
+        mbtiDesc: '풍부한 상상력과 따뜻한 감성으로 시각적 서사를 깊이 음미하는 창의적 탐험가 유형',
+        target: '초등 전학년 및 온 가족 독자',
         theme: '푸른 달빛 숲길을 곰과 함께 거닐며 나누는 자연의 온기와 서정적 위로',
         similar: [
           { title: '1. 달 샤베트 (백희나)', desc: '달빛으로 빚어낸 이웃의 온기와 환상' },
           { title: '2. 구름빵 (백희나)', desc: '하늘을 날아오르는 아침의 마법' },
           { title: '3. 수박 수영장 (안녕달)', desc: '시원하고 포근한 여름 마을 이야기' }
         ],
-        tts: '이 책은 이현지 작가의 그림책 달빛 산책입니다. 밤하늘 은은한 달빛 아래 곰과 함께 숲속을 거닐며 전하는 다정한 위로를 담고 있습니다. 독서 성향은 풍부한 상상력을 지닌 ENFP 예술가형에 해당하며, 달 샤베트와 수박 수영장을 함께 추천합니다.'
+        tts: '이 책은 이현지 작가의 그림책 달빛 산책입니다. 밤하늘 은은한 달빛 아래 곰과 함께 숲속을 거닐며 전하는 다정한 위로를 담고 있습니다. 독서 성향은 숲속의 감성 탐험가형에 해당하며, 달 샤베트와 수박 수영장을 함께 추천합니다.'
       },
       text: {
         category: '줄글책',
@@ -850,16 +910,16 @@
         coverKey: 'book-cover-general',
         confidence: '96.2%',
         probs: { picture: '2.1%', text: '96.2%', comic: '1.7%' },
-        mbti: 'INTJ 탐구자형 독서가',
-        mbtiDesc: '거시적 인과관계와 구조적 통찰을 통해 삶의 본질을 파고드는 지적 독서 유형',
-        target: '사색과 사유에 몰입하는 청소년 및 성인 독자',
-        theme: '삶을 단단하게 지탱하는 한 줄의 힘과 인간 실존에 대한 깊이 있는 사유',
+        mbti: '별빛을 관측하는 탐구자 (INTJ형 독서가)',
+        mbtiDesc: '깊이 있는 문장 속 인과관계와 구조적 통찰을 통해 세상을 넓게 바라보는 지적 탐구자 유형',
+        target: '생각의 깊이를 넓혀가는 초등 고학년 및 청소년 독자',
+        theme: '마음의 눈으로 세상을 바라보는 따뜻한 위로와 성장 문학의 깊은 사유',
         similar: [
-          { title: '1. 사피엔스 (유발 하라리)', desc: '인류 문명의 기원과 역사의 통찰' },
-          { title: '2. 총, 균, 쇠 (재레드 다이아몬드)', desc: '지리적 환경과 문명 발전의 필연성' },
-          { title: '3. 코스모스 (칼 세이건)', desc: '우주와 인류 존재 의의의 탐색' }
+          { title: '1. 나의 라임오렌지나무 (J.M. 바스콘셀로스)', desc: '슬픔을 통해 마음의 키가 자라는 따뜻한 성장기' },
+          { title: '2. 마당을 나온 암탉 (황선미)', desc: '꿈과 자유를 향해 당당하게 날아오르는 생명의 감동' },
+          { title: '3. 샬롯의 거미줄 (E.B. 화이트)', desc: '진정한 우정과 생명의 소중함을 일깨우는 초등 명작' }
         ],
-        tts: '이 책은 김가온 작가의 줄글책 오늘의 문장입니다. 삶을 단단하게 하는 한 줄의 힘과 깊은 사유의 기록을 담고 있습니다. 구조적 통찰을 추구하는 INTJ 탐구자형 독서가에게 최적의 책입니다.'
+        tts: '이 책은 김가온 작가의 줄글책 오늘의 문장입니다. 마음의 눈으로 세상을 바라보는 따뜻한 위로와 사유의 기록을 담고 있습니다. 별빛을 관측하는 탐구자형 독서가에게 최적의 책이며, 나의 라임오렌지나무와 마당을 나온 암탉을 함께 추천합니다.'
       },
       comic: {
         category: '만화책',
@@ -870,16 +930,16 @@
         coverKey: 'book-cover-comic',
         confidence: '98.1%',
         probs: { picture: '1.1%', text: '0.8%', comic: '98.1%' },
-        mbti: 'ENTP 모험가형 독서가',
-        mbtiDesc: '역동적인 컷 연출과 박진감 넘치는 미지의 서사에서 강렬한 에너지를 얻는 탐험형 독서 유형',
-        target: '모험과 미스터리를 사랑하는 초등 고학년 및 청소년',
+        mbti: '비밀 서가의 개척자 (ENTP형 독서가)',
+        mbtiDesc: '역동적인 컷 연출과 박진감 넘치는 미지의 서사에서 용기를 얻는 신비로운 모험가 유형',
+        target: '모험과 상상력을 사랑하는 초등 고학년 및 청소년 독자',
         theme: '비밀 서가 뒤에 숨겨진 또 다른 차원의 세계로 뛰어드는 유쾌한 탐험기',
         similar: [
-          { title: '1. 슬램덩크 완전판', desc: '코트 위에서 타오르는 청춘과 투지' },
-          { title: '2. 하이큐!! (후루다테 하루이치)', desc: '성장과 연대가 빚어내는 승부의 열기' },
-          { title: '3. 신의 탑 (SIU)', desc: '끝없이 펼쳐지는 장대한 세계관과 도전' }
+          { title: '1. 마법천자문 (시리얼)', desc: '신나는 한자 마법과 용기 있는 모험기' },
+          { title: '2. 흔한남매 (백난도)', desc: '유쾌한 웃음과 현실 공감 초등 일상 만화' },
+          { title: '3. 만화 그리스 로마 신화 (홍은영)', desc: '상상력을 자극하는 흥미진진한 신화 대모험' }
         ],
-        tts: '이 책은 마음책방의 모험 만화 도서관 탐험 1권입니다. 신비로운 도서관 서가 속 비밀을 풀어나가는 박진감 넘치는 모험을 그렸습니다. 호기심과 에너지가 넘치는 ENTP 모험가형 독서가에게 추천합니다.'
+        tts: '이 책은 마음책방의 모험 만화 도서관 탐험 1권입니다. 신비로운 도서관 서가 속 비밀을 풀어나가는 박진감 넘치는 모험을 그렸습니다. 비밀 서가의 개척자형 독서가에게 추천하며, 마법천자문과 흔한남매를 함께 추천합니다.'
       }
     };
 
@@ -1575,11 +1635,31 @@
     function openBenchmarkModal() {
       document.getElementById('benchmarkModal').classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+      switchBenchmarkTab('metrics');
     }
 
     function closeBenchmarkModal() {
       document.getElementById('benchmarkModal').classList.add('hidden');
       document.body.style.overflow = 'auto';
+    }
+
+    function switchBenchmarkTab(tab) {
+      const metricsEl = document.getElementById('benchmarkTabMetrics');
+      const notesEl = document.getElementById('benchmarkTabNotes');
+      const btnMetrics = document.getElementById('tabBtnMetrics');
+      const btnNotes = document.getElementById('tabBtnNotes');
+
+      if (tab === 'metrics') {
+        metricsEl.classList.remove('hidden');
+        notesEl.classList.add('hidden');
+        btnMetrics.className = 'brutal-btn bg-coral text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-brutal-sm transition-all';
+        btnNotes.className = 'brutal-btn bg-stage text-charcoal font-black text-xs px-3 py-1.5 rounded-xl border border-charcoal transition-all';
+      } else {
+        metricsEl.classList.add('hidden');
+        notesEl.classList.remove('hidden');
+        btnNotes.className = 'brutal-btn bg-coral text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-brutal-sm transition-all';
+        btnMetrics.className = 'brutal-btn bg-stage text-charcoal font-black text-xs px-3 py-1.5 rounded-xl border border-charcoal transition-all';
+      }
     }
   </script>
 </body>
