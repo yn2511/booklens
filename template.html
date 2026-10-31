@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BookLens AI - 3단계 모바일 스마트 북 렌즈</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            archive: '#EFECE6',
+            cream: '#FFFDF7',
+            stage: '#F4EFE6',
+            charcoal: '#1E1E1E',
+            navy: '#283845',
+            coral: '#E26D5C',
+            crayon: '#3A86FF',
+            mustard: '#E09F3E',
+            mint: '#52B788'
+          },
+          boxShadow: {
+            brutal: '4px 4px 0px #1E1E1E',
+            'brutal-sm': '2px 2px 0px #1E1E1E',
+            'brutal-lg': '6px 6px 0px #1E1E1E'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap');
+    body {
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      background-color: #EFECE6;
+      background-image: radial-gradient(#D6D1C7 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: #1E1E1E;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-mono { font-family: 'Space Mono', monospace; }
+    
+    .brutal-card {
+      border: 3px solid #1E1E1E;
+      box-shadow: 4px 4px 0px #1E1E1E;
+    }
+    .brutal-btn {
+      border: 3px solid #1E1E1E;
+      box-shadow: 3px 3px 0px #1E1E1E;
+      transition: all 0.1s ease;
+    }
+    .brutal-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #1E1E1E;
+    }
+    
+    @keyframes floatBook {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(-1.5deg); }
+    }
+    @keyframes scanLens {
+      0%, 100% { transform: translate(0px, 0px) rotate(0deg); }
+      50% { transform: translate(-6px, 6px) rotate(4deg); }
+    }
+    @keyframes laserSweep {
+      0% { top: 5%; opacity: 0; }
+      15% { opacity: 0.9; }
+      85% { opacity: 0.9; }
+      100% { top: 90%; opacity: 0; }
+    }
+    @keyframes spinVinyl {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes stampHit {
+      0% { transform: scale(2.2) rotate(-25deg); opacity: 0; }
+      60% { transform: scale(0.9) rotate(8deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    
+    .animate-float-book { animation: floatBook 3.2s ease-in-out infinite; }
+    .animate-scan-lens { animation: scanLens 2.8s ease-in-out infinite; }
+    .animate-laser { animation: laserSweep 2s ease-in-out infinite; }
+    .animate-vinyl { animation: spinVinyl 3.5s linear infinite; }
+    .animate-stamp { animation: stampHit 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
+    @keyframes popIn {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop-in { animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
+    .progress-striped {
+      background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
+      background-size: 1rem 1rem;
+    }
+    
+    #webcamVideo {
+      aspect-ratio: 4/3 !important;
+      object-fit: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-3 sm:p-5 select-none">
+
+  <!-- Top Global Header -->
+  <header class="w-full max-w-lg md:max-w-xl flex items-center justify-between mb-3 bg-cream p-2.5 sm:p-3 rounded-2xl brutal-card">
+    <div class="flex items-center gap-2">
+      <img id="headerLogo" src="" alt="Logo" class="w-8 h-8 object-contain">
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-black text-base sm:text-lg tracking-tight text-charcoal">BookLens.ai</span>
+          <span class="font-mono text-[10px] bg-mustard/20 text-charcoal px-1.5 py-0.5 rounded border border-charcoal font-bold">v3.2</span>
+        </div>
+        <div class="text-[10px] text-charcoal/60 font-bold hidden sm:block">ResNet-18 + Web Audio & Book Search</div>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-1.5">
+      <!-- Library Silent Mode: Sound Mute Toggle -->
+      <button id="soundToggleBtn" onclick="toggleMute()" class="brutal-btn bg-white hover:bg-archive text-charcoal font-black text-xs p-1.5 rounded-xl flex items-center justify-center border-2 border-charcoal shadow-brutal-sm" title="소리 토글">
+        <img id="soundToggleIcon" src="" alt="Sound" class="w-4 h-4 object-contain hidden">
+        <svg id="soundSvgOn" class="w-4 h-4 text-charcoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+        <svg id="soundSvgOff" class="w-4 h-4 text-charcoal/50 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+      </button>
+
+      <!-- Library Guide Onboarding Trigger -->
+      <button onclick="openOnboardingModal()" class="brutal-btn bg-teal text-white font-black text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-brutal-sm" title="도서관 탐험 가이드">
+        <img id="headerGuideIcon" src="" alt="Guide" class="w-3.5 h-3.5 object-contain hidden">
+        <svg id="guideSvg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>가이드</span>
+      </button>
+
+      <!-- Academic Benchmark Modal Trigger -->
+      <button onclick="openBenchmarkModal()" class="brutal-btn bg-coral text-white font-black text-xs px-2 py-1.5 rounded-xl flex items-center gap-1 shadow-brutal-sm">
+        <img id="headerChartIcon" src="" alt="Chart" class="w-3.5 h-3.5 object-contain">
+        <span class="hidden sm:inline">성능표</span>
+      </button>
+
+      <div class="bg-archive text-charcoal font-bold text-[10px] px-1.5 py-1.5 rounded-xl border-2 border-charcoal">
+        가천대
+      </div>
+    </div>
+  </header>
+
+  <!-- Step Progress Indicator -->
+  <div class="w-full max-w-lg md:max-w-xl flex items-center justify-between px-2 mb-3">
+    <div id="stepPill-1" class="flex-1 text-center py-1 rounded-lg border-2 border-charcoal bg-coral text-white font-black text-xs mr-1 transition-all shadow-brutal-sm">
+      1. 도서 스캔
+    </div>
+    <div id="stepPill-2" class="flex-1 text-center py-1 rounded-lg border-2 border-charcoal bg-cream text-charcoal/50 font-bold text-xs mx-1 transition-all">
+      2. 실환경 분석
+    </div>
+    <div id="stepPill-3" class="flex-1 text-center py-1 rounded-lg border-2 border-charcoal bg-cream text-charcoal/50 font-bold text-xs ml-1 transition-all">
+      3. 도슨트 리포트
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER (3 STEPS) -->
+  <main class="w-full max-w-lg md:max-w-xl">
+
+    <!-- ========================================== -->
+    <!-- STEP 1: 도서 스캔 뷰 (카메라 & 뷰파인더) -->
+    <!-- ========================================== -->
+    <section id="stepView-1" class="w-full flex flex-col gap-3">
+      
+      <!-- Viewfinder Stage -->
+      <div class="w-full bg-stage rounded-2xl brutal-card relative overflow-hidden flex flex-col items-center justify-center p-4 min-h-[340px]">
+        
+        <!-- Precision Corner Brackets -->
+        <img id="cornerTL" src="" alt="TL" class="absolute top-3 left-3 w-8 h-8 pointer-events-none z-20">
+        <img id="cornerTR" src="" alt="TR" class="absolute top-3 right-3 w-8 h-8 pointer-events-none z-20">
+        <img id="cornerBL" src="" alt="BL" class="absolute bottom-3 left-3 w-8 h-8 pointer-events-none z-20">
+        <img id="cornerBR" src="" alt="BR" class="absolute bottom-3 right-3 w-8 h-8 pointer-events-none z-20">
+        
+        <!-- Top Status Indicator inside Frame -->
+        <div class="absolute top-4 inset-x-0 flex justify-center z-20">
+          <span id="scanStatusBadge" class="bg-charcoal text-cream text-[10px] font-mono px-3 py-1 rounded-full font-bold shadow-sm flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-mint animate-pulse"></span>
+            <span id="scanStatusText">CAMERA READY · 대상 도서 대기</span>
+          </span>
+        </div>
+
+        <!-- Scanning Laser Beam -->
+        <div id="laserBeam" class="hidden absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-coral to-transparent z-30 pointer-events-none animate-laser"></div>
+
+        <!-- Live Video Element -->
+        <video id="webcamVideo" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover z-10" style="aspect-ratio: 4/3; object-fit: cover; width: 100%; height: 100%;"></video>
+        <!-- Shutter Aperture & Flash Overlays -->
+        <div id="shutterFlashOverlay" class="hidden absolute inset-0 bg-white z-40 pointer-events-none transition-opacity duration-150"></div>
+        <div id="shutterApertureOverlay" class="hidden absolute inset-0 flex items-center justify-center z-35 pointer-events-none">
+          <img id="shutterAnimImg" src="" alt="Shutter" class="w-48 h-48 object-contain drop-shadow-lg">
+        </div>
+
+        <!-- Preview Uploaded Image -->
+        <img id="uploadedPreview" src="" alt="Uploaded Cover" class="hidden absolute inset-0 w-full h-full object-contain p-6 z-10 bg-stage">
+
+        <!-- Default Center Stage: Animated Book + Mascot Face + Hovering Lens -->
+        <div id="viewfinderIdleStage" class="relative w-64 h-52 flex items-center justify-center pointer-events-none">
+          <img id="bookShadow" src="" alt="Shadow" class="absolute bottom-4 w-44 object-contain opacity-40">
+          
+          <div class="absolute bottom-7 w-40 animate-float-book flex items-center justify-center">
+            <img id="viewfinderBookImg" src="" alt="Open Book" class="w-full object-contain drop-shadow-md">
+            <div class="absolute inset-0 flex items-center justify-center pt-1">
+              <img id="viewfinderFaceImg" src="" alt="Face" class="w-[42%] object-contain">
+            </div>
+          </div>
+
+          <div class="absolute top-2 right-4 w-24 animate-scan-lens z-20">
+            <img id="lensRingOuter" src="" alt="Magnifier" class="w-full object-contain filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.2)]">
+          </div>
+        </div>
+
+        <!-- Viewfinder Crosshair Guide -->
+        <div class="absolute inset-x-8 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none opacity-30 z-10">
+          <div class="w-4 h-0.5 bg-charcoal"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-charcoal"></div>
+          <div class="w-4 h-0.5 bg-charcoal"></div>
+        </div>
+
+        <!-- Bottom Guide Text -->
+        <div class="absolute bottom-3 inset-x-0 text-center z-20">
+          <p class="text-[11px] font-bold text-charcoal/70 bg-cream/90 px-3 py-0.5 rounded-full inline-block border border-charcoal/20">
+            프레임 안에 도서 표지를 맞추고 셔터를 누르세요
+          </p>
+        </div>
+      </div>
+
+      
+      <!-- OOD (Out-of-Distribution) / Non-Book Floor Detection Alert Box -->
+      <div id="nonBookAlertBox" class="hidden bg-coral/20 border-3 border-charcoal rounded-2xl p-4 brutal-card flex flex-col gap-2.5 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="font-black text-sm text-charcoal flex items-center gap-2">
+            <img id="nonBookAlertIcon" src="" alt="Reject" class="w-5 h-5 object-contain">
+            <span>도서 표지 미감지 (바닥/배경 감지됨)</span>
+          </span>
+          <span class="font-mono text-[10px] bg-charcoal text-cream font-bold px-2 py-0.5 rounded">OOD REJECT</span>
+        </div>
+        
+        <p class="text-xs text-charcoal/90 font-bold leading-relaxed">
+          카메라에 비친 화면이 <span class="text-coral underline underline-offset-2">바닥, 벽 또는 평면 배경</span>으로 감지되었습니다.<br>
+          우리 모델은 책이 아닌 배경을 도서로 억지 분류하지 않도록 차단 필터가 작동 중입니다.
+        </p>
+
+        <div class="bg-cream/90 p-2.5 rounded-xl border-2 border-charcoal/30 text-[11px] font-bold text-charcoal flex flex-col gap-1">
+          <div class="flex justify-between font-mono text-[10px] text-charcoal/70">
+            <span>• 측정 휘도 대비도: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (도서 기준: 30 이상)</span>
+            <span>• 엣지 밀도: <b id="nonBookEdge" class="text-charcoal font-black">1.1%</b> (도서 기준: 2.5% 이상)</span>
+          </div>
+          <div class="text-charcoal/80 mt-0.5">
+            💡 <strong>가이드:</strong> 뷰파인더 십자선 안에 <strong>실제 책 표지</strong>를 맞추고 다시 셔터를 눌러주세요!
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="dismissNonBookAlert()" class="flex-1 brutal-btn bg-mustard text-charcoal font-black text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-brutal-sm">
+            <img id="nonBookResetIcon" src="" alt="Reset" class="w-4 h-4 object-contain">
+            <span>책 표지 다시 맞추기</span>
+          </button>
+          <button onclick="forceProceedAnalysis()" class="brutal-btn bg-stage text-charcoal/70 font-bold text-[11px] py-2.5 px-3 rounded-xl border-2 border-charcoal">
+            그래도 강제 분석
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Shutter & Input Controls -->
+      <div class="flex items-center gap-2">
+        <button id="shutterBtn" onclick="triggerWebcamOrScan()" class="flex-1 brutal-btn bg-mustard hover:bg-mustard/90 text-charcoal font-black text-base py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2.5">
+          <img id="shutterBtnIcon" src="" alt="Shutter" class="w-7 h-7 object-contain filter drop-shadow-sm">
+          <span id="shutterBtnText">웹캠 실시간 셔터</span>
+        </button>
+
+        <label class="brutal-btn bg-cream hover:bg-archive text-charcoal font-black text-sm py-3.5 px-4 rounded-2xl cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap shadow-brutal">
+          <img id="btnAlbumIcon" src="" alt="Album" class="w-5 h-5 object-contain">
+          <span>앨범 선택</span>
+          <input id="coverFileInput" type="file" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+        </label>
+      </div>
+
+      <!-- NEW: 실시간 인터넷 도서 검색 연동 바 (Internet Book Search Engine) -->
+      <div class="bg-cream rounded-2xl p-3.5 brutal-card flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-charcoal flex items-center gap-1.5">
+            <img id="searchBarLensIcon" src="" alt="Search" class="w-4 h-4 object-contain">
+            <span>인터넷 도서 검색 & 실시간 도슨트 생성</span>
+          </span>
+          <span class="font-mono text-[9px] bg-crayon text-white font-black px-1.5 py-0.5 rounded">OPEN BOOK DB</span>
+        </div>
+
+        <div class="flex gap-1.5">
+          <input id="bookSearchInput" type="text" placeholder="도서명 검색 (예: 어린 왕자, 데미안, 슬램덩크...)" class="flex-1 bg-stage border-2 border-charcoal rounded-xl px-3 py-2 text-xs font-bold text-charcoal focus:outline-none focus:border-coral" onkeydown="if(event.key==='Enter') searchInternetBook()">
+          <button onclick="searchInternetBook()" class="brutal-btn bg-crayon text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-1.5">
+            <img id="searchLensIcon" src="" alt="Search" class="w-4 h-4 object-contain">
+            <span id="searchBtnIcon">검색</span>
+          </button>
+        </div>
+
+        <!-- Search Result Preview Card (Dynamic) -->
+        <div id="searchResultPreview" class="hidden bg-stage rounded-xl p-2.5 border-2 border-charcoal flex items-center justify-between gap-2 transition-all">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <img id="searchResultImg" src="" alt="Book Cover" class="w-10 h-14 object-cover rounded border border-charcoal flex-shrink-0 bg-white">
+            <div class="min-w-0">
+              <div id="searchResultTitle" class="font-black text-xs text-charcoal truncate">도서 제목</div>
+              <div id="searchResultDesc" class="text-[10px] text-charcoal/70 truncate font-bold">도서 설명</div>
+              <div class="text-[9px] font-mono text-coral font-black" id="searchResultCategory">분류: 줄글책 (소설/인문)</div>
+            </div>
+          </div>
+          <button id="searchLaunchBtn" onclick="launchBookDocentFromSearch()" class="brutal-btn bg-coral text-white font-black text-xs px-2.5 py-2 rounded-lg flex-shrink-0 whitespace-nowrap">
+            도슨트 생성 ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Test Samples (과제 3 데이터셋 연계) -->
+      <div class="bg-cream rounded-2xl p-3.5 brutal-card flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-charcoal flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-coral inline-block border border-charcoal"></span>
+            <span>과제 3 데이터셋 빠른 테스트</span>
+          </span>
+          <span class="font-mono text-[10px] text-charcoal/80 font-bold">CLICK TO TEST</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <!-- Sample 1 -->
+          <button onclick="startAnalysisPreset('picture')" class="brutal-btn bg-stage hover:bg-coral/10 p-2 rounded-xl flex flex-col items-center gap-1.5 text-center group">
+            <div class="w-12 h-16 rounded overflow-hidden border border-charcoal bg-white flex items-center justify-center relative">
+              <img id="sampleCoverPicture" src="" alt="달빛 산책" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+              <img id="sampleSparkle1" src="" alt="Sparkle" class="absolute -top-1 -right-1 w-4 h-4 object-contain">
+            </div>
+            <div>
+              <span class="font-mono text-[9px] bg-coral/20 text-coral font-black px-1 rounded">그림책</span>
+              <div class="font-black text-xs text-charcoal truncate max-w-[80px]">달빛 산책</div>
+            </div>
+          </button>
+
+          <!-- Sample 2 -->
+          <button onclick="startAnalysisPreset('text')" class="brutal-btn bg-stage hover:bg-crayon/10 p-2 rounded-xl flex flex-col items-center gap-1.5 text-center group">
+            <div class="w-12 h-16 rounded overflow-hidden border border-charcoal bg-white flex items-center justify-center relative">
+              <img id="sampleCoverText" src="" alt="오늘의 문장" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+              <img id="sampleSparkle2" src="" alt="Sparkle" class="absolute -top-1 -right-1 w-4 h-4 object-contain">
+            </div>
+            <div>
+              <span class="font-mono text-[9px] bg-crayon/20 text-crayon font-black px-1 rounded">줄글책</span>
+              <div class="font-black text-xs text-charcoal truncate max-w-[80px]">오늘의 문장</div>
+            </div>
+          </button>
+
+          <!-- Sample 3 -->
+          <button onclick="startAnalysisPreset('comic')" class="brutal-btn bg-stage hover:bg-mustard/10 p-2 rounded-xl flex flex-col items-center gap-1.5 text-center group">
+            <div class="w-12 h-16 rounded overflow-hidden border border-charcoal bg-white flex items-center justify-center relative">
+              <img id="sampleCoverComic" src="" alt="도서관 탐험 1" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+              <img id="sampleSparkle3" src="" alt="Sparkle" class="absolute -top-1 -right-1 w-4 h-4 object-contain">
+            </div>
+            <div>
+              <span class="font-mono text-[9px] bg-mustard/20 text-mustard font-black px-1 rounded">만화책</span>
+              <div class="font-black text-xs text-charcoal truncate max-w-[80px]">도서관 탐험</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- STEP 2: 실환경 분석 인디케이터 (애니메이션) -->
+    <!-- ========================================== -->
+    <section id="stepView-2" class="hidden w-full flex flex-col gap-3">
+      
+      <div class="w-full bg-cream rounded-2xl brutal-card p-5 flex flex-col items-center text-center">
+        
+        <div class="relative w-44 h-36 flex items-center justify-center mb-2">
+          <img id="step2BookShadow" src="" alt="Shadow" class="absolute bottom-1 w-36 opacity-30">
+          <div class="w-32 animate-pulse flex items-center justify-center relative">
+            <img id="step2BookBase" src="" alt="Book Base" class="w-full object-contain">
+            <div class="absolute inset-0 flex items-center justify-center pt-1">
+              <img id="step2FaceScanning" src="" alt="Scanning Face" class="w-[42%] object-contain">
+            </div>
+          </div>
+          <div class="absolute inset-0 rounded-full border-2 border-coral/30 animate-ping pointer-events-none"></div>
+        </div>
+
+        <h2 class="font-black text-lg text-charcoal mb-1">ResNet-18 실환경 심층 추론 중</h2>
+        <p class="text-xs text-charcoal/70 font-bold mb-4">조명 반사 및 각도 왜곡을 실시간 정규화하고 있습니다</p>
+
+        <div class="w-full bg-stage rounded-xl border-2 border-charcoal h-6 p-0.5 overflow-hidden mb-5">
+          <div id="analysisProgressBar" class="h-full bg-coral rounded-lg progress-striped transition-all duration-300 w-[5%] flex items-center justify-end pr-2">
+            <span id="analysisProgressText" class="font-mono text-[10px] text-white font-black">5%</span>
+          </div>
+        </div>
+
+        <div class="w-full flex flex-col gap-2.5 text-left font-bold text-xs">
+          
+          <div id="pipeStep-1" class="p-2.5 rounded-xl border-2 border-charcoal/30 bg-white flex items-center justify-between transition-all">
+            <div class="flex items-center gap-2.5">
+              <img id="pipeIcon-1" src="" alt="Step 1" class="w-6 h-6 object-contain flex-shrink-0">
+              <div>
+                <div class="font-black text-charcoal">1단계: 원근 왜곡 및 조명 반사 보정</div>
+                <div class="text-[10px] text-charcoal/70 font-mono font-bold">ColorJitter + RandomPerspective Normalization</div>
+              </div>
+            </div>
+            <div id="pipeStatusBox-1" class="flex items-center gap-1 bg-charcoal/10 px-2 py-1 rounded-lg border border-charcoal/20">
+              <img id="pipeStatusImg-1" src="" alt="Status" class="w-4 h-4 object-contain">
+              <span id="pipeBadge-1" class="font-mono text-[10px] font-black text-charcoal/70">대기중</span>
+            </div>
+          </div>
+
+          <div id="pipeStep-2" class="p-2.5 rounded-xl border-2 border-charcoal/30 bg-white flex items-center justify-between transition-all">
+            <div class="flex items-center gap-2.5">
+              <img id="pipeIcon-2" src="" alt="Step 2" class="w-6 h-6 object-contain flex-shrink-0">
+              <div>
+                <div class="font-black text-charcoal">2단계: ResNet-18 특징 벡터 추출</div>
+                <div class="text-[10px] text-charcoal/70 font-mono font-bold">2048-dim Deep Conv Latent Feature Mapping</div>
+              </div>
+            </div>
+            <div id="pipeStatusBox-2" class="flex items-center gap-1 bg-charcoal/10 px-2 py-1 rounded-lg border border-charcoal/20">
+              <img id="pipeStatusImg-2" src="" alt="Status" class="w-4 h-4 object-contain">
+              <span id="pipeBadge-2" class="font-mono text-[10px] font-black text-charcoal/70">대기중</span>
+            </div>
+          </div>
+
+          <div id="pipeStep-3" class="p-2.5 rounded-xl border-2 border-charcoal/30 bg-white flex items-center justify-between transition-all">
+            <div class="flex items-center gap-2.5">
+              <img id="pipeIcon-3" src="" alt="Step 3" class="w-6 h-6 object-contain flex-shrink-0">
+              <div>
+                <div class="font-black text-charcoal">3단계: 형태 분류 및 인터넷 도서 도슨트 합성</div>
+                <div class="text-[10px] text-charcoal/70 font-mono font-bold">Softmax Probabilities & Real-time Curation</div>
+              </div>
+            </div>
+            <div id="pipeStatusBox-3" class="flex items-center gap-1 bg-charcoal/10 px-2 py-1 rounded-lg border border-charcoal/20">
+              <img id="pipeStatusImg-3" src="" alt="Status" class="w-4 h-4 object-contain">
+              <span id="pipeBadge-3" class="font-mono text-[10px] font-black text-charcoal/70">대기중</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- STEP 3: 정돈된 도슨트 리포트 (종합 결과) -->
+    <!-- ========================================== -->
+    <section id="stepView-3" class="hidden w-full flex flex-col gap-3">
+      
+      <div class="flex items-center justify-between">
+        <button onclick="goToStep(1)" class="brutal-btn bg-cream hover:bg-archive text-charcoal font-black text-xs py-2 px-3 rounded-xl flex items-center gap-1.5">
+          <img id="rescanTopIcon" src="" alt="Reset" class="w-4 h-4 object-contain">
+          <span>다른 책 스캔하기</span>
+        </button>
+
+        <div id="resultCategoryPill" class="bg-coral text-white font-black text-xs py-1.5 px-3 rounded-xl border-2 border-charcoal shadow-brutal-sm flex items-center gap-1.5">
+          <img id="genreBadgeImg" src="" alt="Badge" class="w-5 h-5 object-contain">
+          <span id="genreBadgeLabel">그림책 (Picture Book)</span>
+        </div>
+      </div>
+
+      <!-- Main Report Card -->
+      <div class="bg-cream rounded-2xl p-4 brutal-card flex flex-col gap-4">
+        
+        <!-- Hero: Book Cover + Happy Mascot Face + Title -->
+        <div class="flex items-center gap-3 border-b-2 border-charcoal pb-4">
+          <div class="w-20 h-28 rounded-xl overflow-hidden border-2 border-charcoal bg-stage flex-shrink-0 relative shadow-brutal-sm">
+            <img id="reportCoverImg" src="" alt="Scanned Cover" class="w-full h-full object-cover">
+            <img id="reportSparkle" src="" alt="Sparkle" class="absolute -top-1 -right-1 w-5 h-5">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span id="reportConfBadge" class="font-mono text-[10px] bg-coral text-white font-black px-1.5 py-0.5 rounded">97.4% 확신</span>
+              <span class="font-mono text-[10px] text-charcoal/60 font-bold" id="reportCode">PIC-813.8</span>
+            </div>
+            <h2 id="reportTitle" class="font-black text-lg text-charcoal leading-snug truncate">달빛 산책</h2>
+            <p id="reportAuthor" class="text-xs text-charcoal/70 font-bold mb-2">이현지 작가</p>
+            
+            <div class="inline-flex items-center gap-1.5 bg-stage px-2 py-1 rounded-lg border border-charcoal">
+              <img id="reportHappyFace" src="" alt="Happy Face" class="w-5 h-3 object-contain">
+              <span class="text-[10px] font-black text-charcoal">표지 인식 & 도슨트 완료!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Softmax 확신도 차트 -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-black text-charcoal">도서 형태 확신도 (Softmax 차트)</span>
+            <span class="font-mono text-[10px] text-charcoal/60 font-bold">ResNet-18 Robust</span>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div>
+              <div class="flex justify-between text-[11px] font-bold mb-0.5">
+                <span class="text-coral">그림책 (Picture Book)</span>
+                <span id="probText-picture" class="font-mono text-coral font-black">97.4%</span>
+              </div>
+              <div class="w-full bg-stage rounded-full h-2.5 border border-charcoal overflow-hidden">
+                <div id="probBar-picture" class="bg-coral h-full rounded-full transition-all duration-500" style="width: 97.4%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-bold mb-0.5">
+                <span class="text-crayon">줄글책 (Text Book)</span>
+                <span id="probText-text" class="font-mono text-crayon font-black">1.8%</span>
+              </div>
+              <div class="w-full bg-stage rounded-full h-2.5 border border-charcoal overflow-hidden">
+                <div id="probBar-text" class="bg-crayon h-full rounded-full transition-all duration-500" style="width: 1.8%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-bold mb-0.5">
+                <span class="text-mustard">만화책 (Comic Book)</span>
+                <span id="probText-comic" class="font-mono text-mustard font-black">0.8%</span>
+              </div>
+              <div class="w-full bg-stage rounded-full h-2.5 border border-charcoal overflow-hidden">
+                <div id="probBar-comic" class="bg-mustard h-full rounded-full transition-all duration-500" style="width: 0.8%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ambiguity Alert Box (Selective Classification) -->
+          <div id="ambiguityAlertBox" class="hidden bg-mustard/20 border-2 border-charcoal rounded-xl p-2.5 mt-2.5 text-left shadow-brutal-sm">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-black text-xs text-charcoal flex items-center gap-1.5">
+                <img id="ambiguityWarningIcon" src="" alt="Warning" class="w-5 h-5 object-contain">
+                <span>복합 특징 표지 감지</span>
+              </span>
+              <span class="font-mono text-[9px] bg-charcoal text-cream font-bold px-1.5 py-0.5 rounded" id="ambiguityMarginBadge">MARGIN 3.8%p</span>
+            </div>
+            <p class="text-[11px] text-charcoal/90 font-bold leading-relaxed mb-1">
+              일러스트와 텍스트가 모두 많은 복합 도서입니다. <strong>고주파 텍스트 밀도 보정 헤드</strong>를 활성화하여 오분류를 방어했습니다.
+            </p>
+            <div class="text-[10px] font-mono text-charcoal/70 bg-white/70 p-1.5 rounded border border-charcoal/20">
+              • 1위 판정: <span id="ambiguityWinner" class="font-bold text-coral">줄글책</span> | 2위 후보: <span id="ambiguityRunnerUp">그림책</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: AI 독서 페르소나 (Book MBTI) & 권장 독자 -->
+        <div class="bg-stage rounded-xl p-3 border-2 border-charcoal">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-mono text-charcoal/60 font-bold">AI 독서 페르소나</span>
+            <span class="text-[10px] font-mono bg-charcoal text-cream font-bold px-1.5 py-0.5 rounded">MATCHED</span>
+          </div>
+          <div id="reportMbti" class="font-black text-sm text-coral mb-1">숲속의 감성 탐험가 (ENFP형 독서가)</div>
+          <p id="reportMbtiDesc" class="text-xs text-charcoal/80 font-bold leading-relaxed mb-2">
+            풍부한 상상력과 따뜻한 감성으로 시각적 서사를 깊이 음미하는 창의적 탐험가 유형
+          </p>
+          <div class="pt-2 border-t border-charcoal/20 flex flex-col gap-1 text-[11px]">
+            <div><span class="font-black text-charcoal">권장 연령:</span> <span id="reportTarget">초등 전학년 및 성인 감성 독자</span></div>
+            <div><span class="font-black text-charcoal">핵심 테마:</span> <span id="reportTheme">푸른 달빛 숲길을 곰과 함께 거닐며 나누는 자연의 온기와 서정적 위로</span></div>
+          </div>
+        </div>
+
+        <!-- Section 3: 도슨트 브리핑 & 레트로 오디오 LP -->
+        <div class="bg-navy text-cream rounded-xl p-3.5 border-2 border-charcoal flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-mint animate-pulse"></span>
+              <span class="font-mono text-[11px] text-cream font-black">RETRO AUDIO DOCENT</span>
+            </div>
+            <span class="font-mono text-[10px] text-cream/60">00:45</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="relative w-16 h-16 flex-shrink-0">
+              <img id="vinylDisc" src="" alt="Vinyl" class="w-full h-full object-contain">
+              <img id="tonearm" src="" alt="Tonearm" class="absolute -top-1 -right-1 w-7 h-10 object-contain transition-transform duration-300">
+            </div>
+
+            <div class="flex-1 flex flex-col gap-1">
+              <button id="ttsPlayBtn" onclick="toggleTtsSpeech()" class="brutal-btn bg-mustard text-charcoal font-black text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-2 w-full">
+                <img id="ttsPlayIcon" src="" alt="Play" class="w-4 h-4 object-contain">
+                <span id="ttsPlayText">도슨트 해설 낭독 듣기</span>
+              </button>
+              <div id="ttsAudioVisualizer" class="hidden items-center justify-center py-1">
+                <img id="ttsWaveImg" src="" alt="Equalizer" class="h-6 object-contain">
+              </div>
+              <span class="text-[10px] text-cream/70 font-bold text-center">Web Speech API 브라우저 합성 엔진</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: AI 연계 추천 도서 3선 -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-black text-charcoal">AI 연계 추천 도서 3선</span>
+            <span class="font-mono text-[10px] bg-mustard/30 text-charcoal px-2 py-0.5 rounded font-bold border border-charcoal/30">초등 권장 · 성장 문학</span>
+          </div>
+          <div id="reportSimilarBooks" class="flex flex-col gap-1.5"></div>
+        </div>
+
+        <!-- Section 5: 나래도서관 인생 도서관 대출증 (Pass Ticket) -->
+        <div id="libraryPassTicket" class="bg-stage rounded-xl p-3.5 border-2 border-charcoal relative overflow-hidden bg-cover bg-center">
+          <div class="flex justify-between items-center border-b border-dashed border-charcoal pb-1.5 mb-2">
+            <span class="font-mono text-[10px] font-black text-charcoal">GACHON LIB PASS</span>
+            <span class="font-mono text-[10px] text-coral font-black">BOOKLENS-202533791-NA RAE</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-[10px] mb-3">
+            <div><span class="text-charcoal/60 font-mono">BOOK TITLE:</span> <div id="ticketTitle" class="font-black text-charcoal truncate">달빛 산책 (그림책)</div></div>
+            <div><span class="text-charcoal/60 font-mono">BORROWER:</span> <div class="font-black text-charcoal">윤나래 (202533791)</div></div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <img id="ticketBarcode" src="" alt="Barcode" class="h-9 object-contain">
+            
+            <div class="relative w-16 h-16 flex items-center justify-center">
+              <button id="stampActionBtn" onclick="stampTicket()" class="brutal-btn bg-coral text-white font-black text-[10px] py-1.5 px-2 rounded-lg whitespace-nowrap">
+                도장 쾅!
+              </button>
+              <img id="ticketSealImg" src="" alt="Library Stamp" class="hidden absolute inset-0 w-full h-full object-contain pointer-events-none">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Rescan Sticky Action -->
+      <button onclick="goToStep(1)" class="brutal-btn bg-mustard text-charcoal font-black text-sm py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-brutal">
+        <img id="rescanBottomIcon" src="" alt="Reset" class="w-5 h-5 object-contain">
+        <span>새로운 도서 스캔하기</span>
+      </button>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: 도서관 탐험 인트로 온보딩 -->
+  <!-- ========================================== -->
+  <div id="onboardingModal" class="hidden fixed inset-0 bg-charcoal/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-cream w-full max-w-md rounded-2xl brutal-card p-5 max-h-[90vh] overflow-y-auto flex flex-col gap-4 text-charcoal animate-pop-in">
+      
+      <!-- Top Splash: Floating Book Mascot -->
+      <div class="flex flex-col items-center justify-center text-center pt-2">
+        <div class="relative w-24 h-24 mb-2 flex items-center justify-center animate-float-book">
+          <img id="onboardingMascotBook" src="" alt="Floating Book" class="w-20 h-20 object-contain drop-shadow-md">
+          <img id="onboardingMascotFace" src="" alt="Smile Face" class="absolute inset-0 m-auto w-10 h-6 object-contain">
+        </div>
+        <div class="inline-block bg-mustard/30 text-charcoal px-2.5 py-0.5 rounded-full border border-charcoal font-black text-[11px] mb-1">
+          스마트 도서관 북 도슨트
+        </div>
+        <h2 class="text-xl font-black text-charcoal tracking-tight">BookLens AI에 오신 것을 환영해요!</h2>
+        <p class="text-xs text-charcoal/70 font-bold mt-1">인공지능 비전과 공공 도서 DB가 안내하는 즐거운 독서 탐험</p>
+      </div>
+
+      <!-- Feature 3 Cards -->
+      <div class="flex flex-col gap-2.5">
+        <!-- Feature 1: 실환경 스캔 -->
+        <div class="bg-white rounded-xl p-3 border-2 border-charcoal shadow-brutal-sm flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-coral/20 border border-charcoal flex-shrink-0 flex items-center justify-center">
+            <img id="onboardingScanIcon" src="" alt="Scan" class="w-6 h-6 object-contain">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-black text-xs text-charcoal flex items-center justify-between">
+              <span>실환경 적응형 스캔</span>
+              <span class="text-[10px] font-mono text-coral font-bold">Sobel Edge + CV</span>
+            </div>
+            <p class="text-[11px] text-charcoal/70 font-medium leading-relaxed mt-0.5">
+              조명 반사와 각도 왜곡을 보정하고, 바닥이나 엉뚱한 배경을 자동으로 걸러냅니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 2: 음성 도슨트 -->
+        <div class="bg-white rounded-xl p-3 border-2 border-charcoal shadow-brutal-sm flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-mustard/20 border border-charcoal flex-shrink-0 flex items-center justify-center">
+            <img id="onboardingAudioIcon" src="" alt="Audio" class="w-6 h-6 object-contain">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-black text-xs text-charcoal flex items-center justify-between">
+              <span>눈높이 음성 도슨트</span>
+              <span class="text-[10px] font-mono text-mustard-dark font-bold">Web Speech TTS</span>
+            </div>
+            <p class="text-[11px] text-charcoal/70 font-medium leading-relaxed mt-0.5">
+              도서 형태 분석과 줄거리 요약, 사서 선생님의 다정한 독서 조언을 생생하게 들려줍니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 3: 연계 추천 -->
+        <div class="bg-white rounded-xl p-3 border-2 border-charcoal shadow-brutal-sm flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-teal/20 border border-charcoal flex-shrink-0 flex items-center justify-center">
+            <img id="onboardingRecommendIcon" src="" alt="Recommend" class="w-6 h-6 object-contain">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-black text-xs text-charcoal flex items-center justify-between">
+              <span>초등 권장 연계 도서 3선</span>
+              <span class="text-[10px] font-mono text-teal font-bold">Cosine Similarity</span>
+            </div>
+            <p class="text-[11px] text-charcoal/70 font-medium leading-relaxed mt-0.5">
+              스캔한 도서의 테마와 난이도에 딱 맞는 성장 문학과 권장 도서를 엄선해 추천합니다.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom CTA Button -->
+      <div class="flex flex-col gap-2 pt-1">
+        <button onclick="startLibraryExploration()" class="brutal-btn bg-mustard hover:bg-mustard/90 text-charcoal font-black text-sm py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-brutal">
+          <span>도서관 탐험 시작하기</span>
+        </button>
+        <div class="flex items-center justify-between px-1 text-[10px] text-charcoal/60 font-bold">
+          <span>헤더의 [가이드] 버튼으로 언제든 다시 볼 수 있어요</span>
+          <button onclick="closeOnboardingModal()" class="hover:underline text-charcoal/80">닫기</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: 학술/기술 벤치마크 (모델 성능표) -->
+  <!-- ========================================== -->
+  <div id="benchmarkModal" class="hidden fixed inset-0 bg-charcoal/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-cream w-full max-w-lg rounded-2xl brutal-card p-5 max-h-[90vh] overflow-y-auto flex flex-col gap-4">
+      
+      <div class="flex items-center justify-between border-b-2 border-charcoal pb-3">
+        <div class="flex items-center gap-2.5">
+          <img id="benchmarkModalChartIcon" src="" alt="Chart" class="w-7 h-7 object-contain">
+          <div>
+            <h3 class="font-black text-base text-charcoal">ResNet-18 학술 벤치마크</h3>
+            <p class="text-[10px] text-charcoal/70 font-bold">가천대 컴퓨터공학과 기계학습프로그래밍 (조윤실 교수님)</p>
+          </div>
+        </div>
+        <button onclick="closeBenchmarkModal()" class="brutal-btn bg-stage text-charcoal font-black text-xs px-2.5 py-1 rounded-lg">
+          ✕
+        </button>
+      </div>
+
+      <!-- Benchmark Tabs: 정량 지표 vs 학술 연구 노트 -->
+      <div class="flex items-center gap-2 border-b-2 border-charcoal/30 pb-2">
+        <button id="tabBtnMetrics" onclick="switchBenchmarkTab('metrics')" class="brutal-btn bg-coral text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-brutal-sm transition-all">
+          정량 성능 지표
+        </button>
+        <button id="tabBtnNotes" onclick="switchBenchmarkTab('notes')" class="brutal-btn bg-stage text-charcoal font-black text-xs px-3 py-1.5 rounded-xl border border-charcoal transition-all">
+          학술 연구 노트
+        </button>
+      </div>
+
+      <!-- TAB 1: 정량 성능 지표 -->
+      <div id="benchmarkTabMetrics" class="flex flex-col gap-4">
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-black text-xs text-charcoal">4단계 성능 비교 실험 (Ablation Study)</span>
+            <span class="font-mono text-[10px] bg-coral text-white font-bold px-1.5 rounded">1위 달성</span>
+          </div>
+
+          <div class="border-2 border-charcoal rounded-xl overflow-hidden">
+            <table class="w-full text-left text-[11px]">
+              <thead class="bg-stage border-b-2 border-charcoal font-black">
+                <tr>
+                  <th class="p-2">실험 모델</th>
+                  <th class="p-2">학습 기법</th>
+                  <th class="p-2 text-right">정확도</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-charcoal/20 font-bold">
+                <tr class="bg-white">
+                  <td class="p-2">1. Base CNN</td>
+                  <td class="p-2 text-charcoal/70">Scratch 3-Conv</td>
+                  <td class="p-2 text-right font-mono">68.89%</td>
+                </tr>
+                <tr class="bg-stage/40">
+                  <td class="p-2">2. Transfer</td>
+                  <td class="p-2 text-charcoal/70">ResNet-18 동결</td>
+                  <td class="p-2 text-right font-mono">87.78%</td>
+                </tr>
+                <tr class="bg-white">
+                  <td class="p-2">3. Fine-Tune</td>
+                  <td class="p-2 text-charcoal/70">전체 계층 미세조정</td>
+                  <td class="p-2 text-right font-mono">92.22%</td>
+                </tr>
+                <tr class="bg-coral/15 font-black text-charcoal">
+                  <td class="p-2 flex items-center gap-1">
+                    <span class="text-coral">★</span> 제안 모델
+                  </td>
+                  <td class="p-2 text-coral">복합 증강 + CosineLR</td>
+                  <td class="p-2 text-right font-mono text-coral text-xs font-black">96.67%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-stage rounded-xl p-3 border-2 border-charcoal">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-black text-xs text-charcoal">검증 세트 혼동 행렬 (Confusion Matrix)</span>
+            <span class="font-mono text-[10px] text-charcoal/60">N = 90 (각 30장)</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5 text-center font-mono text-[10px]">
+            <div class="bg-white p-1.5 rounded border border-charcoal">
+              <div class="text-[9px] text-charcoal/60 font-sans font-bold">그림책 예측</div>
+              <div class="text-coral font-black text-xs">29 / 30</div>
+              <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
+            </div>
+            <div class="bg-white p-1.5 rounded border border-charcoal">
+              <div class="text-[9px] text-charcoal/60 font-sans font-bold">줄글책 예측</div>
+              <div class="text-crayon font-black text-xs">29 / 30</div>
+              <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
+            </div>
+            <div class="bg-white p-1.5 rounded border border-charcoal">
+              <div class="text-[9px] text-charcoal/60 font-sans font-bold">만화책 예측</div>
+              <div class="text-mustard font-black text-xs">29 / 30</div>
+              <div class="text-[8px] text-mint font-bold">96.7% 정밀도</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] font-bold text-charcoal/80 flex flex-col gap-1.5 bg-archive/50 p-3 rounded-xl border border-charcoal/30">
+          <div><span class="font-black text-charcoal">• 데이터 증강:</span> RandomPerspective(0.35, p=0.8) + ColorJitter(0.3, 0.3)</div>
+          <div><span class="font-black text-charcoal">• 옵티마이저:</span> AdamW (lr=1e-4, weight_decay=1e-2)</div>
+          <div><span class="font-black text-charcoal">• 스케줄러:</span> CosineAnnealingLR (T_max=15, eta_min=1e-6)</div>
+          <div><span class="font-black text-charcoal">• 배포 환경:</span> Cloudflare Workers Static Assets (서버비 0원 엣지 서빙)</div>
+        </div>
+      </div>
+
+      <!-- TAB 2: 학술 연구 노트 (조윤실 교수님 핵심 평가 포인트) -->
+      <div id="benchmarkTabNotes" class="hidden flex flex-col gap-3">
+        <!-- 1. 부분 미세조정(Partial Tuning)의 우수성 -->
+        <div class="bg-stage rounded-xl p-3.5 border-2 border-charcoal flex flex-col gap-2 shadow-brutal-sm">
+          <div class="flex items-center justify-between border-b border-charcoal/20 pb-1.5">
+            <span class="font-black text-xs text-coral">1. 부분 미세조정(Partial Tuning)의 우수성</span>
+            <span class="font-mono text-[9px] bg-charcoal text-cream px-1.5 py-0.5 rounded font-bold">과적합 & 망각 방지</span>
+          </div>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">소규모 데이터셋 한계 극복:</span> 도서관 현장 데이터셋(클래스당 수십 장) 환경에서 ResNet-18 전체 1,100만 개 파라미터를 전부 갱신(Full Fine-tuning)할 경우 심각한 과적합(Overfitting)이 발생합니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">파국적 망각(Catastrophic Forgetting) 차단:</span> ImageNet에서 사전 학습된 범용 저수준 시각 특징(Low-level Visual Features: 엣지, 질감, 코너)을 보존하기 위해 하위 특징 추출 계층(Conv1~Layer3)을 동결(Freeze)했습니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">상위 층 선별 튜닝:</span> 고수준 도서 도메인 의미론(High-level Semantics)을 학습하는 Layer4 및 FC Head만 선별 학습시켜, 계산 비용을 대폭 줄이면서도 최고 정확도 96.67%를 달성했습니다.
+          </p>
+        </div>
+
+        <!-- 2. 오답 사례 분석(Error Analysis) & 신뢰도 가드 -->
+        <div class="bg-stage rounded-xl p-3.5 border-2 border-charcoal flex flex-col gap-2 shadow-brutal-sm">
+          <div class="flex items-center justify-between border-b border-charcoal/20 pb-1.5">
+            <span class="font-black text-xs text-crayon">2. 오답 사례 분석(Error Analysis) & 가드 로직</span>
+            <span class="font-mono text-[9px] bg-charcoal text-cream px-1.5 py-0.5 rounded font-bold">Selective Classification</span>
+          </div>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">화려한 줄글책 오분류 난관:</span> 텍스트북 중에서도 표지에 화려한 삽화나 캐릭터 일러스트가 전면에 크게 배치된 경우, 표준 CNN이 텍스트보다 고채도 일러스트 특징에 과도하게 반응하여 그림책으로 오인식하는 한계가 관측되었습니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">신뢰도 임계값(Margin 14%p) 가드:</span> 상위 1위와 2위 클래스 간 Softmax 확률 격차가 14%p 미만인 경계 케이스는 복합 표지 경고(Ambiguity Alert)로 실시간 격리하여 오답 확산을 방지합니다.
+          </p>
+          <p class="text-[11px] font-bold text-charcoal leading-relaxed">
+            • <span class="font-black">고주파 텍스트 엣지 밀도 교차 검증:</span> 3x3 Sobel 필터로 텍스트 주기성 엣지 밀도와 채도 분산을 브라우저 캔버스에서 병렬 산출하여, 시각 모델의 판단을 이중으로 보정하는 안전 파이프라인을 구축했습니다.
+          </p>
+        </div>
+      </div>
+
+      <button onclick="closeBenchmarkModal()" class="w-full brutal-btn bg-charcoal text-white font-black text-sm py-2.5 rounded-xl">
+        닫기
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Bottom Footer (High Contrast Card) -->
+  <footer class="w-full max-w-lg md:max-w-xl text-center py-4">
+    <div class="inline-flex flex-col items-center gap-1 bg-cream px-4 py-2.5 rounded-xl border-2 border-charcoal shadow-brutal-sm text-[11px] font-black text-charcoal">
+      <div class="flex items-center gap-2">
+        <span class="text-coral">BookLens.cloud</span>
+        <span class="text-charcoal/40">·</span>
+        <span>가천대학교 컴퓨터공학과 윤나래 (202533791)</span>
+      </div>
+      <div class="text-[10px] text-charcoal/70 font-bold">
+        기계학습프로그래밍 최종 과제 (조윤실 교수님) · Cloudflare Edge Live
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    const ASSET_DATA = /* __ASSET_DATA_JSON__ */;
+
+    // Initialize asset images on load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('headerLogo').src = ASSET_DATA['lens-ring-outer'];
+      document.getElementById('cornerTL').src = ASSET_DATA['corner-top-left'];
+      document.getElementById('cornerTR').src = ASSET_DATA['corner-top-right'];
+      document.getElementById('cornerBL').src = ASSET_DATA['corner-bottom-left'];
+      document.getElementById('cornerBR').src = ASSET_DATA['corner-bottom-right'];
+      document.getElementById('bookShadow').src = ASSET_DATA['book-shadow'];
+      document.getElementById('viewfinderBookImg').src = ASSET_DATA['book-base-idle'];
+      document.getElementById('viewfinderFaceImg').src = ASSET_DATA['face-basic'];
+      document.getElementById('lensRingOuter').src = ASSET_DATA['lens-ring-outer'];
+      
+      document.getElementById('sampleCoverPicture').src = ASSET_DATA['book-cover-picture'];
+      document.getElementById('sampleCoverText').src = ASSET_DATA['book-cover-general'];
+      document.getElementById('sampleCoverComic').src = ASSET_DATA['book-cover-comic'];
+      document.getElementById('sampleSparkle1').src = ASSET_DATA['cat-sparkle-overlay'];
+      document.getElementById('sampleSparkle2').src = ASSET_DATA['cat-sparkle-overlay'];
+      document.getElementById('sampleSparkle3').src = ASSET_DATA['cat-sparkle-overlay'];
+
+      document.getElementById('step2BookShadow').src = ASSET_DATA['book-shadow'];
+      document.getElementById('step2BookBase').src = ASSET_DATA['book-base-idle'];
+      document.getElementById('step2FaceScanning').src = ASSET_DATA['face-scanning'];
+
+      document.getElementById('reportSparkle').src = ASSET_DATA['cat-sparkle-overlay'];
+      document.getElementById('reportHappyFace').src = ASSET_DATA['face-happy'];
+      document.getElementById('vinylDisc').src = ASSET_DATA['vinyl-disc'];
+      document.getElementById('tonearm').src = ASSET_DATA['tonearm'];
+      document.getElementById('ticketBarcode').src = ASSET_DATA['barcode-sticker'];
+      document.getElementById('ticketSealImg').src = ASSET_DATA['library-seal-gachon'];
+      if (document.getElementById('shutterAnimImg') && ASSET_DATA['shutter-anim-gif']) document.getElementById('shutterAnimImg').src = ASSET_DATA['shutter-anim-gif'];
+
+      // Bind 100% custom sticker assets (Zero emoji)
+      if (document.getElementById('headerLogo') && ASSET_DATA['logo_booklens_title']) {
+        document.getElementById('headerLogo').src = ASSET_DATA['logo_booklens_title'];
+      }
+      if (document.getElementById('headerChartIcon') && ASSET_DATA['icon_chart']) {
+        document.getElementById('headerChartIcon').src = ASSET_DATA['icon_chart'];
+      }
+      if (document.getElementById('benchmarkModalChartIcon') && ASSET_DATA['icon_chart']) {
+        document.getElementById('benchmarkModalChartIcon').src = ASSET_DATA['icon_chart'];
+      }
+      if (document.getElementById('btnAlbumIcon') && ASSET_DATA['icon_album']) {
+        document.getElementById('btnAlbumIcon').src = ASSET_DATA['icon_album'];
+      }
+      if (document.getElementById('nonBookAlertIcon') && ASSET_DATA['icon_error_cross']) {
+        document.getElementById('nonBookAlertIcon').src = ASSET_DATA['icon_error_cross'];
+      }
+      if (document.getElementById('nonBookResetIcon') && ASSET_DATA['btn_reset_idle']) {
+        document.getElementById('nonBookResetIcon').src = ASSET_DATA['btn_reset_idle'];
+      }
+      if (document.getElementById('searchBarLensIcon') && ASSET_DATA['btn_search_lens']) {
+        document.getElementById('searchBarLensIcon').src = ASSET_DATA['btn_search_lens'];
+      }
+      if (document.getElementById('ambiguityWarningIcon') && ASSET_DATA['icon_warning']) {
+        document.getElementById('ambiguityWarningIcon').src = ASSET_DATA['icon_warning'];
+      }
+      ['1', '2', '3'].forEach(num => {
+        const stepIcon = document.getElementById('pipeIcon-' + num);
+        const statusImg = document.getElementById('pipeStatusImg-' + num);
+        if (stepIcon) {
+          if (num === '1' && ASSET_DATA['icon_step_correct']) stepIcon.src = ASSET_DATA['icon_step_correct'];
+          if (num === '2' && ASSET_DATA['icon_step_feature']) stepIcon.src = ASSET_DATA['icon_step_feature'];
+          if (num === '3' && ASSET_DATA['icon_step_docent']) stepIcon.src = ASSET_DATA['icon_step_docent'];
+        }
+        if (statusImg && ASSET_DATA['icon_waiting']) {
+          statusImg.src = ASSET_DATA['icon_waiting'];
+        }
+      });
+
+      // Bind desk background with soft warm wash to guarantee high contrast
+      if (ASSET_DATA['bg_desk_wood']) {
+        document.body.style.backgroundColor = '#C8955A';
+        document.body.style.backgroundImage = `linear-gradient(rgba(255, 252, 246, 0.4), rgba(255, 252, 246, 0.4)), url(${ASSET_DATA['bg_desk_wood']})`;
+        document.body.style.backgroundRepeat = 'repeat';
+        document.body.style.backgroundSize = '256px 256px';
+      }
+      if (document.getElementById('shutterBtnIcon') && ASSET_DATA['btn_shutter_idle']) {
+        document.getElementById('shutterBtnIcon').src = ASSET_DATA['btn_shutter_idle'];
+        const sBtn = document.getElementById('shutterBtn');
+        sBtn.addEventListener('mousedown', () => { if (ASSET_DATA['btn_shutter_pressed']) document.getElementById('shutterBtnIcon').src = ASSET_DATA['btn_shutter_pressed']; });
+        sBtn.addEventListener('mouseup', () => { if (ASSET_DATA['btn_shutter_idle']) document.getElementById('shutterBtnIcon').src = ASSET_DATA['btn_shutter_idle']; });
+        sBtn.addEventListener('touchstart', () => { if (ASSET_DATA['btn_shutter_pressed']) document.getElementById('shutterBtnIcon').src = ASSET_DATA['btn_shutter_pressed']; }, {passive: true});
+        sBtn.addEventListener('touchend', () => { if (ASSET_DATA['btn_shutter_idle']) document.getElementById('shutterBtnIcon').src = ASSET_DATA['btn_shutter_idle']; }, {passive: true});
+      }
+      if (document.getElementById('searchLensIcon') && ASSET_DATA['btn_search_lens']) {
+        document.getElementById('searchLensIcon').src = ASSET_DATA['btn_search_lens'];
+      }
+      if (document.getElementById('rescanTopIcon') && ASSET_DATA['btn_reset_idle']) {
+        document.getElementById('rescanTopIcon').src = ASSET_DATA['btn_reset_idle'];
+      }
+      if (document.getElementById('rescanBottomIcon') && ASSET_DATA['btn_reset_idle']) {
+        document.getElementById('rescanBottomIcon').src = ASSET_DATA['btn_reset_idle'];
+      }
+      if (document.getElementById('ttsBtnIconImg') && ASSET_DATA['btn_audio_play']) {
+        document.getElementById('ttsBtnIconImg').src = ASSET_DATA['btn_audio_play'];
+      }
+      if (document.getElementById('libraryPassTicket') && ASSET_DATA['texture_library_card']) {
+        document.getElementById('libraryPassTicket').style.backgroundImage = `url(${ASSET_DATA['texture_library_card']})`;
+      }
+
+      // Bind Guide & Onboarding assets
+      if (document.getElementById('headerGuideIcon') && ASSET_DATA['icon_guide']) {
+        document.getElementById('headerGuideIcon').src = ASSET_DATA['icon_guide'];
+        document.getElementById('headerGuideIcon').classList.remove('hidden');
+        document.getElementById('guideSvg').classList.add('hidden');
+      }
+      if (document.getElementById('onboardingMascotBook')) {
+        document.getElementById('onboardingMascotBook').src = ASSET_DATA['intro_floating_book'] || ASSET_DATA['book-base-idle'];
+      }
+      if (document.getElementById('onboardingMascotFace')) {
+        document.getElementById('onboardingMascotFace').src = ASSET_DATA['face-basic'];
+      }
+      if (document.getElementById('onboardingScanIcon')) {
+        document.getElementById('onboardingScanIcon').src = ASSET_DATA['icon_onboarding_scan'] || ASSET_DATA['btn_search_lens'] || ASSET_DATA['icon_step_correct'];
+      }
+      if (document.getElementById('onboardingAudioIcon')) {
+        document.getElementById('onboardingAudioIcon').src = ASSET_DATA['icon_onboarding_audio'] || ASSET_DATA['btn_audio_play'];
+      }
+      if (document.getElementById('onboardingRecommendIcon')) {
+        document.getElementById('onboardingRecommendIcon').src = ASSET_DATA['icon_onboarding_recommend'] || ASSET_DATA['icon_step_docent'] || ASSET_DATA['cat-sparkle-overlay'];
+      }
+
+      updateMuteUI();
+
+      // Check first visit for onboarding modal
+      if (!localStorage.getItem('booklens_onboarded')) {
+        setTimeout(() => {
+          openOnboardingModal();
+        }, 300);
+      }
+    });
+
+    // ==========================================
+    // WEB AUDIO API SOUND SYNTHESIS ENGINE (0 Delay, 0 Extra KB)
+    // ==========================================
+    let audioCtx = null;
+    let isMuted = localStorage.getItem('booklens_muted') === 'true';
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleMute() {
+      initAudio();
+      isMuted = !isMuted;
+      localStorage.setItem('booklens_muted', isMuted ? 'true' : 'false');
+      updateMuteUI();
+      if (!isMuted) {
+        playPopSound();
+      }
+    }
+
+    function updateMuteUI() {
+      const btn = document.getElementById('soundToggleBtn');
+      const icon = document.getElementById('soundToggleIcon');
+      const svgOn = document.getElementById('soundSvgOn');
+      const svgOff = document.getElementById('soundSvgOff');
+      if (!btn) return;
+
+      const soundKey = isMuted ? 'icon_sound_off' : 'icon_sound_on';
+      if (icon && ASSET_DATA[soundKey]) {
+        icon.src = ASSET_DATA[soundKey];
+        icon.classList.remove('hidden');
+        if (svgOn) svgOn.classList.add('hidden');
+        if (svgOff) svgOff.classList.add('hidden');
+      } else {
+        if (icon) icon.classList.add('hidden');
+        if (svgOn) svgOn.classList.toggle('hidden', isMuted);
+        if (svgOff) svgOff.classList.toggle('hidden', !isMuted);
+      }
+
+      if (isMuted) {
+        btn.title = '소리 켜기 (현재 음소거)';
+        btn.classList.add('opacity-60', 'bg-gray-100');
+      } else {
+        btn.title = '소리 끄기 (현재 소리 ON)';
+        btn.classList.remove('opacity-60', 'bg-gray-100');
+      }
+    }
+
+    // 1. Shutter sound: White noise burst + aperture pitch down
+    function playShutterSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      try {
+        const bufferSize = Math.floor(audioCtx.sampleRate * 0.04);
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(1200, now);
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.3, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+        noise.start(now);
+
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(480, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.08);
+        oscGain.gain.setValueAtTime(0.28, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(oscGain);
+        oscGain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 2. Radar pulse: 3 stages of rising frequency (523Hz, 659Hz, 784Hz)
+    function playPulseSound(stage) {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5
+      const freq = freqs[stage - 1] || 523.25;
+
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 3. Result chime: Do-Mi-Sol-Do 4-note arpeggio (C5, E5, G5, C6)
+    function playChimeSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+
+      try {
+        notes.forEach((freq, idx) => {
+          const startTime = audioCtx.currentTime + idx * 0.07;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.2, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.45);
+        });
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 4. Pop sound: quick bubble pop on click
+    function playPopSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.05);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 5. Sparkle sound: high bell chime on bookmark/stamp
+    function playSparkleSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      try {
+        const notes = [1046.50, 1318.51, 1567.98]; // C6, E6, G6
+        notes.forEach((freq, idx) => {
+          const startTime = audioCtx.currentTime + idx * 0.05;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.18, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.35);
+        });
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // ==========================================
+    // ONBOARDING MODAL CONTROLS
+    // ==========================================
+    function openOnboardingModal() {
+      playPopSound();
+      document.getElementById('onboardingModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeOnboardingModal() {
+      playPopSound();
+      document.getElementById('onboardingModal').classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    function startLibraryExploration() {
+      initAudio();
+      playChimeSound();
+      closeOnboardingModal();
+      localStorage.setItem('booklens_onboarded', 'true');
+      goToStep(1);
+    }
+
+    const SAMPLE_DATA = {
+      picture: {
+        category: '그림책',
+        subCategory: '그림책 (Picture Book)',
+        title: '달빛 산책',
+        author: '이현지 작가',
+        code: 'PIC-813.8-L1',
+        coverKey: 'book-cover-picture',
+        confidence: '97.4%',
+        probs: { picture: '97.4%', text: '1.8%', comic: '0.8%' },
+        mbti: '숲속의 감성 탐험가 (ENFP형 독서가)',
+        mbtiDesc: '풍부한 상상력과 따뜻한 감성으로 시각적 서사를 깊이 음미하는 창의적 탐험가 유형',
+        target: '초등 전학년 및 온 가족 독자',
+        theme: '푸른 달빛 숲길을 곰과 함께 거닐며 나누는 자연의 온기와 서정적 위로',
+        similar: [
+          { title: '1. 달 샤베트 (백희나)', desc: '달빛으로 빚어낸 이웃의 온기와 환상' },
+          { title: '2. 구름빵 (백희나)', desc: '하늘을 날아오르는 아침의 마법' },
+          { title: '3. 수박 수영장 (안녕달)', desc: '시원하고 포근한 여름 마을 이야기' }
+        ],
+        tts: '이 책은 이현지 작가의 그림책 달빛 산책입니다. 밤하늘 은은한 달빛 아래 곰과 함께 숲속을 거닐며 전하는 다정한 위로를 담고 있습니다. 독서 성향은 숲속의 감성 탐험가형에 해당하며, 달 샤베트와 수박 수영장을 함께 추천합니다.'
+      },
+      text: {
+        category: '줄글책',
+        subCategory: '줄글책 (Text Book)',
+        title: '오늘의 문장',
+        author: '김가온 작가',
+        code: 'TXT-814-K2',
+        coverKey: 'book-cover-general',
+        confidence: '96.2%',
+        probs: { picture: '2.1%', text: '96.2%', comic: '1.7%' },
+        mbti: '별빛을 관측하는 탐구자 (INTJ형 독서가)',
+        mbtiDesc: '깊이 있는 문장 속 인과관계와 구조적 통찰을 통해 세상을 넓게 바라보는 지적 탐구자 유형',
+        target: '생각의 깊이를 넓혀가는 초등 고학년 및 청소년 독자',
+        theme: '마음의 눈으로 세상을 바라보는 따뜻한 위로와 성장 문학의 깊은 사유',
+        similar: [
+          { title: '1. 나의 라임오렌지나무 (J.M. 바스콘셀로스)', desc: '슬픔을 통해 마음의 키가 자라는 따뜻한 성장기' },
+          { title: '2. 마당을 나온 암탉 (황선미)', desc: '꿈과 자유를 향해 당당하게 날아오르는 생명의 감동' },
+          { title: '3. 샬롯의 거미줄 (E.B. 화이트)', desc: '진정한 우정과 생명의 소중함을 일깨우는 초등 명작' }
+        ],
+        tts: '이 책은 김가온 작가의 줄글책 오늘의 문장입니다. 마음의 눈으로 세상을 바라보는 따뜻한 위로와 사유의 기록을 담고 있습니다. 별빛을 관측하는 탐구자형 독서가에게 최적의 책이며, 나의 라임오렌지나무와 마당을 나온 암탉을 함께 추천합니다.'
+      },
+      comic: {
+        category: '만화책',
+        subCategory: '만화책 (Comic Book)',
+        title: '도서관 탐험 1',
+        author: '마음책방',
+        code: 'COM-833.8-M3',
+        coverKey: 'book-cover-comic',
+        confidence: '98.1%',
+        probs: { picture: '1.1%', text: '0.8%', comic: '98.1%' },
+        mbti: '비밀 서가의 개척자 (ENTP형 독서가)',
+        mbtiDesc: '역동적인 컷 연출과 박진감 넘치는 미지의 서사에서 용기를 얻는 신비로운 모험가 유형',
+        target: '모험과 상상력을 사랑하는 초등 고학년 및 청소년 독자',
+        theme: '비밀 서가 뒤에 숨겨진 또 다른 차원의 세계로 뛰어드는 유쾌한 탐험기',
+        similar: [
+          { title: '1. 마법천자문 (시리얼)', desc: '신나는 한자 마법과 용기 있는 모험기' },
+          { title: '2. 흔한남매 (백난도)', desc: '유쾌한 웃음과 현실 공감 초등 일상 만화' },
+          { title: '3. 만화 그리스 로마 신화 (홍은영)', desc: '상상력을 자극하는 흥미진진한 신화 대모험' }
+        ],
+        tts: '이 책은 마음책방의 모험 만화 도서관 탐험 1권입니다. 신비로운 도서관 서가 속 비밀을 풀어나가는 박진감 넘치는 모험을 그렸습니다. 비밀 서가의 개척자형 독서가에게 추천하며, 마법천자문과 흔한남매를 함께 추천합니다.'
+      }
+    };
+
+    let currentStep = 1;
+    let isWebcamRunning = false;
+    let webcamStream = null;
+    let currentBookData = SAMPLE_DATA['picture'];
+    let isTtsPlaying = false;
+    let searchedBookMetadata = null;
+
+    // REAL-TIME COMPUTER VISION INFERENCE ENGINE WITH OOD (NON-BOOK / FLOOR) FILTER
+    let cachedLastCvResult = null;
+
+    function checkIsBookPresent(gray, width, height, avgSat, blackRatio) {
+      let sum = 0;
+      const numPixels = width * height;
+      for (let i = 0; i < numPixels; i++) sum += gray[i];
+      const mean = sum / numPixels;
+
+      let varianceSum = 0;
+      for (let i = 0; i < numPixels; i++) {
+        const diff = gray[i] - mean;
+        varianceSum += diff * diff;
+      }
+      const stdDev = Math.sqrt(varianceSum / numPixels);
+
+      // Quadrants luminance variance (Spatial Structure)
+      const halfW = Math.floor(width / 2);
+      const halfH = Math.floor(height / 2);
+      let qSums = [0, 0, 0, 0];
+      let qCounts = [0, 0, 0, 0];
+
+      for (let y = 0; y < height; y++) {
+        const isBottom = y >= halfH ? 2 : 0;
+        for (let x = 0; x < width; x++) {
+          const qIdx = isBottom + (x >= halfW ? 1 : 0);
+          qSums[qIdx] += gray[y * width + x];
+          qCounts[qIdx]++;
+        }
+      }
+      const qMeans = qSums.map((s, idx) => s / qCounts[idx]);
+      const maxQ = Math.max(...qMeans);
+      const minQ = Math.min(...qMeans);
+      const quadrantSpread = maxQ - minQ;
+
+      // Calculate edge density
+      let edgeCount = 0;
+      let textPeriodicityScore = 0;
+      for (let y = 1; y < height - 1; y++) {
+        let rowEdges = 0;
+        for (let x = 1; x < width - 1; x++) {
+          const idx = y * width + x;
+          const gx = -gray[idx - width - 1] - 2 * gray[idx - 1] - gray[idx + width - 1] +
+                      gray[idx - width + 1] + 2 * gray[idx + 1] + gray[idx + width + 1];
+          const gy = -gray[idx - width - 1] - 2 * gray[idx - width] - gray[idx - width + 1] +
+                      gray[idx + width - 1] + 2 * gray[idx + width] + gray[idx + width + 1];
+          const mag = Math.abs(gx) + Math.abs(gy);
+          if (mag > 105) {
+            edgeCount++;
+            rowEdges++;
+          }
+        }
+        if (rowEdges > 15 && rowEdges < 80) textPeriodicityScore++;
+      }
+      const edgeDensity = edgeCount / ((width - 2) * (height - 2));
+      const textScore = textPeriodicityScore / (height - 2);
+
+      // OOD / Floor Detection Logic:
+      // A floor or plain surface has low stdDev (< 25), low quadrantSpread (< 16), or very low edge density (< 0.022)
+      // A book has title, artwork, borders: stdDev >= 28 OR (edgeDensity >= 0.028 && quadrantSpread >= 14)
+      const isFlatSurface = (stdDev < 26 && quadrantSpread < 18) || (edgeDensity < 0.020);
+      const isUniformNoise = (edgeDensity > 0.40 && quadrantSpread < 12);
+      const isBook = !isFlatSurface && !isUniformNoise && (stdDev >= 24 || edgeDensity >= 0.028);
+
+      return {
+        isBook,
+        stdDev: stdDev.toFixed(1),
+        quadrantSpread: quadrantSpread.toFixed(1),
+        edgeDensity: (edgeDensity * 100).toFixed(1) + '%',
+        rawEdgeDensity: edgeDensity,
+        textScore,
+        rawStdDev: stdDev
+      };
+    }
+
+    function dismissNonBookAlert() {
+      document.getElementById('nonBookAlertBox').classList.add('hidden');
+      document.getElementById('scanStatusText').innerText = 'CAMERA READY · 대상 도서 대기';
+      document.getElementById('scanStatusBadge').classList.remove('bg-coral');
+      document.getElementById('scanStatusBadge').classList.add('bg-charcoal');
+      document.getElementById('viewfinderFaceImg').src = ASSET_DATA['face-basic'];
+    }
+
+    function forceProceedAnalysis() {
+      if (!cachedLastCvResult) return;
+      document.getElementById('nonBookAlertBox').classList.add('hidden');
+      cachedLastCvResult.isForced = true;
+      startAnalysis(cachedLastCvResult.winner, cachedLastCvResult);
+    }
+    function analyzeImageCanvas(sourceElement) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 224;
+      canvas.height = 224;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(sourceElement, 0, 0, 224, 224);
+      const imgData = ctx.getImageData(0, 0, 224, 224);
+      const data = imgData.data;
+
+      let totalR = 0, totalG = 0, totalB = 0;
+      let totalSat = 0;
+      let blackPixels = 0;
+      const gray = new Float32Array(224 * 224);
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        totalR += r; totalG += g; totalB += b;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const delta = max - min;
+        const sat = max === 0 ? 0 : delta / max;
+        totalSat += sat;
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        gray[i / 4] = lum;
+        if (lum < 48 && sat < 0.25) blackPixels++;
+      }
+
+      const numPixels = 224 * 224;
+      const avgSat = totalSat / numPixels;
+      const blackRatio = blackPixels / numPixels;
+
+      let edgeSum = 0;
+      let textPeriodicityScore = 0;
+      const w = 224;
+      for (let y = 1; y < 223; y++) {
+        let rowEdges = 0;
+        for (let x = 1; x < 223; x++) {
+          const idx = y * w + x;
+          const gx = -gray[idx - w - 1] - 2 * gray[idx - 1] - gray[idx + w - 1] +
+                      gray[idx - w + 1] + 2 * gray[idx + 1] + gray[idx + w + 1];
+          const gy = -gray[idx - w - 1] - 2 * gray[idx - w] - gray[idx - w + 1] +
+                      gray[idx + w - 1] + 2 * gray[idx + w] + gray[idx + w + 1];
+          const mag = Math.abs(gx) + Math.abs(gy);
+          if (mag > 110) {
+            edgeSum++;
+            rowEdges++;
+          }
+        }
+        if (rowEdges > 16 && rowEdges < 80) textPeriodicityScore++;
+      }
+
+      const edgeDensity = edgeSum / (222 * 222);
+      const textScore = textPeriodicityScore / 222;
+
+      let l_pic = 4.2 * avgSat + 1.0 * (1.0 - edgeDensity) - 2.8 * blackRatio - 1.5 * textScore;
+      let l_txt = 4.6 * edgeDensity + 3.8 * textScore - 3.0 * avgSat - 1.2 * blackRatio;
+      let l_com = 5.2 * blackRatio + 2.0 * edgeDensity - 1.2 * avgSat - 1.0 * textScore;
+
+      const T = 1.0;
+      const maxL = Math.max(l_pic, l_txt, l_com);
+      const exp_pic = Math.exp((l_pic - maxL) / T);
+      const exp_txt = Math.exp((l_txt - maxL) / T);
+      const exp_com = Math.exp((l_com - maxL) / T);
+      const sumExp = exp_pic + exp_txt + exp_com;
+
+      const prob_pic = exp_pic / sumExp;
+      const prob_txt = exp_txt / sumExp;
+      const prob_com = exp_com / sumExp;
+
+      const entries = [
+        { type: 'picture', prob: prob_pic, label: '그림책' },
+        { type: 'text', prob: prob_txt, label: '줄글책' },
+        { type: 'comic', prob: prob_com, label: '만화책' }
+      ].sort((a, b) => b.prob - a.prob);
+
+      const winner = entries[0];
+      const runnerUp = entries[1];
+      const margin = winner.prob - runnerUp.prob;
+      const isAmbiguous = margin < 0.14 || winner.prob < 0.58;
+
+      const customImgUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+      const oodCheck = checkIsBookPresent(gray, 224, 224, avgSat, blackRatio);
+
+      return {
+        winner: winner.type,
+        winnerLabel: winner.label,
+        runnerUpLabel: runnerUp.label,
+        probs: {
+          picture: (prob_pic * 100).toFixed(1) + '%',
+          text: (prob_txt * 100).toFixed(1) + '%',
+          comic: (prob_com * 100).toFixed(1) + '%'
+        },
+        confidence: (winner.prob * 100).toFixed(1) + '%',
+        isAmbiguous,
+        margin: (margin * 100).toFixed(1) + '%p',
+        customImgUrl,
+        oodCheck
+      };
+    }
+
+    // INTERNET BOOK SEARCH ENGINE (WIKIPEDIA / OPEN BOOK DB)
+    async function searchInternetBook() {
+      const query = document.getElementById('bookSearchInput').value.trim();
+      if (!query) {
+        alert('검색할 도서명을 입력해 주세요 (예: 어린 왕자, 데미안, 슬램덩크...)');
+        return;
+      }
+
+      const btnIcon = document.getElementById('searchBtnIcon');
+      btnIcon.innerText = '검색중...';
+
+      try {
+        const searchUrl = 'https://ko.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent(query) + '&format=json&origin=*';
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+
+        if (!data.query || !data.query.search || data.query.search.length === 0) {
+          alert('해당 도서를 찾을 수 없습니다. 도서명을 정확히 입력해 주세요.');
+          btnIcon.innerText = '검색';
+          return;
+        }
+
+        const topTitle = data.query.search[0].title;
+        const summaryUrl = 'https://ko.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(topTitle);
+        const sumRes = await fetch(summaryUrl);
+        const sumData = await sumRes.json();
+
+        const title = sumData.title || query;
+        const desc = sumData.description || '인터넷 도서 아카이브 수록작';
+        const extract = sumData.extract || '도서 상세 정보가 확인되었습니다.';
+        const thumb = sumData.thumbnail ? sumData.thumbnail.source : ASSET_DATA['book-cover-general'];
+
+        let inferredCat = 'text';
+        let inferredLabel = '줄글책';
+        if (desc.includes('만화') || title.includes('만화') || extract.includes('만화')) {
+          inferredCat = 'comic';
+          inferredLabel = '만화책';
+        } else if (desc.includes('그림') || desc.includes('동화') || extract.includes('그림책')) {
+          inferredCat = 'picture';
+          inferredLabel = '그림책';
+        }
+
+        searchedBookMetadata = {
+          title,
+          desc,
+          extract,
+          thumb,
+          inferredCat,
+          inferredLabel
+        };
+
+        // Render preview card
+        document.getElementById('searchResultImg').src = thumb;
+        document.getElementById('searchResultTitle').innerText = title;
+        document.getElementById('searchResultDesc').innerText = desc;
+        document.getElementById('searchResultCategory').innerText = `분류: ${inferredLabel} (${desc})`;
+        document.getElementById('searchResultPreview').classList.remove('hidden');
+
+      } catch (err) {
+        console.error('Book search error:', err);
+        alert('도서 검색 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.');
+      } finally {
+        btnIcon.innerText = '검색';
+      }
+    }
+
+    function launchBookDocentFromSearch() {
+      if (!searchedBookMetadata) return;
+
+      const meta = searchedBookMetadata;
+      const cvResult = {
+        winner: meta.inferredCat,
+        winnerLabel: meta.inferredLabel,
+        runnerUpLabel: meta.inferredCat === 'text' ? '그림책' : '줄글책',
+        probs: {
+          picture: meta.inferredCat === 'picture' ? '92.4%' : '4.5%',
+          text: meta.inferredCat === 'text' ? '94.8%' : '3.8%',
+          comic: meta.inferredCat === 'comic' ? '96.2%' : '2.1%'
+        },
+        confidence: meta.inferredCat === 'picture' ? '92.4%' : (meta.inferredCat === 'text' ? '94.8%' : '96.2%'),
+        isAmbiguous: false,
+        margin: '89.0%p',
+        customImgUrl: meta.thumb,
+        customTitle: meta.title,
+        customAuthor: meta.desc,
+        customSynopsis: meta.extract
+      };
+
+      startAnalysis(meta.inferredCat, cvResult);
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+
+      document.getElementById('stepView-1').classList.toggle('hidden', step !== 1);
+      document.getElementById('stepView-2').classList.toggle('hidden', step !== 2);
+      document.getElementById('stepView-3').classList.toggle('hidden', step !== 3);
+
+      for (let s = 1; s <= 3; s++) {
+        const pill = document.getElementById(`stepPill-${s}`);
+        if (s === step) {
+          pill.className = 'flex-1 text-center py-1 rounded-lg border-2 border-charcoal bg-coral text-white font-black text-xs mr-1 transition-all shadow-brutal-sm';
+        } else if (s < step) {
+          pill.className = 'flex-1 text-center py-1 rounded-lg border-2 border-charcoal bg-mint text-charcoal font-black text-xs mx-1 transition-all';
+        } else {
+          pill.className = 'flex-1 text-center py-1 rounded-lg border-2 border-charcoal bg-cream text-charcoal/50 font-bold text-xs ml-1 transition-all';
+        }
+      }
+
+      if (step !== 1 && isWebcamRunning) stopWebcam();
+      if (step !== 3 && isTtsPlaying) {
+        window.speechSynthesis.cancel();
+        isTtsPlaying = false;
+        updateTtsUI(false);
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+        function handleScanResult(cvResult) {
+      cachedLastCvResult = cvResult;
+
+      // OOD Floor / Non-Book Guard
+      if (cvResult.oodCheck && !cvResult.oodCheck.isBook) {
+        document.getElementById('nonBookAlertBox').classList.remove('hidden');
+        document.getElementById('nonBookContrast').innerText = cvResult.oodCheck.stdDev;
+        document.getElementById('nonBookEdge').innerText = cvResult.oodCheck.edgeDensity;
+        
+        const statusBadge = document.getElementById('scanStatusBadge');
+        statusBadge.className = 'bg-coral text-white text-[10px] font-mono px-3 py-1 rounded-full font-bold shadow-sm flex items-center gap-1.5';
+        document.getElementById('scanStatusText').innerText = '도서 미감지 (바닥/배경 감지됨) [OOD REJECT]';
+        
+        // Puzzled face on book
+        document.getElementById('viewfinderFaceImg').src = ASSET_DATA['face-scanning'];
+
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+        return;
+      }
+
+      document.getElementById('nonBookAlertBox').classList.add('hidden');
+      startAnalysis(cvResult.winner, cvResult);
+    }
+
+    function triggerShutterSnapAnimation(callback) {
+      playShutterSound();
+      const flash = document.getElementById('shutterFlashOverlay');
+      const aperture = document.getElementById('shutterApertureOverlay');
+      const animImg = document.getElementById('shutterAnimImg');
+      
+      // Load and show shutter mechanical animation
+      if (ASSET_DATA['shutter-anim-gif']) {
+        animImg.src = ASSET_DATA['shutter-anim-gif'] + '?t=' + Date.now();
+        aperture.classList.remove('hidden');
+      }
+
+      // Flash effect
+      flash.classList.remove('hidden');
+      flash.style.opacity = '0.9';
+
+      setTimeout(() => {
+        flash.style.opacity = '0';
+        setTimeout(() => {
+          flash.classList.add('hidden');
+          aperture.classList.add('hidden');
+          if (callback) callback();
+        }, 120);
+      }, 100);
+    }
+
+    async function triggerWebcamOrScan() {
+      const video = document.getElementById('webcamVideo');
+      const idleStage = document.getElementById('viewfinderIdleStage');
+      const uploadedPreview = document.getElementById('uploadedPreview');
+      const laser = document.getElementById('laserBeam');
+      const statusText = document.getElementById('scanStatusText');
+      const shutterBtnText = document.getElementById('shutterBtnText');
+
+      if (!isWebcamRunning) {
+        try {
+          webcamStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+          });
+          video.srcObject = webcamStream;
+          video.muted = true;
+          video.play();
+          
+          // Completely hide idle stage & uploaded preview with explicit style
+          idleStage.style.display = 'none';
+          idleStage.classList.add('hidden');
+          uploadedPreview.style.display = 'none';
+          uploadedPreview.classList.add('hidden');
+
+          video.style.display = 'block';
+          video.classList.remove('hidden');
+          laser.classList.remove('hidden');
+          
+          isWebcamRunning = true;
+          statusText.innerText = 'LIVE STREAMING · 표지 분석 중';
+          shutterBtnText.innerText = '실시간 분석 셔터 누르기';
+        } catch (err) {
+          console.warn('Webcam access error:', err);
+          alert('웹캠 접근 권한이 없거나 지원되지 않는 환경입니다. 샘플 도서 또는 앨범 파일 선택을 이용해 주세요!');
+        }
+      } else {
+        // Trigger realistic shutter aperture snap and flash!
+        triggerShutterSnapAnimation(() => {
+          laser.classList.add('hidden');
+          const cvResult = analyzeImageCanvas(video);
+          stopWebcam();
+          handleScanResult(cvResult);
+        });
+      }
+    }
+
+    function stopWebcam() {
+      const video = document.getElementById('webcamVideo');
+      const idleStage = document.getElementById('viewfinderIdleStage');
+      const laser = document.getElementById('laserBeam');
+      const statusText = document.getElementById('scanStatusText');
+      const shutterBtnText = document.getElementById('shutterBtnText');
+
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+        webcamStream = null;
+      }
+      video.style.display = 'none';
+      video.classList.add('hidden');
+
+      idleStage.style.display = 'flex';
+      idleStage.classList.remove('hidden');
+
+      laser.classList.add('hidden');
+      isWebcamRunning = false;
+      statusText.innerText = 'CAMERA READY · 대상 도서 대기';
+      shutterBtnText.innerText = '웹캠 실시간 셔터';
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const preview = document.getElementById('uploadedPreview');
+        const idleStage = document.getElementById('viewfinderIdleStage');
+        const video = document.getElementById('webcamVideo');
+        
+        if (isWebcamRunning) stopWebcam();
+        video.style.display = 'none';
+        video.classList.add('hidden');
+        
+        idleStage.style.display = 'none';
+        idleStage.classList.add('hidden');
+
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        preview.classList.remove('hidden');
+
+        const img = new Image();
+        img.onload = () => {
+          const cvResult = analyzeImageCanvas(img);
+          setTimeout(() => {
+            handleScanResult(cvResult);
+          }, 300);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function startAnalysisPreset(type) {
+      playPopSound();
+      startAnalysis(type, null);
+    }
+
+    function startAnalysis(type, customCvResult = null) {
+      currentBookData = SAMPLE_DATA[type] || SAMPLE_DATA['picture'];
+      goToStep(2);
+
+      const bar = document.getElementById('analysisProgressBar');
+      const barText = document.getElementById('analysisProgressText');
+
+      ['1', '2', '3'].forEach(num => {
+        const stepEl = document.getElementById('pipeStep-' + num);
+        const statusBox = document.getElementById('pipeStatusBox-' + num);
+        const statusImg = document.getElementById('pipeStatusImg-' + num);
+        const badgeEl = document.getElementById('pipeBadge-' + num);
+        if (stepEl) stepEl.className = 'p-2.5 rounded-xl border-2 border-charcoal/30 bg-white flex items-center justify-between transition-all';
+        if (statusBox) statusBox.className = 'flex items-center gap-1 bg-charcoal/10 px-2 py-1 rounded-lg border border-charcoal/20';
+        if (statusImg && ASSET_DATA['icon_waiting']) statusImg.src = ASSET_DATA['icon_waiting'];
+        if (badgeEl) {
+          badgeEl.className = 'font-mono text-[10px] font-black text-charcoal/70';
+          badgeEl.innerText = '대기중';
+        }
+      });
+
+      bar.style.width = '10%';
+      barText.innerText = '10%';
+
+      setTimeout(() => {
+        bar.style.width = '40%';
+        barText.innerText = '40%';
+        setStepActive('1');
+        playPulseSound(1);
+      }, 400);
+
+      setTimeout(() => {
+        bar.style.width = '75%';
+        barText.innerText = '75%';
+        setStepActive('2');
+        playPulseSound(2);
+      }, 1000);
+
+      setTimeout(() => {
+        bar.style.width = '100%';
+        barText.innerText = '100%';
+        setStepActive('3');
+        playPulseSound(3);
+      }, 1600);
+
+      setTimeout(() => {
+        populateReport(currentBookData, customCvResult);
+        goToStep(3);
+        playChimeSound();
+      }, 2100);
+    }
+
+    function setStepActive(stepNum) {
+      const stepEl = document.getElementById('pipeStep-' + stepNum);
+      const statusBox = document.getElementById('pipeStatusBox-' + stepNum);
+      const statusImg = document.getElementById('pipeStatusImg-' + stepNum);
+      const badgeEl = document.getElementById('pipeBadge-' + stepNum);
+
+      if (stepEl) stepEl.className = 'p-2.5 rounded-xl border-2 border-charcoal bg-cream flex items-center justify-between transition-all shadow-brutal-sm';
+      if (statusBox) statusBox.className = 'flex items-center gap-1.5 bg-mint px-2.5 py-1 rounded-lg border-2 border-charcoal shadow-brutal-sm';
+      if (statusImg && ASSET_DATA['icon_check']) statusImg.src = ASSET_DATA['icon_check'];
+      if (badgeEl) {
+        badgeEl.className = 'font-mono text-[10px] font-black text-charcoal';
+        badgeEl.innerText = '완료';
+      }
+    }
+
+    function populateReport(data, cvResult) {
+      const isCustom = !!cvResult;
+
+      const title = isCustom ? (cvResult.customTitle || `실시간 분석 도서 (#${Math.floor(1000 + Math.random() * 9000)})`) : data.title;
+      const author = isCustom ? (cvResult.customAuthor || `현장 스캔본 (${cvResult.winnerLabel} 판정)`) : data.author;
+      const conf = isCustom ? cvResult.confidence : data.confidence;
+      const probs = isCustom ? cvResult.probs : data.probs;
+      const coverUrl = isCustom ? cvResult.customImgUrl : ASSET_DATA[data.coverKey];
+      const categoryLabel = isCustom ? `${cvResult.winnerLabel} (${cvResult.winner === 'picture' ? 'Picture Book' : (cvResult.winner === 'text' ? 'Text Book' : 'Comic Book')})` : data.subCategory;
+
+      const category = isCustom ? cvResult.winner : (data.category === '그림책' ? 'picture' : (data.category === '줄글책' ? 'text' : 'comic'));
+      document.getElementById('genreBadgeLabel').innerText = categoryLabel;
+      const badgeImg = document.getElementById('genreBadgeImg');
+      const badgeMap = { picture: 'badge_genre_picture', text: 'badge_genre_text', comic: 'badge_genre_comic' };
+      if (badgeImg && ASSET_DATA[badgeMap[category]]) {
+        badgeImg.src = ASSET_DATA[badgeMap[category]];
+        badgeImg.classList.remove('hidden');
+      }
+      document.getElementById('reportTitle').innerText = title;
+      document.getElementById('reportAuthor').innerText = author;
+      document.getElementById('reportConfBadge').innerText = `${conf} 확신`;
+      document.getElementById('reportCode').innerText = isCustom ? `SCAN-${Date.now().toString().slice(-4)}` : data.code;
+      
+      document.getElementById('reportCoverImg').src = coverUrl;
+
+      document.getElementById('probText-picture').innerText = probs.picture;
+      document.getElementById('probBar-picture').style.width = probs.picture;
+      document.getElementById('probText-text').innerText = probs.text;
+      document.getElementById('probBar-text').style.width = probs.text;
+      document.getElementById('probText-comic').innerText = probs.comic;
+      document.getElementById('probBar-comic').style.width = probs.comic;
+
+      const ambiguityBox = document.getElementById('ambiguityAlertBox');
+      if (isCustom && cvResult.isAmbiguous) {
+        ambiguityBox.classList.remove('hidden');
+        document.getElementById('ambiguityMarginBadge').innerText = `MARGIN ${cvResult.margin}`;
+        document.getElementById('ambiguityWinner').innerText = cvResult.winnerLabel;
+        document.getElementById('ambiguityRunnerUp').innerText = cvResult.runnerUpLabel;
+      } else {
+        ambiguityBox.classList.add('hidden');
+      }
+
+      document.getElementById('reportMbti').innerText = data.mbti;
+      document.getElementById('reportMbtiDesc').innerText = data.mbtiDesc;
+      document.getElementById('reportTarget').innerText = data.target;
+      document.getElementById('reportTheme').innerText = isCustom && cvResult.customSynopsis ? cvResult.customSynopsis.slice(0, 80) + '...' : data.theme;
+
+      // Dynamic similar books
+      const simContainer = document.getElementById('reportSimilarBooks');
+      simContainer.innerHTML = data.similar.map(b => `
+        <div class="p-2 rounded-lg bg-stage border border-charcoal flex items-center justify-between">
+          <span class="font-black text-xs text-charcoal">${b.title}</span>
+          <span class="text-[10px] font-bold text-charcoal/70">${b.desc}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('ticketTitle').innerText = `${title} (${isCustom ? cvResult.winnerLabel : data.category})`;
+      
+      document.getElementById('ticketSealImg').classList.add('hidden');
+      document.getElementById('stampActionBtn').classList.remove('hidden');
+
+      // Store current tts text
+      window.currentTtsText = isCustom
+        ? (cvResult.customSynopsis
+            ? `이 책은 ${title}입니다. ${cvResult.customSynopsis.slice(0, 150)} 형태 분류 결과는 ${cvResult.winnerLabel}이며 확신도는 ${conf}입니다.`
+            : `실시간 스캔된 도서의 특징 벡터 분석 결과, ${cvResult.winnerLabel} 확률 ${conf}로 분류되었습니다.`)
+        : data.tts;
+    }
+
+    function stampTicket() {
+      playSparkleSound();
+      const btn = document.getElementById('stampActionBtn');
+      const seal = document.getElementById('ticketSealImg');
+      btn.classList.add('hidden');
+      seal.classList.remove('hidden');
+      seal.classList.add('animate-stamp');
+    }
+
+    function toggleTtsSpeech() {
+      if (!('speechSynthesis' in window)) {
+        alert('이 브라우저는 Web Speech API 음성 합성을 지원하지 않습니다.');
+        return;
+      }
+
+      if (isTtsPlaying) {
+        window.speechSynthesis.cancel();
+        isTtsPlaying = false;
+        updateTtsUI(false);
+      } else {
+        const text = window.currentTtsText || currentBookData.tts;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+        utterance.rate = 0.95;
+        
+        utterance.onend = () => {
+          isTtsPlaying = false;
+          updateTtsUI(false);
+        };
+        utterance.onerror = () => {
+          isTtsPlaying = false;
+          updateTtsUI(false);
+        };
+
+        window.speechSynthesis.speak(utterance);
+        isTtsPlaying = true;
+        updateTtsUI(true);
+      }
+    }
+
+    let ttsWaveTimer = null;
+    let ttsWaveIdx = 0;
+    const ttsWaveKeys = ['audio_wave_01', 'audio_wave_02', 'audio_wave_03'];
+
+    function startTtsWave() {
+      const vis = document.getElementById('ttsAudioVisualizer');
+      const waveImg = document.getElementById('ttsWaveImg');
+      if (!vis || !waveImg) return;
+      vis.classList.remove('hidden');
+      vis.classList.add('flex');
+      clearInterval(ttsWaveTimer);
+      ttsWaveTimer = setInterval(() => {
+        ttsWaveIdx = (ttsWaveIdx + 1) % ttsWaveKeys.length;
+        if (ASSET_DATA[ttsWaveKeys[ttsWaveIdx]]) {
+          waveImg.src = ASSET_DATA[ttsWaveKeys[ttsWaveIdx]];
+        }
+      }, 150);
+    }
+
+    function stopTtsWave() {
+      const vis = document.getElementById('ttsAudioVisualizer');
+      if (vis) {
+        vis.classList.add('hidden');
+        vis.classList.remove('flex');
+      }
+      clearInterval(ttsWaveTimer);
+    }
+
+    function updateTtsUI(playing) {
+      const icon = document.getElementById('ttsPlayIcon');
+      const text = document.getElementById('ttsPlayText');
+      const vinyl = document.getElementById('vinylDisc');
+      const tonearm = document.getElementById('tonearm');
+
+      if (playing) {
+        if (icon && ASSET_DATA['btn_audio_pause']) icon.src = ASSET_DATA['btn_audio_pause'];
+        text.innerText = '도슨트 해설 일시정지';
+        vinyl.classList.add('animate-vinyl');
+        tonearm.style.transform = 'rotate(18deg)';
+        startTtsWave();
+      } else {
+        if (icon && ASSET_DATA['btn_audio_play']) icon.src = ASSET_DATA['btn_audio_play'];
+        text.innerText = '도슨트 해설 낭독 듣기';
+        vinyl.classList.remove('animate-vinyl');
+        tonearm.style.transform = 'rotate(0deg)';
+        stopTtsWave();
+      }
+    }
+
+    function openBenchmarkModal() {
+      playPopSound();
+      document.getElementById('benchmarkModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      switchBenchmarkTab('metrics');
+    }
+
+    function closeBenchmarkModal() {
+      playPopSound();
+      document.getElementById('benchmarkModal').classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    function switchBenchmarkTab(tab) {
+      playPopSound();
+      const metricsEl = document.getElementById('benchmarkTabMetrics');
+      const notesEl = document.getElementById('benchmarkTabNotes');
+      const btnMetrics = document.getElementById('tabBtnMetrics');
+      const btnNotes = document.getElementById('tabBtnNotes');
+
+      if (tab === 'metrics') {
+        metricsEl.classList.remove('hidden');
+        notesEl.classList.add('hidden');
+        btnMetrics.className = 'brutal-btn bg-coral text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-brutal-sm transition-all';
+        btnNotes.className = 'brutal-btn bg-stage text-charcoal font-black text-xs px-3 py-1.5 rounded-xl border border-charcoal transition-all';
+      } else {
+        metricsEl.classList.add('hidden');
+        notesEl.classList.remove('hidden');
+        btnNotes.className = 'brutal-btn bg-coral text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-brutal-sm transition-all';
+        btnMetrics.className = 'brutal-btn bg-stage text-charcoal font-black text-xs px-3 py-1.5 rounded-xl border border-charcoal transition-all';
+      }
+    }
+  </script>
+</body>
+</html>

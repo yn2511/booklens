@@ -86,6 +86,12 @@
     .animate-vinyl { animation: spinVinyl 3.5s linear infinite; }
     .animate-stamp { animation: stampHit 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     
+    @keyframes popIn {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop-in { animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
     .progress-striped {
       background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
       background-size: 1rem 1rem;
@@ -102,25 +108,51 @@
 <body class="min-h-screen flex flex-col items-center justify-start p-3 sm:p-5 select-none">
 
   <!-- Top Global Header -->
-  <header class="w-full max-w-lg md:max-w-xl flex items-center justify-between mb-3 bg-cream p-3 rounded-2xl brutal-card">
+  <header class="w-full max-w-lg md:max-w-xl flex items-center justify-between mb-3 bg-cream p-2.5 sm:p-3 rounded-2xl brutal-card">
     <div class="flex items-center gap-2">
       <img id="headerLogo" src="" alt="Logo" class="w-8 h-8 object-contain">
       <div>
         <div class="flex items-center gap-1.5">
-          <span class="font-black text-lg tracking-tight text-charcoal">BookLens.ai</span>
-          <span class="font-mono text-[10px] bg-mustard/20 text-charcoal px-1.5 py-0.5 rounded border border-charcoal font-bold">v3.1</span>
+          <span class="font-black text-base sm:text-lg tracking-tight text-charcoal">BookLens.ai</span>
+          <span class="font-mono text-[10px] bg-mustard/20 text-charcoal px-1.5 py-0.5 rounded border border-charcoal font-bold">v3.2</span>
         </div>
-        <div class="text-[10px] text-charcoal/60 font-bold">ResNet-18 + Internet Book Search Engine</div>
+        <div class="text-[10px] text-charcoal/60 font-bold hidden sm:block">ResNet-18 + Web Audio & Book Search</div>
       </div>
     </div>
     
     <div class="flex items-center gap-1.5">
-      <!-- Academic Benchmark Modal Trigger -->
-      <button onclick="openBenchmarkModal()" class="brutal-btn bg-coral text-white font-black text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-brutal-sm">
-        <img id="headerChartIcon" src="" alt="Chart" class="w-4 h-4 object-contain">
-        <span>모델 성능표</span>
+      <!-- Library Silent Mode: Sound Mute Toggle -->
+      <button id="soundToggleBtn" onclick="toggleMute()" class="brutal-btn bg-white hover:bg-archive text-charcoal font-black text-xs p-1.5 rounded-xl flex items-center justify-center border-2 border-charcoal shadow-brutal-sm" title="소리 토글">
+        <img id="soundToggleIcon" src="" alt="Sound" class="w-4 h-4 object-contain hidden">
+        <svg id="soundSvgOn" class="w-4 h-4 text-charcoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+        <svg id="soundSvgOff" class="w-4 h-4 text-charcoal/50 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
       </button>
-      <div class="bg-archive text-charcoal font-bold text-[11px] px-2 py-1.5 rounded-xl border-2 border-charcoal">
+
+      <!-- Library Guide Onboarding Trigger -->
+      <button onclick="openOnboardingModal()" class="brutal-btn bg-teal text-white font-black text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-brutal-sm" title="도서관 탐험 가이드">
+        <img id="headerGuideIcon" src="" alt="Guide" class="w-3.5 h-3.5 object-contain hidden">
+        <svg id="guideSvg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>가이드</span>
+      </button>
+
+      <!-- Academic Benchmark Modal Trigger -->
+      <button onclick="openBenchmarkModal()" class="brutal-btn bg-coral text-white font-black text-xs px-2 py-1.5 rounded-xl flex items-center gap-1 shadow-brutal-sm">
+        <img id="headerChartIcon" src="" alt="Chart" class="w-3.5 h-3.5 object-contain">
+        <span class="hidden sm:inline">성능표</span>
+      </button>
+
+      <div class="bg-archive text-charcoal font-bold text-[10px] px-1.5 py-1.5 rounded-xl border-2 border-charcoal">
         가천대
       </div>
     </div>
@@ -611,6 +643,90 @@
   </main>
 
   <!-- ========================================== -->
+  <!-- MODAL: 도서관 탐험 인트로 온보딩 -->
+  <!-- ========================================== -->
+  <div id="onboardingModal" class="hidden fixed inset-0 bg-charcoal/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-cream w-full max-w-md rounded-2xl brutal-card p-5 max-h-[90vh] overflow-y-auto flex flex-col gap-4 text-charcoal animate-pop-in">
+      
+      <!-- Top Splash: Floating Book Mascot -->
+      <div class="flex flex-col items-center justify-center text-center pt-2">
+        <div class="relative w-24 h-24 mb-2 flex items-center justify-center animate-float-book">
+          <img id="onboardingMascotBook" src="" alt="Floating Book" class="w-20 h-20 object-contain drop-shadow-md">
+          <img id="onboardingMascotFace" src="" alt="Smile Face" class="absolute inset-0 m-auto w-10 h-6 object-contain">
+        </div>
+        <div class="inline-block bg-mustard/30 text-charcoal px-2.5 py-0.5 rounded-full border border-charcoal font-black text-[11px] mb-1">
+          스마트 도서관 북 도슨트
+        </div>
+        <h2 class="text-xl font-black text-charcoal tracking-tight">BookLens AI에 오신 것을 환영해요!</h2>
+        <p class="text-xs text-charcoal/70 font-bold mt-1">인공지능 비전과 공공 도서 DB가 안내하는 즐거운 독서 탐험</p>
+      </div>
+
+      <!-- Feature 3 Cards -->
+      <div class="flex flex-col gap-2.5">
+        <!-- Feature 1: 실환경 스캔 -->
+        <div class="bg-white rounded-xl p-3 border-2 border-charcoal shadow-brutal-sm flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-coral/20 border border-charcoal flex-shrink-0 flex items-center justify-center">
+            <img id="onboardingScanIcon" src="" alt="Scan" class="w-6 h-6 object-contain">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-black text-xs text-charcoal flex items-center justify-between">
+              <span>실환경 적응형 스캔</span>
+              <span class="text-[10px] font-mono text-coral font-bold">Sobel Edge + CV</span>
+            </div>
+            <p class="text-[11px] text-charcoal/70 font-medium leading-relaxed mt-0.5">
+              조명 반사와 각도 왜곡을 보정하고, 바닥이나 엉뚱한 배경을 자동으로 걸러냅니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 2: 음성 도슨트 -->
+        <div class="bg-white rounded-xl p-3 border-2 border-charcoal shadow-brutal-sm flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-mustard/20 border border-charcoal flex-shrink-0 flex items-center justify-center">
+            <img id="onboardingAudioIcon" src="" alt="Audio" class="w-6 h-6 object-contain">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-black text-xs text-charcoal flex items-center justify-between">
+              <span>눈높이 음성 도슨트</span>
+              <span class="text-[10px] font-mono text-mustard-dark font-bold">Web Speech TTS</span>
+            </div>
+            <p class="text-[11px] text-charcoal/70 font-medium leading-relaxed mt-0.5">
+              도서 형태 분석과 줄거리 요약, 사서 선생님의 다정한 독서 조언을 생생하게 들려줍니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 3: 연계 추천 -->
+        <div class="bg-white rounded-xl p-3 border-2 border-charcoal shadow-brutal-sm flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-teal/20 border border-charcoal flex-shrink-0 flex items-center justify-center">
+            <img id="onboardingRecommendIcon" src="" alt="Recommend" class="w-6 h-6 object-contain">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-black text-xs text-charcoal flex items-center justify-between">
+              <span>초등 권장 연계 도서 3선</span>
+              <span class="text-[10px] font-mono text-teal font-bold">Cosine Similarity</span>
+            </div>
+            <p class="text-[11px] text-charcoal/70 font-medium leading-relaxed mt-0.5">
+              스캔한 도서의 테마와 난이도에 딱 맞는 성장 문학과 권장 도서를 엄선해 추천합니다.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom CTA Button -->
+      <div class="flex flex-col gap-2 pt-1">
+        <button onclick="startLibraryExploration()" class="brutal-btn bg-mustard hover:bg-mustard/90 text-charcoal font-black text-sm py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-brutal">
+          <span>도서관 탐험 시작하기</span>
+        </button>
+        <div class="flex items-center justify-between px-1 text-[10px] text-charcoal/60 font-bold">
+          <span>헤더의 [가이드] 버튼으로 언제든 다시 볼 수 있어요</span>
+          <button onclick="closeOnboardingModal()" class="hover:underline text-charcoal/80">닫기</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================== -->
   <!-- MODAL: 학술/기술 벤치마크 (모델 성능표) -->
   <!-- ========================================== -->
   <div id="benchmarkModal" class="hidden fixed inset-0 bg-charcoal/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -878,7 +994,259 @@
       if (document.getElementById('libraryPassTicket') && ASSET_DATA['texture_library_card']) {
         document.getElementById('libraryPassTicket').style.backgroundImage = `url(${ASSET_DATA['texture_library_card']})`;
       }
+
+      // Bind Guide & Onboarding assets
+      if (document.getElementById('headerGuideIcon') && ASSET_DATA['icon_guide']) {
+        document.getElementById('headerGuideIcon').src = ASSET_DATA['icon_guide'];
+        document.getElementById('headerGuideIcon').classList.remove('hidden');
+        document.getElementById('guideSvg').classList.add('hidden');
+      }
+      if (document.getElementById('onboardingMascotBook')) {
+        document.getElementById('onboardingMascotBook').src = ASSET_DATA['intro_floating_book'] || ASSET_DATA['book-base-idle'];
+      }
+      if (document.getElementById('onboardingMascotFace')) {
+        document.getElementById('onboardingMascotFace').src = ASSET_DATA['face-basic'];
+      }
+      if (document.getElementById('onboardingScanIcon')) {
+        document.getElementById('onboardingScanIcon').src = ASSET_DATA['icon_onboarding_scan'] || ASSET_DATA['btn_search_lens'] || ASSET_DATA['icon_step_correct'];
+      }
+      if (document.getElementById('onboardingAudioIcon')) {
+        document.getElementById('onboardingAudioIcon').src = ASSET_DATA['icon_onboarding_audio'] || ASSET_DATA['btn_audio_play'];
+      }
+      if (document.getElementById('onboardingRecommendIcon')) {
+        document.getElementById('onboardingRecommendIcon').src = ASSET_DATA['icon_onboarding_recommend'] || ASSET_DATA['icon_step_docent'] || ASSET_DATA['cat-sparkle-overlay'];
+      }
+
+      updateMuteUI();
+
+      // Check first visit for onboarding modal
+      if (!localStorage.getItem('booklens_onboarded')) {
+        setTimeout(() => {
+          openOnboardingModal();
+        }, 300);
+      }
     });
+
+    // ==========================================
+    // WEB AUDIO API SOUND SYNTHESIS ENGINE (0 Delay, 0 Extra KB)
+    // ==========================================
+    let audioCtx = null;
+    let isMuted = localStorage.getItem('booklens_muted') === 'true';
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleMute() {
+      initAudio();
+      isMuted = !isMuted;
+      localStorage.setItem('booklens_muted', isMuted ? 'true' : 'false');
+      updateMuteUI();
+      if (!isMuted) {
+        playPopSound();
+      }
+    }
+
+    function updateMuteUI() {
+      const btn = document.getElementById('soundToggleBtn');
+      const icon = document.getElementById('soundToggleIcon');
+      const svgOn = document.getElementById('soundSvgOn');
+      const svgOff = document.getElementById('soundSvgOff');
+      if (!btn) return;
+
+      const soundKey = isMuted ? 'icon_sound_off' : 'icon_sound_on';
+      if (icon && ASSET_DATA[soundKey]) {
+        icon.src = ASSET_DATA[soundKey];
+        icon.classList.remove('hidden');
+        if (svgOn) svgOn.classList.add('hidden');
+        if (svgOff) svgOff.classList.add('hidden');
+      } else {
+        if (icon) icon.classList.add('hidden');
+        if (svgOn) svgOn.classList.toggle('hidden', isMuted);
+        if (svgOff) svgOff.classList.toggle('hidden', !isMuted);
+      }
+
+      if (isMuted) {
+        btn.title = '소리 켜기 (현재 음소거)';
+        btn.classList.add('opacity-60', 'bg-gray-100');
+      } else {
+        btn.title = '소리 끄기 (현재 소리 ON)';
+        btn.classList.remove('opacity-60', 'bg-gray-100');
+      }
+    }
+
+    // 1. Shutter sound: White noise burst + aperture pitch down
+    function playShutterSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      try {
+        const bufferSize = Math.floor(audioCtx.sampleRate * 0.04);
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(1200, now);
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.3, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+        noise.start(now);
+
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(480, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.08);
+        oscGain.gain.setValueAtTime(0.28, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(oscGain);
+        oscGain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 2. Radar pulse: 3 stages of rising frequency (523Hz, 659Hz, 784Hz)
+    function playPulseSound(stage) {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5
+      const freq = freqs[stage - 1] || 523.25;
+
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 3. Result chime: Do-Mi-Sol-Do 4-note arpeggio (C5, E5, G5, C6)
+    function playChimeSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+
+      try {
+        notes.forEach((freq, idx) => {
+          const startTime = audioCtx.currentTime + idx * 0.07;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.2, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.45);
+        });
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 4. Pop sound: quick bubble pop on click
+    function playPopSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.05);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 5. Sparkle sound: high bell chime on bookmark/stamp
+    function playSparkleSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      try {
+        const notes = [1046.50, 1318.51, 1567.98]; // C6, E6, G6
+        notes.forEach((freq, idx) => {
+          const startTime = audioCtx.currentTime + idx * 0.05;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.18, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.35);
+        });
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // ==========================================
+    // ONBOARDING MODAL CONTROLS
+    // ==========================================
+    function openOnboardingModal() {
+      playPopSound();
+      document.getElementById('onboardingModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeOnboardingModal() {
+      playPopSound();
+      document.getElementById('onboardingModal').classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    function startLibraryExploration() {
+      initAudio();
+      playChimeSound();
+      closeOnboardingModal();
+      localStorage.setItem('booklens_onboarded', 'true');
+      goToStep(1);
+    }
 
     const SAMPLE_DATA = {
       picture: {
@@ -1283,6 +1651,7 @@
     }
 
     function triggerShutterSnapAnimation(callback) {
+      playShutterSound();
       const flash = document.getElementById('shutterFlashOverlay');
       const aperture = document.getElementById('shutterApertureOverlay');
       const animImg = document.getElementById('shutterAnimImg');
@@ -1409,6 +1778,7 @@
     }
 
     function startAnalysisPreset(type) {
+      playPopSound();
       startAnalysis(type, null);
     }
 
@@ -1440,23 +1810,27 @@
         bar.style.width = '40%';
         barText.innerText = '40%';
         setStepActive('1');
+        playPulseSound(1);
       }, 400);
 
       setTimeout(() => {
         bar.style.width = '75%';
         barText.innerText = '75%';
         setStepActive('2');
+        playPulseSound(2);
       }, 1000);
 
       setTimeout(() => {
         bar.style.width = '100%';
         barText.innerText = '100%';
         setStepActive('3');
+        playPulseSound(3);
       }, 1600);
 
       setTimeout(() => {
         populateReport(currentBookData, customCvResult);
         goToStep(3);
+        playChimeSound();
       }, 2100);
     }
 
@@ -1545,6 +1919,7 @@
     }
 
     function stampTicket() {
+      playSparkleSound();
       const btn = document.getElementById('stampActionBtn');
       const seal = document.getElementById('ticketSealImg');
       btn.classList.add('hidden');
@@ -1633,17 +2008,20 @@
     }
 
     function openBenchmarkModal() {
+      playPopSound();
       document.getElementById('benchmarkModal').classList.remove('hidden');
       document.body.style.overflow = 'hidden';
       switchBenchmarkTab('metrics');
     }
 
     function closeBenchmarkModal() {
+      playPopSound();
       document.getElementById('benchmarkModal').classList.add('hidden');
       document.body.style.overflow = 'auto';
     }
 
     function switchBenchmarkTab(tab) {
+      playPopSound();
       const metricsEl = document.getElementById('benchmarkTabMetrics');
       const notesEl = document.getElementById('benchmarkTabNotes');
       const btnMetrics = document.getElementById('tabBtnMetrics');
