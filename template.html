@@ -122,8 +122,8 @@
     
     <div class="flex items-center gap-1.5">
       <!-- Library Silent Mode: Sound Mute Toggle -->
-      <button id="soundToggleBtn" onclick="toggleMute()" class="brutal-btn bg-white hover:bg-archive text-charcoal font-black text-xs p-1.5 rounded-xl flex items-center justify-center border-2 border-charcoal shadow-brutal-sm" title="소리 토글">
-        <img id="soundToggleIcon" src="" alt="Sound" class="w-4 h-4 object-contain hidden">
+      <button id="soundToggleBtn" onclick="toggleMute()" class="brutal-btn bg-white hover:bg-archive text-charcoal font-black text-xs p-1.5 rounded-xl flex items-center justify-center border-2 border-charcoal shadow-brutal-sm w-8 h-8" title="소리 토글">
+        <img id="soundToggleIcon" src="" alt="Sound" class="w-5 h-5 object-contain hidden">
         <svg id="soundSvgOn" class="w-4 h-4 text-charcoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -137,8 +137,8 @@
       </button>
 
       <!-- Library Guide Onboarding Trigger -->
-      <button onclick="openOnboardingModal()" class="brutal-btn bg-navy text-cream font-black text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-brutal-sm" title="도서관 탐험 가이드">
-        <img id="headerGuideIcon" src="" alt="Guide" class="w-3.5 h-3.5 object-contain hidden">
+      <button onclick="openOnboardingModal()" class="brutal-btn bg-navy text-cream font-black text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-brutal-sm" title="도서관 탐험 가이드">
+        <img id="headerGuideIcon" src="" alt="Guide" class="w-4 h-4 object-contain hidden">
         <svg id="guideSvg" class="w-3.5 h-3.5 text-cream" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -650,9 +650,9 @@
       
       <!-- Top Splash: Floating Book Mascot -->
       <div class="flex flex-col items-center justify-center text-center pt-2">
-        <div class="relative w-24 h-24 mb-2 flex items-center justify-center animate-float-book">
-          <img id="onboardingMascotBook" src="" alt="Floating Book" class="w-20 h-20 object-contain drop-shadow-md">
-          <img id="onboardingMascotFace" src="" alt="Smile Face" class="absolute inset-0 m-auto w-10 h-6 object-contain">
+        <div class="relative w-28 h-28 mb-1 flex items-center justify-center animate-float-book">
+          <img id="onboardingMascotBook" src="" alt="Floating Book" class="w-24 h-24 object-contain drop-shadow-md">
+          <img id="onboardingMascotFace" src="" alt="Smile Face" class="hidden absolute inset-0 m-auto w-10 h-6 object-contain">
         </div>
         <div class="inline-block bg-mustard/30 text-charcoal px-2.5 py-0.5 rounded-full border border-charcoal font-black text-[11px] mb-1">
           스마트 도서관 북 도슨트
@@ -999,13 +999,22 @@
       if (document.getElementById('headerGuideIcon') && ASSET_DATA['icon_guide']) {
         document.getElementById('headerGuideIcon').src = ASSET_DATA['icon_guide'];
         document.getElementById('headerGuideIcon').classList.remove('hidden');
-        document.getElementById('guideSvg').classList.add('hidden');
+        if (document.getElementById('guideSvg')) document.getElementById('guideSvg').classList.add('hidden');
       }
       if (document.getElementById('onboardingMascotBook')) {
-        document.getElementById('onboardingMascotBook').src = ASSET_DATA['intro_floating_book'] || ASSET_DATA['book-base-idle'];
-      }
-      if (document.getElementById('onboardingMascotFace')) {
-        document.getElementById('onboardingMascotFace').src = ASSET_DATA['face-basic'];
+        if (ASSET_DATA['intro_floating_book']) {
+          document.getElementById('onboardingMascotBook').src = ASSET_DATA['intro_floating_book'];
+          document.getElementById('onboardingMascotBook').className = 'w-24 h-24 object-contain drop-shadow-md';
+          if (document.getElementById('onboardingMascotFace')) {
+            document.getElementById('onboardingMascotFace').classList.add('hidden');
+          }
+        } else {
+          document.getElementById('onboardingMascotBook').src = ASSET_DATA['book-base-idle'];
+          if (document.getElementById('onboardingMascotFace')) {
+            document.getElementById('onboardingMascotFace').src = ASSET_DATA['face-basic'];
+            document.getElementById('onboardingMascotFace').classList.remove('hidden');
+          }
+        }
       }
       if (document.getElementById('onboardingScanIcon')) {
         document.getElementById('onboardingScanIcon').src = ASSET_DATA['icon_onboarding_scan'] || ASSET_DATA['btn_search_lens'] || ASSET_DATA['icon_step_correct'];
