@@ -252,18 +252,19 @@
           <span class="font-mono text-[10px] bg-charcoal text-cream font-bold px-2 py-0.5 rounded">OOD REJECT</span>
         </div>
         
-        <p class="text-xs text-charcoal/90 font-bold leading-relaxed">
-          카메라에 비친 화면이 <span class="text-coral underline underline-offset-2">바닥, 벽 또는 평면 배경</span>으로 감지되었습니다.<br>
-          우리 모델은 책이 아닌 배경을 도서로 억지 분류하지 않도록 차단 필터가 작동 중입니다.
+        <p id="nonBookReasonText" class="text-xs text-charcoal/90 font-bold leading-relaxed">
+          카메라에 비친 대상이 책 표지가 아닌 것으로 판별되었습니다. (사물, 배경, 신체 부위 등 OOD 차단)<br>
+          우리 모델은 책이 아닌 일반 사물을 도서로 억지 분류하지 않도록 4단계 정밀 차단 필터가 작동 중입니다.
         </p>
 
         <div class="bg-cream/90 p-2.5 rounded-xl border-2 border-charcoal/30 text-[11px] font-bold text-charcoal flex flex-col gap-1">
           <div class="flex justify-between font-mono text-[10px] text-charcoal/70">
-            <span>• 측정 휘도 대비도: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (도서 기준: 30 이상)</span>
-            <span>• 엣지 밀도: <b id="nonBookEdge" class="text-charcoal font-black">1.1%</b> (도서 기준: 2.5% 이상)</span>
+            <span>• 휘도 대비: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (기준 32+)</span>
+            <span>• 엣지 밀도: <b id="nonBookEdge" class="text-charcoal font-black">1.1%</b> (기준 3.5%+)</span>
+            <span>• 직교 윤곽: <b id="nonBookOrtho" class="text-charcoal font-black">35%</b> (기준 46%+)</span>
           </div>
           <div class="text-charcoal/80 mt-0.5">
-            💡 <strong>가이드:</strong> 뷰파인더 십자선 안에 <strong>실제 책 표지</strong>를 맞추고 다시 셔터를 눌러주세요!
+            💡 <strong>가이드:</strong> 뷰파인더 프레임 안에 <strong>실제 책 표지</strong>가 가득 차도록 정면에서 맞춰주세요!
           </div>
         </div>
 
@@ -1362,9 +1363,12 @@
       const minQ = Math.min(...qMeans);
       const quadrantSpread = maxQ - minQ;
 
-      // Calculate edge density
+      // Calculate directional edge gradients & text line periodicity
       let edgeCount = 0;
+      let horizEdges = 0;
+      let vertEdges = 0;
       let textPeriodicityScore = 0;
+
       for (let y = 1; y < height - 1; y++) {
         let rowEdges = 0;
         for (let x = 1; x < width - 1; x++) {
@@ -1373,31 +1377,62 @@
                       gray[idx - width + 1] + 2 * gray[idx + 1] + gray[idx + width + 1];
           const gy = -gray[idx - width - 1] - 2 * gray[idx - width] - gray[idx - width + 1] +
                       gray[idx + width - 1] + 2 * gray[idx + width] + gray[idx + width + 1];
-          const mag = Math.abs(gx) + Math.abs(gy);
+          const absGx = Math.abs(gx);
+          const absGy = Math.abs(gy);
+          const mag = absGx + absGy;
+          
           if (mag > 105) {
             edgeCount++;
             rowEdges++;
+            if (absGy > 1.5 * absGx) horizEdges++;
+            else if (absGx > 1.5 * absGy) vertEdges++;
           }
         }
-        if (rowEdges > 15 && rowEdges < 80) textPeriodicityScore++;
+        if (rowEdges >= 14 && rowEdges <= 85) textPeriodicityScore++;
       }
+
       const edgeDensity = edgeCount / ((width - 2) * (height - 2));
       const textScore = textPeriodicityScore / (height - 2);
+      const orthogonalRatio = edgeCount > 0 ? (horizEdges + vertEdges) / edgeCount : 0;
 
-      // OOD / Floor Detection Logic:
-      // A floor or plain surface has low stdDev (< 25), low quadrantSpread (< 16), or very low edge density (< 0.022)
-      // A book has title, artwork, borders: stdDev >= 28 OR (edgeDensity >= 0.028 && quadrantSpread >= 14)
-      const isFlatSurface = (stdDev < 26 && quadrantSpread < 18) || (edgeDensity < 0.020);
-      const isUniformNoise = (edgeDensity > 0.40 && quadrantSpread < 12);
-      const isBook = !isFlatSurface && !isUniformNoise && (stdDev >= 24 || edgeDensity >= 0.028);
+      // Robust 4-Stage OOD & Book Verification Gate:
+      // Stage 1: Flat/Plain surface guard (floor, blank wall, desk plane)
+      const isFlatSurface = (stdDev < 32 || quadrantSpread < 20 || edgeDensity < 0.035);
+
+      // Stage 2: Uniform noise / texture guard (carpet, fabric, screen noise)
+      const isUniformNoise = (edgeDensity > 0.38 && quadrantSpread < 14);
+
+      // Stage 3: Orthogonal Book Geometry Guard (books have strong H/V rectangular contours)
+      const hasOrthogonalStructure = (orthogonalRatio >= 0.46);
+
+      // Stage 4: Semantic Book Feature Coherence
+      const hasTypography = (textScore >= 0.15);
+      const hasIllustration = (avgSat >= 0.22 && stdDev >= 45);
+      const hasComicLines = (blackRatio >= 0.05 && edgeDensity >= 0.05);
+      const hasBookFeature = hasTypography || hasIllustration || hasComicLines;
+
+      const isBook = !isFlatSurface && !isUniformNoise && hasOrthogonalStructure && hasBookFeature;
+
+      let rejectReason = '';
+      if (isFlatSurface) {
+        rejectReason = '도서 표지 미감지: 평면 배경 또는 대비 부족 (바닥/벽면 감지)';
+      } else if (isUniformNoise) {
+        rejectReason = '도서 표지 미감지: 균일 노이즈 또는 직물/카펫 텍스처 감지';
+      } else if (!hasOrthogonalStructure) {
+        rejectReason = '도서 표지 미감지: 비도서 사물 (직사각형 도서 윤곽선 부재)';
+      } else if (!hasBookFeature) {
+        rejectReason = '도서 표지 미감지: 표지 타이포그래피 또는 삽화 미식별 (OOD)';
+      }
 
       return {
         isBook,
+        rejectReason,
         stdDev: stdDev.toFixed(1),
         quadrantSpread: quadrantSpread.toFixed(1),
         edgeDensity: (edgeDensity * 100).toFixed(1) + '%',
+        orthogonalRatio: (orthogonalRatio * 100).toFixed(1) + '%',
+        textScore: (textScore * 100).toFixed(1) + '%',
         rawEdgeDensity: edgeDensity,
-        textScore,
         rawStdDev: stdDev
       };
     }
@@ -1469,9 +1504,9 @@
       const edgeDensity = edgeSum / (222 * 222);
       const textScore = textPeriodicityScore / 222;
 
-      let l_pic = 4.2 * avgSat + 1.0 * (1.0 - edgeDensity) - 2.8 * blackRatio - 1.5 * textScore;
-      let l_txt = 4.6 * edgeDensity + 3.8 * textScore - 3.0 * avgSat - 1.2 * blackRatio;
-      let l_com = 5.2 * blackRatio + 2.0 * edgeDensity - 1.2 * avgSat - 1.0 * textScore;
+      let l_pic = 5.2 * avgSat + 2.2 * edgeDensity + 1.2 * textScore - 3.2 * blackRatio;
+      let l_txt = 5.2 * edgeDensity + 4.6 * textScore - 3.2 * avgSat - 1.5 * blackRatio;
+      let l_com = 5.8 * blackRatio + 2.8 * edgeDensity - 1.5 * avgSat - 1.0 * textScore;
 
       const T = 1.0;
       const maxL = Math.max(l_pic, l_txt, l_com);
@@ -1643,10 +1678,14 @@
         document.getElementById('nonBookAlertBox').classList.remove('hidden');
         document.getElementById('nonBookContrast').innerText = cvResult.oodCheck.stdDev;
         document.getElementById('nonBookEdge').innerText = cvResult.oodCheck.edgeDensity;
+        const orthoEl = document.getElementById('nonBookOrtho');
+        if (orthoEl) orthoEl.innerText = cvResult.oodCheck.orthogonalRatio;
+        const reasonEl = document.getElementById('nonBookReasonText');
+        if (reasonEl) reasonEl.innerHTML = '<strong>' + cvResult.oodCheck.rejectReason + '</strong><br>우리 모델은 책이 아닌 일반 사물(신체 부위, 가구, 컵, 바닥 등)을 도서로 억지 분류하지 않도록 4단계 정밀 차단 필터가 작동 중입니다.';
         
         const statusBadge = document.getElementById('scanStatusBadge');
         statusBadge.className = 'bg-coral text-white text-[10px] font-mono px-3 py-1 rounded-full font-bold shadow-sm flex items-center gap-1.5';
-        document.getElementById('scanStatusText').innerText = '도서 미감지 (바닥/배경 감지됨) [OOD REJECT]';
+        document.getElementById('scanStatusText').innerText = '도서 미감지 [OOD REJECT]';
         
         // Puzzled face on book
         document.getElementById('viewfinderFaceImg').src = ASSET_DATA['face-scanning'];
