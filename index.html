@@ -240,37 +240,54 @@
 
       
       <!-- OOD (Out-of-Distribution) / Non-Book Floor Detection Alert Box -->
-      <div id="nonBookAlertBox" class="hidden bg-coral/20 border-3 border-charcoal rounded-2xl p-4 brutal-card flex flex-col gap-2.5 transition-all">
-        <div class="flex items-center justify-between">
-          <span class="font-black text-sm text-charcoal flex items-center gap-2">
-            <img id="nonBookAlertIcon" src="" alt="Reject" class="w-5 h-5 object-contain">
-            <span id="nonBookAlertBoxTitle">도서 표지 미감지 (비도서/배경 감지됨)</span>
-          </span>
-          <span class="font-mono text-[10px] bg-charcoal text-cream font-bold px-2 py-0.5 rounded">OOD REJECT</span>
+      <div id="nonBookAlertBox" class="hidden bg-[#FCFBF7] border-2 border-charcoal rounded-2xl p-4 brutal-card flex flex-col gap-3 shadow-brutal transition-all">
+        <!-- Top Monospace Meta Path & Reject Indicator -->
+        <div class="flex items-center justify-between text-xs border-b border-charcoal/15 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[10px] bg-coral text-white font-black px-1.5 py-0.5 rounded">! REJECT</span>
+            <span class="font-mono text-[11px] text-charcoal/60 font-bold">// Security & OOD Guard / Gate Blocked</span>
+          </div>
+          <span class="font-mono text-[10px] text-coral font-black">OOD: FAILED</span>
         </div>
-        
-        <p id="nonBookReasonText" class="text-xs text-charcoal/90 font-bold leading-relaxed">
-          카메라에 비친 대상이 책 표지가 아닌 것으로 판별되었습니다. (사물, 배경, 신체 부위 등 OOD 차단)<br>
-          우리 모델은 책이 아닌 일반 사물을 도서로 억지 분류하지 않도록 6단계 정밀 OOD 차단 필터가 작동 중입니다.
+
+        <!-- Main Alert Title Row -->
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-2.5 min-w-0">
+            <span class="bg-charcoal text-white font-black text-xs px-2 py-1 rounded-md shrink-0 font-mono tracking-tight">OOD</span>
+            <div class="min-w-0">
+              <h2 id="nonBookAlertBoxTitle" class="font-black text-base text-charcoal leading-tight">도서 표지 미감지 (비도서 사물 / 배경)</h2>
+              <div class="text-[11px] text-charcoal/70 font-medium mt-0.5 truncate" id="nonBookReasonSummary">비도서 사물 또는 배경 감지됨 (신뢰도/텍스처 미달)</div>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <div class="text-xl font-black font-mono text-coral leading-none tracking-tight" id="nonBookConfidenceScore">REJECT</div>
+            <div class="text-[9px] font-mono text-charcoal/50 font-bold mt-0.5 flex items-center justify-end gap-0.5">
+              <span class="text-coral">★</span> <span>BLOCKED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explanatory note -->
+        <p id="nonBookReasonText" class="text-xs text-charcoal/90 font-medium leading-relaxed bg-white/80 p-2.5 rounded-xl border border-charcoal/15">
+          카메라에 비친 대상이 책 표지가 아닌 것으로 판별되었습니다.<br>
+          우리 모델은 책이 아닌 일반 사물이나 배경을 억지로 도서로 오분류하지 않도록 <strong>Selective Classification & Free Energy 게이트</strong>가 작동 중입니다.
         </p>
 
-        <div class="bg-cream/90 p-2.5 rounded-xl border-2 border-charcoal/30 text-[11px] font-bold text-charcoal flex flex-col gap-1">
-          <div class="flex justify-between font-mono text-[10px] text-charcoal/70">
-            <span>• 휘도 대비: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (기준 26+)</span>
-            <span>• 엣지 밀도: <b id="nonBookEdge" class="text-charcoal font-black">1.1%</b> (기준 3.5%+)</span>
-            <span>• 직교 윤곽: <b id="nonBookOrtho" class="text-charcoal font-black">35%</b> (기준 42%+)</span>
-          </div>
-          <div class="text-charcoal/80 mt-0.5">
-            💡 <strong>가이드:</strong> 뷰파인더 프레임 안에 <strong>실제 책 표지</strong>가 가득 차도록 정면에서 맞춰주세요!
+        <!-- Metric Table -->
+        <div class="bg-white rounded-xl p-2.5 border border-charcoal/20 text-[11px] font-mono font-bold text-charcoal flex flex-col gap-1">
+          <div class="grid grid-cols-2 gap-2 text-[10px] text-charcoal/80">
+            <div>• Free Energy: <b id="nonBookEnergy" class="text-coral font-black">2.62</b> (기준 3.25+)</div>
+            <div>• 신뢰도 마진: <b id="nonBookMargin" class="text-coral font-black">0.3%p</b> (기준 18%p+)</div>
+            <div>• 중앙 텍스처: <b id="nonBookCenterEdge" class="text-charcoal font-black">7.2%</b> (기준 12%+)</div>
+            <div>• 휘도 대비: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (기준 28+)</div>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 mt-1">
+        <div class="flex items-center gap-2 pt-1">
           <button onclick="dismissNonBookAlert()" class="flex-1 brutal-btn bg-mustard text-charcoal font-black text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-brutal-sm">
-            <img id="nonBookResetIcon" src="" alt="Reset" class="w-4 h-4 object-contain">
-            <span>책 표지 다시 맞추기</span>
+            <span>📷 책 표지 다시 맞추기</span>
           </button>
-          <button onclick="forceProceedAnalysis()" class="brutal-btn bg-stage text-charcoal/70 font-bold text-[11px] py-2.5 px-3 rounded-xl border-2 border-charcoal">
+          <button onclick="forceProceedAnalysis()" class="brutal-btn bg-white text-charcoal/70 font-bold text-[11px] py-2.5 px-3 rounded-xl border border-charcoal/30">
             그래도 강제 분석
           </button>
         </div>
@@ -478,80 +495,133 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between">
-        <div id="resultCategoryPill" class="bg-coral text-white font-black text-xs py-1.5 px-3 rounded-xl border-2 border-charcoal shadow-brutal-sm flex items-center gap-1.5">
-          <img id="genreBadgeImg" src="" alt="Badge" class="w-5 h-5 object-contain">
-          <span id="genreBadgeLabel">그림책 (Picture Book)</span>
+      <!-- Editorial Result Card (Inspired by taste-skill & impeccable reference) -->
+      <div class="bg-[#FCFBF7] rounded-2xl p-4 border-2 border-charcoal shadow-brutal flex flex-col gap-3.5">
+        
+        <!-- Top Monospace Meta Path & Rank Indicator -->
+        <div class="flex items-center justify-between text-xs border-b border-charcoal/15 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[10px] bg-coral text-white font-black px-1.5 py-0.5 rounded shadow-xs" id="editorialRankBadge">#1</span>
+            <span class="font-mono text-[11px] text-charcoal/60 font-bold" id="editorialMetaPath">// BookLens / ResNet-18 Classifier</span>
+          </div>
+          <span class="font-mono text-[10px] text-charcoal/50 font-bold" id="reportCode">SCAN-9699</span>
+        </div>
+
+        <!-- Main Identity Row: Rank Pill + Title/Model + Big Confidence Stat -->
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-2.5 min-w-0">
+            <span class="bg-charcoal text-white font-black text-xs px-2 py-1 rounded-md shrink-0 font-mono tracking-tight" id="editorialRankText">1위</span>
+            <div class="min-w-0">
+              <h2 id="reportTitle" class="font-black text-lg text-charcoal leading-tight truncate">달빛 산책</h2>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span id="genreBadgeLabel" class="text-xs font-black text-coral">그림책 (Picture Book)</span>
+                <span class="text-charcoal/30 text-xs">•</span>
+                <span id="reportAuthor" class="text-xs text-charcoal/70 font-medium truncate">이현지 작가</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <div class="text-2xl font-black font-mono text-coral leading-none tracking-tight" id="editorialConfScore">97.4%</div>
+            <div class="text-[9px] font-mono text-charcoal/50 font-bold mt-0.5 flex items-center justify-end gap-0.5">
+              <span class="text-coral">★</span> <span>CONFIDENCE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Tag Pills (Just like [YouTube] [Reddit] [X] [GitHub] in IMG_1875) -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-charcoal/25 bg-white text-charcoal/80">ResNet-18</span>
+          <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-charcoal/25 bg-white text-charcoal/80">CosineLR</span>
+          <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-charcoal/25 bg-white text-charcoal/80">3-Frame TTA</span>
+          <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-mint/60 bg-mint/20 text-charcoal font-black">OOD: PASSED</span>
+        </div>
+
+        <!-- Visual 10-Slot Tactical Confidence Bar Chart (Direct homage to IMG_1875!) -->
+        <div class="bg-white rounded-xl p-2.5 border border-charcoal/20 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-[10px] font-mono font-bold text-charcoal/60">
+            <span>CONFIDENCE DISTRIBUTION SCALE</span>
+            <span id="activeSlotLabel" class="text-coral font-black">TIER 10 (MAX)</span>
+          </div>
+          <!-- 10 Vertical Slot Rectangles (10 to 1) -->
+          <div class="grid grid-cols-10 gap-1 h-9 items-end">
+            <div id="confSlot-1" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 30%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">1</span></div>
+            <div id="confSlot-2" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 40%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">2</span></div>
+            <div id="confSlot-3" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 50%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">3</span></div>
+            <div id="confSlot-4" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 60%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">4</span></div>
+            <div id="confSlot-5" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 70%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">5</span></div>
+            <div id="confSlot-6" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 80%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">6</span></div>
+            <div id="confSlot-7" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 85%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">7</span></div>
+            <div id="confSlot-8" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 90%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">8</span></div>
+            <div id="confSlot-9" class="h-full border border-charcoal/20 rounded bg-charcoal/5 flex flex-col justify-end p-0.5"><div class="w-full bg-mustard rounded-xs" style="height: 95%;"></div><span class="text-[8px] font-mono text-center text-charcoal/40 font-bold mt-0.5">9</span></div>
+            <div id="confSlot-10" class="h-full border-2 border-coral rounded bg-coral/5 flex flex-col justify-end p-0.5 shadow-xs"><div class="w-full bg-coral rounded-xs" style="height: 100%;"></div><span class="text-[8px] font-mono text-center text-coral font-black mt-0.5">10</span></div>
+          </div>
+        </div>
+
+        <!-- 3-Class Softmax Probability Breakdown -->
+        <div class="flex flex-col gap-1.5 pt-1">
+          <div>
+            <div class="flex justify-between text-[11px] font-bold mb-0.5">
+              <span class="text-coral flex items-center gap-1"><span>•</span> 그림책 (Picture Book)</span>
+              <span id="probText-picture" class="font-mono text-coral font-black">97.4%</span>
+            </div>
+            <div class="w-full bg-stage rounded-full h-2 border border-charcoal/30 overflow-hidden">
+              <div id="probBar-picture" class="bg-coral h-full rounded-full transition-all duration-500" style="width: 97.4%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] font-bold mb-0.5">
+              <span class="text-crayon flex items-center gap-1"><span>•</span> 줄글책 (Text Book)</span>
+              <span id="probText-text" class="font-mono text-crayon font-black">1.8%</span>
+            </div>
+            <div class="w-full bg-stage rounded-full h-2 border border-charcoal/30 overflow-hidden">
+              <div id="probBar-text" class="bg-crayon h-full rounded-full transition-all duration-500" style="width: 1.8%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] font-bold mb-0.5">
+              <span class="text-mustard flex items-center gap-1"><span>•</span> 만화책 (Comic Book)</span>
+              <span id="probText-comic" class="font-mono text-mustard font-black">0.8%</span>
+            </div>
+            <div class="w-full bg-stage rounded-full h-2 border border-charcoal/30 overflow-hidden">
+              <div id="probBar-comic" class="bg-mustard h-full rounded-full transition-all duration-500" style="width: 0.8%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Book Thumbnail & Meta Details Accordion -->
+        <div class="flex items-center gap-3 pt-2 border-t border-charcoal/15">
+          <div class="w-16 h-22 rounded-lg overflow-hidden border border-charcoal bg-white shrink-0 relative shadow-sm">
+            <img id="reportCoverImg" src="" alt="Cover" class="w-full h-full object-cover">
+          </div>
+          <div class="flex-1 min-w-0 flex flex-col justify-center">
+            <div class="text-[11px] font-black text-charcoal truncate" id="subReportTitle">달빛 산책</div>
+            <div class="text-[10px] font-mono text-charcoal/60 truncate mt-0.5" id="subReportAuthor">이현지 작가 · 표지 스캔본</div>
+            <div class="inline-flex items-center gap-1 bg-mint/30 px-2 py-0.5 rounded border border-mint/60 w-fit mt-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-mint inline-block"></span>
+              <span class="text-[10px] font-mono font-bold text-charcoal">ResNet-18 Verified</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ambiguity Alert Box (Selective Classification) -->
+        <div id="ambiguityAlertBox" class="hidden bg-mustard/20 border-2 border-charcoal rounded-xl p-2.5 text-left shadow-brutal-sm">
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-black text-xs text-charcoal flex items-center gap-1.5">
+              <img id="ambiguityWarningIcon" src="" alt="Warning" class="w-5 h-5 object-contain">
+              <span>복합 특징 표지 감지</span>
+            </span>
+            <span class="font-mono text-[9px] bg-charcoal text-cream font-bold px-1.5 py-0.5 rounded" id="ambiguityMarginBadge">MARGIN 3.8%p</span>
+          </div>
+          <p class="text-[11px] text-charcoal/90 font-bold leading-relaxed mb-1">
+            일러스트와 텍스트가 모두 많은 복합 도서입니다. <strong>고주파 텍스트 밀도 보정 헤드</strong>를 활성화하여 오분류를 방어했습니다.
+          </p>
+          <div class="text-[10px] font-mono text-charcoal/70 bg-white/70 p-1.5 rounded border border-charcoal/20">
+            • 1위 판정: <span id="ambiguityWinner" class="font-bold text-coral">줄글책</span> | 2위 후보: <span id="ambiguityRunnerUp">그림책</span>
+          </div>
         </div>
       </div>
-
-      <!-- Main Report Card -->
-      <div class="bg-cream rounded-2xl p-4 brutal-card flex flex-col gap-4">
-        
-        <!-- Hero: Book Cover + Happy Mascot Face + Title -->
-        <div class="flex items-center gap-3 border-b-2 border-charcoal pb-4">
-          <div class="w-20 h-28 rounded-xl overflow-hidden border-2 border-charcoal bg-stage flex-shrink-0 relative shadow-brutal-sm">
-            <img id="reportCoverImg" src="" alt="Scanned Cover" class="w-full h-full object-cover">
-            <img id="reportSparkle" src="" alt="Sparkle" class="absolute -top-1 -right-1 w-5 h-5">
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-1.5 mb-1">
-              <span id="reportConfBadge" class="font-mono text-[10px] bg-coral text-white font-black px-1.5 py-0.5 rounded">97.4% 확신</span>
-              <span class="font-mono text-[10px] text-charcoal/60 font-bold" id="reportCode">PIC-813.8</span>
-            </div>
-            <h2 id="reportTitle" class="font-black text-lg text-charcoal leading-snug truncate">달빛 산책</h2>
-            <p id="reportAuthor" class="text-xs text-charcoal/70 font-bold mb-2">이현지 작가</p>
-            
-            <div class="inline-flex items-center gap-1.5 bg-stage px-2 py-1 rounded-lg border border-charcoal">
-              <img id="reportHappyFace" src="" alt="Happy Face" class="w-5 h-3 object-contain">
-              <span class="text-[10px] font-black text-charcoal">표지 인식 & 도슨트 완료!</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 1: Softmax 확신도 차트 -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-black text-charcoal">도서 형태 확신도 (Softmax 차트)</span>
-            <span class="font-mono text-[10px] text-charcoal/60 font-bold">ResNet-18 Robust</span>
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <div>
-              <div class="flex justify-between text-[11px] font-bold mb-0.5">
-                <span class="text-coral">그림책 (Picture Book)</span>
-                <span id="probText-picture" class="font-mono text-coral font-black">97.4%</span>
-              </div>
-              <div class="w-full bg-stage rounded-full h-2.5 border border-charcoal overflow-hidden">
-                <div id="probBar-picture" class="bg-coral h-full rounded-full transition-all duration-500" style="width: 97.4%;"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-[11px] font-bold mb-0.5">
-                <span class="text-crayon">줄글책 (Text Book)</span>
-                <span id="probText-text" class="font-mono text-crayon font-black">1.8%</span>
-              </div>
-              <div class="w-full bg-stage rounded-full h-2.5 border border-charcoal overflow-hidden">
-                <div id="probBar-text" class="bg-crayon h-full rounded-full transition-all duration-500" style="width: 1.8%;"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-[11px] font-bold mb-0.5">
-                <span class="text-mustard">만화책 (Comic Book)</span>
-                <span id="probText-comic" class="font-mono text-mustard font-black">0.8%</span>
-              </div>
-              <div class="w-full bg-stage rounded-full h-2.5 border border-charcoal overflow-hidden">
-                <div id="probBar-comic" class="bg-mustard h-full rounded-full transition-all duration-500" style="width: 0.8%;"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ambiguity Alert Box (Selective Classification) -->
-          <div id="ambiguityAlertBox" class="hidden bg-mustard/20 border-2 border-charcoal rounded-xl p-2.5 mt-2.5 text-left shadow-brutal-sm">
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-black text-xs text-charcoal flex items-center gap-1.5">
                 <img id="ambiguityWarningIcon" src="" alt="Warning" class="w-5 h-5 object-contain">
                 <span>복합 특징 표지 감지</span>
               </span>
@@ -1359,7 +1429,7 @@
     // REAL-TIME COMPUTER VISION INFERENCE ENGINE WITH OOD (NON-BOOK / FLOOR) FILTER
     let cachedLastCvResult = null;
 
-    function checkIsBookPresent(gray, width, height, avgSat, blackRatio) {
+    function checkIsBookPresent(gray, width, height, avgSat, blackRatio, freeEnergy = 4.0, margin = 0.5, winnerConf = 0.8) {
       let sum = 0;
       const numPixels = width * height;
       for (let i = 0; i < numPixels; i++) sum += gray[i];
@@ -1457,43 +1527,29 @@
       const textScore = textPeriodicityScore / (height - 2);
       const orthogonalRatio = edgeCount > 0 ? (horizEdges + vertEdges) / edgeCount : 0;
 
-      // Robust 6-Stage OOD & Book Verification Gate:
-      // Stage 1: Dark background / vehicle interior / nighttime guard
-      const isDarkBackground = (centerShadowRatio > 0.38) || (centerMean < 35) || (deepShadowRatio > 0.45 && centerMean < 45);
+      // Multi-modal OOD Decision (Physics Priors + Energy Score + Softmax Margin)
+      const isDark = (centerShadowRatio > 0.35) || (centerMean < 38) || (deepShadowRatio > 0.40 && centerMean < 48);
+      const isFlat = (stdDev < 28) || (edgeDensity < 0.04) || (stdDev < 38 && quadrantSpread < 14);
+      const isUniform = (edgeDensity > 0.40 && quadrantSpread < 16 && avgSat < 0.18);
+      const isCenterWeak = (centerEdgeDensity < 0.12 && edgeDensity < 0.22);
+      const isLowEnergy = (freeEnergy < 3.25);
+      const isLowMargin = (margin < 0.18);
+      const isLowConf = (winnerConf < 0.55);
 
-      // Stage 2: Flat/Plain surface guard (floor, blank wall, desk plane)
-      const isFlatSurface = (stdDev < 26) || (edgeDensity < 0.035) || (stdDev < 35 && quadrantSpread < 14);
-
-      // Stage 3: Uniform noise / texture guard (carpet, fabric, screen noise)
-      const isUniformNoise = (edgeDensity > 0.40 && quadrantSpread < 16 && avgSat < 0.18);
-
-      // Stage 4: Central book presence guard (center must contain illuminated book surface)
-      const isCenterEmpty = (centerEdgeDensity < 0.065) && (centerShadowRatio > 0.25 || centerMean < 45 || stdDev < 40);
-
-      // Stage 5: Orthogonal Book Geometry Guard (books have strong H/V rectangular contours)
-      const hasOrthogonalStructure = (orthogonalRatio >= 0.42);
-
-      // Stage 6: Semantic Book Feature Coherence
-      const hasTypography = (textScore >= 0.18);
-      const hasIllustration = (avgSat >= 0.20 && stdDev >= 40);
-      const hasComicLines = (blackRatio >= 0.08 && edgeDensity >= 0.08 && orthogonalRatio >= 0.40);
-      const hasBookFeature = hasTypography || hasIllustration || hasComicLines;
-
-      const isBook = !isDarkBackground && !isFlatSurface && !isUniformNoise && !isCenterEmpty && hasOrthogonalStructure && hasBookFeature;
+      const isOod = isDark || isFlat || isUniform || isCenterWeak || isLowEnergy || isLowMargin || isLowConf;
+      const isBook = !isOod;
 
       let rejectReason = '';
-      if (isDarkBackground) {
+      if (isDark) {
         rejectReason = '도서 표지 미감지: 실내/차량 어두운 배경 (중앙 암전 또는 조도 부족)';
-      } else if (isFlatSurface) {
+      } else if (isFlat) {
         rejectReason = '도서 표지 미감지: 평면 단색 배경 (바닥/벽면/책상 감지)';
-      } else if (isUniformNoise) {
+      } else if (isUniform) {
         rejectReason = '도서 표지 미감지: 균일 노이즈 또는 직물/카펫 텍스처 감지';
-      } else if (isCenterEmpty) {
-        rejectReason = '도서 표지 미감지: 중앙 뷰파인더 내 도서 표면 부재 (빈 배경 감지)';
-      } else if (!hasOrthogonalStructure) {
-        rejectReason = '도서 표지 미감지: 비도서 사물 (직사각형 도서 윤곽선 부재)';
-      } else if (!hasBookFeature) {
-        rejectReason = '도서 표지 미감지: 표지 타이포그래피 또는 삽화 미식별 (OOD)';
+      } else if (isCenterWeak) {
+        rejectReason = '도서 표지 미감지: 중앙 표지 텍스처 부재 (비도서 사물 또는 빈 배경 감지)';
+      } else if (isLowEnergy || isLowMargin || isLowConf) {
+        rejectReason = `도서 표지 미감지: 비도서 배경 (낮은 신뢰도 ${(winnerConf * 100).toFixed(1)}%, 마진 ${(margin * 100).toFixed(1)}%p)`;
       }
 
       return {
@@ -1507,6 +1563,9 @@
         textScore: (textScore * 100).toFixed(1) + '%',
         centerMean: centerMean.toFixed(1),
         centerShadowRatio: (centerShadowRatio * 100).toFixed(1) + '%',
+        freeEnergy: freeEnergy.toFixed(2),
+        margin: (margin * 100).toFixed(1) + '%p',
+        winnerConf: (winnerConf * 100).toFixed(1) + '%',
         rawEdgeDensity: edgeDensity,
         rawStdDev: stdDev
       };
@@ -1605,9 +1664,10 @@
       const margin = winner.prob - runnerUp.prob;
       const isAmbiguous = margin < 0.14 || winner.prob < 0.58;
 
+      const freeEnergy = maxL + Math.log(sumExp);
       const customImgUrl = canvas.toDataURL('image/jpeg', 0.85);
 
-      const oodCheck = checkIsBookPresent(gray, 224, 224, avgSat, blackRatio);
+      const oodCheck = checkIsBookPresent(gray, 224, 224, avgSat, blackRatio, freeEnergy, margin, winner.prob);
 
       return {
         winner: winner.type,
@@ -1752,13 +1812,17 @@
       if (cvResult.oodCheck && !cvResult.oodCheck.isBook) {
         document.getElementById('nonBookAlertBox').classList.remove('hidden');
         document.getElementById('nonBookContrast').innerText = cvResult.oodCheck.stdDev;
-        document.getElementById('nonBookEdge').innerText = cvResult.oodCheck.edgeDensity;
-        const orthoEl = document.getElementById('nonBookOrtho');
-        if (orthoEl) orthoEl.innerText = cvResult.oodCheck.orthogonalRatio;
+        document.getElementById('nonBookCenterEdge').innerText = cvResult.oodCheck.centerEdgeDensity;
+        document.getElementById('nonBookEnergy').innerText = cvResult.oodCheck.freeEnergy;
+        document.getElementById('nonBookMargin').innerText = cvResult.oodCheck.margin;
+        document.getElementById('nonBookConfidenceScore').innerText = cvResult.oodCheck.winnerConf;
+        
         const titleEl = document.getElementById('nonBookAlertBoxTitle');
         if (titleEl) titleEl.innerText = cvResult.oodCheck.rejectReason.split(':')[0] || '도서 표지 미감지';
+        const summaryEl = document.getElementById('nonBookReasonSummary');
+        if (summaryEl) summaryEl.innerText = cvResult.oodCheck.rejectReason;
         const reasonEl = document.getElementById('nonBookReasonText');
-        if (reasonEl) reasonEl.innerHTML = '<strong>' + cvResult.oodCheck.rejectReason + '</strong><br>우리 모델은 책이 아닌 일반 사물이나 배경(차량 실내, 가구, 바닥, 신체 등)을 도서로 억지 분류하지 않도록 6단계 정밀 OOD 차단 필터가 작동 중입니다.';
+        if (reasonEl) reasonEl.innerHTML = '<strong>' + cvResult.oodCheck.rejectReason + '</strong><br>우리 모델은 책이 아닌 일반 사물이나 배경(차량 실내, 가구, 바닥, 신체 등)을 도서로 억지 분류하지 않도록 <strong>Selective Classification & Free Energy 게이트</strong>가 작동 중입니다.';
         
         const statusBadge = document.getElementById('scanStatusBadge');
         statusBadge.className = 'bg-coral text-white text-[10px] font-mono px-3 py-1 rounded-full font-bold shadow-sm flex items-center gap-1.5';
@@ -1994,10 +2058,53 @@
       }
       document.getElementById('reportTitle').innerText = title;
       document.getElementById('reportAuthor').innerText = author;
-      document.getElementById('reportConfBadge').innerText = `${conf} 확신`;
-      document.getElementById('reportCode').innerText = isCustom ? `SCAN-${Date.now().toString().slice(-4)}` : data.code;
+      const confBadge = document.getElementById('reportConfBadge');
+      if (confBadge) confBadge.innerText = `${conf} 확신`;
+      const reportCodeEl = document.getElementById('reportCode');
+      if (reportCodeEl) reportCodeEl.innerText = isCustom ? `SCAN-${Date.now().toString().slice(-4)}` : data.code;
       
-      document.getElementById('reportCoverImg').src = coverUrl;
+      const coverImgEl = document.getElementById('reportCoverImg');
+      if (coverImgEl) coverImgEl.src = coverUrl;
+
+      // Editorial card elements (taste-skill & impeccable reference)
+      const editorialConfEl = document.getElementById('editorialConfScore');
+      if (editorialConfEl) editorialConfEl.innerText = conf;
+      const editorialRankEl = document.getElementById('editorialRankText');
+      if (editorialRankEl) editorialRankEl.innerText = '1위';
+      const editorialRankBadge = document.getElementById('editorialRankBadge');
+      if (editorialRankBadge) editorialRankBadge.innerText = '#1';
+      const editorialMetaPath = document.getElementById('editorialMetaPath');
+      if (editorialMetaPath) editorialMetaPath.innerText = `// ResNet-18 / ${categoryLabel.split(' ')[0]}`;
+      const subTitleEl = document.getElementById('subReportTitle');
+      if (subTitleEl) subTitleEl.innerText = title;
+      const subAuthorEl = document.getElementById('subReportAuthor');
+      if (subAuthorEl) subAuthorEl.innerText = `${author} · 표지 스캔본`;
+
+      // 10-Slot Tactile Confidence Visualizer (IMG_1875 reference)
+      const confNum = parseFloat(conf) || 50;
+      const activeTier = Math.min(10, Math.max(1, Math.ceil(confNum / 10)));
+      const activeSlotLabel = document.getElementById('activeSlotLabel');
+      if (activeSlotLabel) activeSlotLabel.innerText = `TIER ${activeTier} (${confNum.toFixed(1)}%)`;
+
+      for (let s = 1; s <= 10; s++) {
+        const slot = document.getElementById(`confSlot-${s}`);
+        if (!slot) continue;
+        const barFill = slot.querySelector('div');
+        const spanText = slot.querySelector('span');
+        if (s === activeTier) {
+          slot.className = 'h-full border-2 border-coral rounded bg-coral/10 flex flex-col justify-end p-0.5 shadow-xs transition-all';
+          if (barFill) barFill.className = 'w-full bg-coral rounded-xs';
+          if (spanText) spanText.className = 'text-[8px] font-mono text-center text-coral font-black mt-0.5';
+        } else if (s < activeTier) {
+          slot.className = 'h-full border border-charcoal/30 rounded bg-white flex flex-col justify-end p-0.5 transition-all';
+          if (barFill) barFill.className = 'w-full bg-mustard rounded-xs';
+          if (spanText) spanText.className = 'text-[8px] font-mono text-center text-charcoal/60 font-bold mt-0.5';
+        } else {
+          slot.className = 'h-full border border-charcoal/15 rounded bg-charcoal/5 flex flex-col justify-end p-0.5 opacity-40 transition-all';
+          if (barFill) barFill.className = 'w-full bg-charcoal/20 rounded-xs';
+          if (spanText) spanText.className = 'text-[8px] font-mono text-center text-charcoal/30 font-medium mt-0.5';
+        }
+      }
 
       document.getElementById('probText-picture').innerText = probs.picture;
       document.getElementById('probBar-picture').style.width = probs.picture;
