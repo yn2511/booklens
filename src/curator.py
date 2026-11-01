@@ -64,8 +64,7 @@ class BookLensNLPCurator:
         extra_info = ""
         if margin is not None and edge_density is not None:
             guard_note = "안정적 분류 (High Confidence)" if margin >= 0.15 else "경계선 샘플 (Sobel 엣지 밀도 교차 검증 적용)"
-            extra_info = f"
-• 판별 보조 지표: Softmax Margin {margin*100:.1f}%p | Sobel 엣지 밀도 {edge_density:.1f}% ({guard_note})"
+            extra_info = f"\n• 판별 보조 지표: Softmax Margin {margin*100:.1f}%p | Sobel 엣지 밀도 {edge_density:.1f}% ({guard_note})"
         report = f"""======================================================================
 [BookLens AI 비전 인식 & TF-IDF 기반 맞춤형 큐레이션 리포트]
 • 비전 인식 결과: {meta['name']} (인식 신뢰도: {confidence*100:.1f}%){extra_info}

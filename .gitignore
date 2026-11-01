@@ -1,0 +1,14 @@
+# Asset source folders (inlined into index.html)
+library_ui_assets/
+shutter_assets/
+stickers_256/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pt
+
+# OS
+.DS_Store
+Thumbs.db
