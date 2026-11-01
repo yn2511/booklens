@@ -244,21 +244,21 @@
         <div class="flex items-center justify-between">
           <span class="font-black text-sm text-charcoal flex items-center gap-2">
             <img id="nonBookAlertIcon" src="" alt="Reject" class="w-5 h-5 object-contain">
-            <span>도서 표지 미감지 (바닥/배경 감지됨)</span>
+            <span id="nonBookAlertBoxTitle">도서 표지 미감지 (비도서/배경 감지됨)</span>
           </span>
           <span class="font-mono text-[10px] bg-charcoal text-cream font-bold px-2 py-0.5 rounded">OOD REJECT</span>
         </div>
         
         <p id="nonBookReasonText" class="text-xs text-charcoal/90 font-bold leading-relaxed">
           카메라에 비친 대상이 책 표지가 아닌 것으로 판별되었습니다. (사물, 배경, 신체 부위 등 OOD 차단)<br>
-          우리 모델은 책이 아닌 일반 사물을 도서로 억지 분류하지 않도록 4단계 정밀 차단 필터가 작동 중입니다.
+          우리 모델은 책이 아닌 일반 사물을 도서로 억지 분류하지 않도록 6단계 정밀 OOD 차단 필터가 작동 중입니다.
         </p>
 
         <div class="bg-cream/90 p-2.5 rounded-xl border-2 border-charcoal/30 text-[11px] font-bold text-charcoal flex flex-col gap-1">
           <div class="flex justify-between font-mono text-[10px] text-charcoal/70">
-            <span>• 휘도 대비: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (기준 32+)</span>
+            <span>• 휘도 대비: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (기준 26+)</span>
             <span>• 엣지 밀도: <b id="nonBookEdge" class="text-charcoal font-black">1.1%</b> (기준 3.5%+)</span>
-            <span>• 직교 윤곽: <b id="nonBookOrtho" class="text-charcoal font-black">35%</b> (기준 46%+)</span>
+            <span>• 직교 윤곽: <b id="nonBookOrtho" class="text-charcoal font-black">35%</b> (기준 42%+)</span>
           </div>
           <div class="text-charcoal/80 mt-0.5">
             💡 <strong>가이드:</strong> 뷰파인더 프레임 안에 <strong>실제 책 표지</strong>가 가득 차도록 정면에서 맞춰주세요!
@@ -1372,6 +1372,13 @@
       }
       const stdDev = Math.sqrt(varianceSum / numPixels);
 
+      // Deep shadow ratio (pixels with lum < 25)
+      let deepShadowCount = 0;
+      for (let i = 0; i < numPixels; i++) {
+        if (gray[i] < 25) deepShadowCount++;
+      }
+      const deepShadowRatio = deepShadowCount / numPixels;
+
       // Quadrants luminance variance (Spatial Structure)
       const halfW = Math.floor(width / 2);
       const halfH = Math.floor(height / 2);
@@ -1391,14 +1398,37 @@
       const minQ = Math.min(...qMeans);
       const quadrantSpread = maxQ - minQ;
 
+      // Central Viewfinder Analysis (Center 50% box: x 56..168, y 56..168)
+      const yMin = Math.floor(height * 0.25);
+      const yMax = Math.floor(height * 0.75);
+      const xMin = Math.floor(width * 0.25);
+      const xMax = Math.floor(width * 0.75);
+
+      let centerSum = 0;
+      let centerShadowCount = 0;
+      let centerCount = 0;
+
+      for (let y = yMin; y < yMax; y++) {
+        for (let x = xMin; x < xMax; x++) {
+          const val = gray[y * width + x];
+          centerSum += val;
+          if (val < 25) centerShadowCount++;
+          centerCount++;
+        }
+      }
+      const centerMean = centerSum / centerCount;
+      const centerShadowRatio = centerShadowCount / centerCount;
+
       // Calculate directional edge gradients & text line periodicity
       let edgeCount = 0;
+      let centerEdgeCount = 0;
       let horizEdges = 0;
       let vertEdges = 0;
       let textPeriodicityScore = 0;
 
       for (let y = 1; y < height - 1; y++) {
         let rowEdges = 0;
+        const isCenterY = (y >= yMin && y < yMax);
         for (let x = 1; x < width - 1; x++) {
           const idx = y * width + x;
           const gx = -gray[idx - width - 1] - 2 * gray[idx - 1] - gray[idx + width - 1] +
@@ -1409,43 +1439,57 @@
           const absGy = Math.abs(gy);
           const mag = absGx + absGy;
           
-          if (mag > 105) {
+          if (mag > 60) {
             edgeCount++;
             rowEdges++;
-            if (absGy > 1.5 * absGx) horizEdges++;
-            else if (absGx > 1.5 * absGy) vertEdges++;
+            if (isCenterY && x >= xMin && x < xMax) {
+              centerEdgeCount++;
+            }
+            if (absGy > 2.0 * absGx) horizEdges++;
+            else if (absGx > 2.0 * absGy) vertEdges++;
           }
         }
-        if (rowEdges >= 14 && rowEdges <= 85) textPeriodicityScore++;
+        if (rowEdges >= 12) textPeriodicityScore++;
       }
 
       const edgeDensity = edgeCount / ((width - 2) * (height - 2));
+      const centerEdgeDensity = centerEdgeCount / ((yMax - yMin) * (xMax - xMin));
       const textScore = textPeriodicityScore / (height - 2);
       const orthogonalRatio = edgeCount > 0 ? (horizEdges + vertEdges) / edgeCount : 0;
 
-      // Robust 4-Stage OOD & Book Verification Gate:
-      // Stage 1: Flat/Plain surface guard (floor, blank wall, desk plane)
-      const isFlatSurface = (stdDev < 32 || quadrantSpread < 20 || edgeDensity < 0.035);
+      // Robust 6-Stage OOD & Book Verification Gate:
+      // Stage 1: Dark background / vehicle interior / nighttime guard
+      const isDarkBackground = (centerShadowRatio > 0.38) || (centerMean < 35) || (deepShadowRatio > 0.45 && centerMean < 45);
 
-      // Stage 2: Uniform noise / texture guard (carpet, fabric, screen noise)
-      const isUniformNoise = (edgeDensity > 0.38 && quadrantSpread < 14);
+      // Stage 2: Flat/Plain surface guard (floor, blank wall, desk plane)
+      const isFlatSurface = (stdDev < 26) || (edgeDensity < 0.035) || (stdDev < 35 && quadrantSpread < 14);
 
-      // Stage 3: Orthogonal Book Geometry Guard (books have strong H/V rectangular contours)
-      const hasOrthogonalStructure = (orthogonalRatio >= 0.46);
+      // Stage 3: Uniform noise / texture guard (carpet, fabric, screen noise)
+      const isUniformNoise = (edgeDensity > 0.40 && quadrantSpread < 16 && avgSat < 0.18);
 
-      // Stage 4: Semantic Book Feature Coherence
-      const hasTypography = (textScore >= 0.15);
-      const hasIllustration = (avgSat >= 0.22 && stdDev >= 45);
-      const hasComicLines = (blackRatio >= 0.05 && edgeDensity >= 0.05);
+      // Stage 4: Central book presence guard (center must contain illuminated book surface)
+      const isCenterEmpty = (centerEdgeDensity < 0.065) && (centerShadowRatio > 0.25 || centerMean < 45 || stdDev < 40);
+
+      // Stage 5: Orthogonal Book Geometry Guard (books have strong H/V rectangular contours)
+      const hasOrthogonalStructure = (orthogonalRatio >= 0.42);
+
+      // Stage 6: Semantic Book Feature Coherence
+      const hasTypography = (textScore >= 0.18);
+      const hasIllustration = (avgSat >= 0.20 && stdDev >= 40);
+      const hasComicLines = (blackRatio >= 0.08 && edgeDensity >= 0.08 && orthogonalRatio >= 0.40);
       const hasBookFeature = hasTypography || hasIllustration || hasComicLines;
 
-      const isBook = !isFlatSurface && !isUniformNoise && hasOrthogonalStructure && hasBookFeature;
+      const isBook = !isDarkBackground && !isFlatSurface && !isUniformNoise && !isCenterEmpty && hasOrthogonalStructure && hasBookFeature;
 
       let rejectReason = '';
-      if (isFlatSurface) {
-        rejectReason = '도서 표지 미감지: 평면 배경 또는 대비 부족 (바닥/벽면 감지)';
+      if (isDarkBackground) {
+        rejectReason = '도서 표지 미감지: 실내/차량 어두운 배경 (중앙 암전 또는 조도 부족)';
+      } else if (isFlatSurface) {
+        rejectReason = '도서 표지 미감지: 평면 단색 배경 (바닥/벽면/책상 감지)';
       } else if (isUniformNoise) {
         rejectReason = '도서 표지 미감지: 균일 노이즈 또는 직물/카펫 텍스처 감지';
+      } else if (isCenterEmpty) {
+        rejectReason = '도서 표지 미감지: 중앙 뷰파인더 내 도서 표면 부재 (빈 배경 감지)';
       } else if (!hasOrthogonalStructure) {
         rejectReason = '도서 표지 미감지: 비도서 사물 (직사각형 도서 윤곽선 부재)';
       } else if (!hasBookFeature) {
@@ -1458,8 +1502,11 @@
         stdDev: stdDev.toFixed(1),
         quadrantSpread: quadrantSpread.toFixed(1),
         edgeDensity: (edgeDensity * 100).toFixed(1) + '%',
+        centerEdgeDensity: (centerEdgeDensity * 100).toFixed(1) + '%',
         orthogonalRatio: (orthogonalRatio * 100).toFixed(1) + '%',
         textScore: (textScore * 100).toFixed(1) + '%',
+        centerMean: centerMean.toFixed(1),
+        centerShadowRatio: (centerShadowRatio * 100).toFixed(1) + '%',
         rawEdgeDensity: edgeDensity,
         rawStdDev: stdDev
       };
@@ -1708,8 +1755,10 @@
         document.getElementById('nonBookEdge').innerText = cvResult.oodCheck.edgeDensity;
         const orthoEl = document.getElementById('nonBookOrtho');
         if (orthoEl) orthoEl.innerText = cvResult.oodCheck.orthogonalRatio;
+        const titleEl = document.getElementById('nonBookAlertBoxTitle');
+        if (titleEl) titleEl.innerText = cvResult.oodCheck.rejectReason.split(':')[0] || '도서 표지 미감지';
         const reasonEl = document.getElementById('nonBookReasonText');
-        if (reasonEl) reasonEl.innerHTML = '<strong>' + cvResult.oodCheck.rejectReason + '</strong><br>우리 모델은 책이 아닌 일반 사물(신체 부위, 가구, 컵, 바닥 등)을 도서로 억지 분류하지 않도록 4단계 정밀 차단 필터가 작동 중입니다.';
+        if (reasonEl) reasonEl.innerHTML = '<strong>' + cvResult.oodCheck.rejectReason + '</strong><br>우리 모델은 책이 아닌 일반 사물이나 배경(차량 실내, 가구, 바닥, 신체 등)을 도서로 억지 분류하지 않도록 6단계 정밀 OOD 차단 필터가 작동 중입니다.';
         
         const statusBadge = document.getElementById('scanStatusBadge');
         statusBadge.className = 'bg-coral text-white text-[10px] font-mono px-3 py-1 rounded-full font-bold shadow-sm flex items-center gap-1.5';
