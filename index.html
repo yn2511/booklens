@@ -2320,12 +2320,6 @@
       let conf = currentCv ? currentCv.confidence : (currentData ? currentData.confidence : '54.2%');
 
       // Update 2-Column Comparison
-      // Sync DLS interactive cross-check input
-      const dlsCrossCheckInputEl = document.getElementById('dlsCrossCheckInput');
-      if (dlsCrossCheckInputEl) {
-        dlsCrossCheckInputEl.value = (isCustom && cvResult.customTitle) ? cvResult.customTitle : (data ? data.title : '');
-      }
-
       const dlsVisionPredEl = document.getElementById('dlsVisionPred');
       const dlsVisionNoteEl = document.getElementById('dlsVisionNote');
       const dlsMetaKdcEl = document.getElementById('dlsMetaKdc');
@@ -2834,6 +2828,11 @@
       }
 
       // Populate Moonjung DLS Hybrid Verification Card
+      const dlsCrossCheckInputEl = document.getElementById('dlsCrossCheckInput');
+      if (dlsCrossCheckInputEl) {
+        dlsCrossCheckInputEl.value = (isCustom && cvResult.customTitle) ? cvResult.customTitle : (data ? data.title : '');
+      }
+
       const dlsVisionPredEl = document.getElementById('dlsVisionPred');
       const dlsVisionNoteEl = document.getElementById('dlsVisionNote');
       const dlsMetaKdcEl = document.getElementById('dlsMetaKdc');
