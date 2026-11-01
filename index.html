@@ -1577,116 +1577,66 @@
     }
 
     // INTERNET BOOK SEARCH ENGINE (WIKIPEDIA / OPEN BOOK DB)
-        // DLS SCHOOL LIBRARY SEARCH ENGINE (SEOUL MUNJEONG ELEMENTARY SCHOOL & OPEN BOOK CATALOG)
     async function searchInternetBook() {
       const query = document.getElementById('bookSearchInput').value.trim();
       if (!query) {
-        alert('검색할 도서명을 입력해 주세요 (예: 어린 왕자, 수박 수영장, 슬램덩크...)');
+        alert('검색할 도서명을 입력해 주세요 (예: 어린 왕자, 데미안, 슬램덩크...)');
         return;
       }
 
       const btnIcon = document.getElementById('searchBtnIcon');
       btnIcon.innerText = '검색중...';
 
-      // 기존 비도서 경고창이 열려있었다면 닫기
-      const alertBox = document.getElementById('nonBookAlertBox');
-      if (alertBox) alertBox.classList.add('hidden');
-
       try {
-        let title = query;
-        let desc = '서울문정초 DLS 연계 · 도서 아카이브 수록작';
-        let extract = query + ' - 서울문정초등학교 도서관 소장 및 KDC 표준 등록 도서입니다.';
-        let thumb = ASSET_DATA['book-cover-general'];
-        let categories = '';
-        let found = false;
+        const searchUrl = 'https://ko.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent(query) + '&format=json&origin=*';
+        const res = await fetch(searchUrl);
+        const data = await res.json();
 
-        // 1차 시도: 도서 전용 규격(Google Books Books-only API) 검색
-        try {
-          const searchUrl = 'https://www.googleapis.com/books/v1/volumes?q=' + encodeURIComponent(query) + '&printType=books&maxResults=5';
-          const res = await fetch(searchUrl);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.items && data.items.length > 0) {
-              const topItem = data.items[0].volumeInfo;
-              title = topItem.title || query;
-              const authors = topItem.authors ? topItem.authors.join(', ') : '저자 미상';
-              const publisher = topItem.publisher || '출판사 정보 확인';
-              desc = '서울문정초 DLS 연계 · ' + authors + ' (' + publisher + ')';
-              extract = topItem.description || (title + ' - 서울문정초등학교 도서관 소장 및 KDC 표준 등록 도서입니다.');
-              if (topItem.imageLinks && (topItem.imageLinks.thumbnail || topItem.imageLinks.smallThumbnail)) {
-                thumb = (topItem.imageLinks.thumbnail || topItem.imageLinks.smallThumbnail).replace('http:', 'https:');
-              }
-              categories = (topItem.categories ? topItem.categories.join(' ') : '') + ' ' + (topItem.description || '') + ' ' + title;
-              found = true;
-            }
-          }
-        } catch (gErr) {
-          console.warn('Google Books API unavailable, falling back to Wikipedia Open Book DB:', gErr);
-        }
-
-        // 2차 시도: 구글 북스 할당량 초과(429) 또는 미검색 시 위키백과 오픈 아카이브 백업
-        if (!found) {
-          try {
-            const wikiSearchUrl = 'https://ko.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent(query) + '&format=json&origin=*';
-            const wRes = await fetch(wikiSearchUrl);
-            const wData = await wRes.json();
-            if (wData.query && wData.query.search && wData.query.search.length > 0) {
-              const topTitle = wData.query.search[0].title;
-              const sumUrl = 'https://ko.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(topTitle);
-              const sumRes = await fetch(sumUrl);
-              const sumData = await sumRes.json();
-              title = sumData.title || query;
-              desc = '서울문정초 DLS 연계 · ' + (sumData.description || '인터넷 도서 아카이브 수록작');
-              extract = sumData.extract || (title + ' - 서울문정초등학교 도서관 소장 및 KDC 표준 등록 도서입니다.');
-              if (sumData.thumbnail && sumData.thumbnail.source) {
-                thumb = sumData.thumbnail.source;
-              }
-              categories = (sumData.description || '') + ' ' + (sumData.extract || '') + ' ' + title;
-              found = true;
-            }
-          } catch (wErr) {
-            console.warn('Wikipedia fallback error:', wErr);
-          }
-        }
-
-        if (!found) {
-          alert('서울문정초등학교 DLS 도서관 및 도서 아카이브에서 '' + query + '' 관련 도서를 찾을 수 없습니다.
-정확한 도서명이나 저자명을 입력해 주세요.');
+        if (!data.query || !data.query.search || data.query.search.length === 0) {
+          alert('해당 도서를 찾을 수 없습니다. 도서명을 정확히 입력해 주세요.');
           btnIcon.innerText = '검색';
           return;
         }
 
+        const topTitle = data.query.search[0].title;
+        const summaryUrl = 'https://ko.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(topTitle);
+        const sumRes = await fetch(summaryUrl);
+        const sumData = await sumRes.json();
+
+        const title = sumData.title || query;
+        const desc = sumData.description || '인터넷 도서 아카이브 수록작';
+        const extract = sumData.extract || '도서 상세 정보가 확인되었습니다.';
+        const thumb = sumData.thumbnail ? sumData.thumbnail.source : ASSET_DATA['book-cover-general'];
+
         let inferredCat = 'text';
         let inferredLabel = '줄글책';
-
-        if (/만화|코믹|comic|graphic|웹툰|애니/i.test(categories)) {
+        if (desc.includes('만화') || title.includes('만화') || extract.includes('만화')) {
           inferredCat = 'comic';
           inferredLabel = '만화책';
-        } else if (/그림|동화|유아|어린이|picture/i.test(categories)) {
+        } else if (desc.includes('그림') || desc.includes('동화') || extract.includes('그림책')) {
           inferredCat = 'picture';
           inferredLabel = '그림책';
         }
 
         searchedBookMetadata = {
-          title: title,
-          desc: desc,
-          extract: extract,
-          thumb: thumb,
-          inferredCat: inferredCat,
-          inferredLabel: inferredLabel,
-          dlsPortalUrl: 'https://read365.edunet.net/PureScreen/SchoolSearch?schoolName=%EC%84%9C%EC%9A%B8%EB%AC%B8%EC%A0%95%EC%B4%88%EB%93%B1%ED%95%99%EA%B5%90&provCode=B10&neisCode=B100000919'
+          title,
+          desc,
+          extract,
+          thumb,
+          inferredCat,
+          inferredLabel
         };
 
-        // Render preview card (기존 디자인 및 레이아웃 100% 동일)
+        // Render preview card
         document.getElementById('searchResultImg').src = thumb;
         document.getElementById('searchResultTitle').innerText = title;
         document.getElementById('searchResultDesc').innerText = desc;
-        document.getElementById('searchResultCategory').innerText = '분류: ' + inferredLabel + ' (문정초 DLS 인증)';
+        document.getElementById('searchResultCategory').innerText = `분류: ${inferredLabel} (${desc})`;
         document.getElementById('searchResultPreview').classList.remove('hidden');
 
       } catch (err) {
         console.error('Book search error:', err);
-        alert('도서 검색 중 네트워크 통신 오류가 발생했습니다.');
+        alert('도서 검색 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.');
       } finally {
         btnIcon.innerText = '검색';
       }
