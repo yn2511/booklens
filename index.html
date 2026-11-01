@@ -150,7 +150,7 @@
       <!-- Academic Benchmark Modal Trigger -->
       <button id="btn-open-bench" onclick="openBenchmarkModal()" class="brutal-btn bg-coral text-white font-black text-xs px-2.5 h-8 rounded-lg flex items-center gap-1 shrink-0 shadow-brutal-sm" title="연구노트">
         <img id="headerChartIcon" src="" alt="Chart" class="w-3.5 h-3.5 object-contain">
-        <span>연구노트</span>
+        <span class="hidden sm:inline">연구노트</span>
       </button>
     </div>
   </header>
@@ -1013,6 +1013,9 @@
       }
       if (document.getElementById('rescanBottomIcon') && ASSET_DATA['btn_reset_idle']) {
         document.getElementById('rescanBottomIcon').src = ASSET_DATA['btn_reset_idle'];
+      }
+      if (document.getElementById('ttsPlayIcon') && ASSET_DATA['btn_audio_play']) {
+        document.getElementById('ttsPlayIcon').src = ASSET_DATA['btn_audio_play'];
       }
       if (document.getElementById('ttsBtnIconImg') && ASSET_DATA['btn_audio_play']) {
         document.getElementById('ttsBtnIconImg').src = ASSET_DATA['btn_audio_play'];
@@ -1982,6 +1985,9 @@
       
       document.getElementById('ticketSealImg').classList.add('hidden');
       document.getElementById('stampActionBtn').classList.remove('hidden');
+
+      // Reset & Initialize TTS UI
+      updateTtsUI(false);
 
       // Store current tts text
       window.currentTtsText = isCustom
