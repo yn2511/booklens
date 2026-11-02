@@ -318,10 +318,21 @@
         </div>
 
         <div class="flex gap-1.5">
-          <input id="bookSearchInput" type="text" placeholder="문정초 소장 도서 검색 (예: 마당을 나온 암탉, 어린 왕자, 수박 수영장, 흔한남매...)" class="flex-1 bg-stage border-2 border-charcoal rounded-xl px-3 py-2 text-xs font-bold text-charcoal focus:outline-none focus:border-coral" onkeydown="if(event.key==='Enter') searchMoonjungDls()">
+          <input id="bookSearchInput" type="text" placeholder="문정초 소장 도서 검색 (예: 키다리 아저씨, 마당을 나온 암탉, 수박 수영장...)" class="flex-1 bg-stage border-2 border-charcoal rounded-xl px-3 py-2 text-xs font-bold text-charcoal focus:outline-none focus:border-coral" onkeydown="if(event.key==='Enter') searchMoonjungDls()">
           <button onclick="searchMoonjungDls()" class="brutal-btn bg-coral text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shrink-0">
             <span id="searchBtnIcon">DLS 검색</span>
           </button>
+        </div>
+        <!-- 문정초 인기 소장 장서 퀵 검색 칩 -->
+        <div class="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar text-[9px] font-mono">
+          <span class="text-charcoal/50 shrink-0 font-bold">인기소장:</span>
+          <button onclick="setAndSearchInput('키다리 아저씨')" class="bg-stage hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold text-charcoal">키다리 아저씨</button>
+          <button onclick="setAndSearchInput('수박 수영장')" class="bg-stage hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold text-charcoal">수박 수영장</button>
+          <button onclick="setAndSearchInput('마당을 나온 암탉')" class="bg-stage hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold text-charcoal">마당을 나온 암탉</button>
+          <button onclick="setAndSearchInput('어린 왕자')" class="bg-stage hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold text-charcoal">어린 왕자</button>
+          <button onclick="setAndSearchInput('알사탕')" class="bg-stage hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold text-charcoal">알사탕</button>
+          <button onclick="setAndSearchInput('흔한남매 1')" class="bg-stage hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold text-charcoal">흔한남매 1</button>
+          <button onclick="setAndSearchInput('Why? 인공지능')" class="bg-stage hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold text-charcoal">Why? 인공지능</button>
         </div>
 
         <!-- Search Result Preview Card (Moonjung DLS Standard Catalog Card) -->
@@ -704,6 +715,7 @@
           <!-- 문정초 대표 장서 퀵 대조 칩 -->
           <div class="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar text-[9px] font-mono">
             <span class="text-charcoal/50 shrink-0 font-bold">인기장서:</span>
+            <button onclick="setAndRunDlsCrossCheck('키다리 아저씨')" class="bg-cream hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold">키다리 아저씨</button>
             <button onclick="setAndRunDlsCrossCheck('마당을 나온 암탉')" class="bg-cream hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold">마당을 나온 암탉</button>
             <button onclick="setAndRunDlsCrossCheck('어린 왕자')" class="bg-cream hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold">어린 왕자</button>
             <button onclick="setAndRunDlsCrossCheck('수박 수영장')" class="bg-cream hover:bg-coral/20 px-1.5 py-0.5 rounded border border-charcoal/30 shrink-0 font-bold">수박 수영장</button>
@@ -1848,6 +1860,21 @@
     // (서울문정초등학교 독서로 DLS 소장 도서 데이터베이스 및 Late Fusion 엔진)
     // =========================================================================
     const MOONJUNG_DLS_CATALOG = {
+      '키다리 아저씨': {
+        title: '키다리 아저씨',
+        author: '진 웹스터 저 · 신진헌 역',
+        publisher: '포에버북스',
+        year: '2024',
+        callNumber: '843-웹78ㅋ',
+        regNumber: 'EM00001920',
+        location: '글샘터 도서관 (본관 3층)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'text',
+        categoryLabel: '줄글책',
+        kdcLabel: 'KDC 843 영미문학 (세계명작선)',
+        desc: '고아 소녀 주디가 후원자 키다리 아저씨에게 보내는 유쾌하고 따뜻한 편지 문학',
+        coverUrl: 'https://image.aladin.co.kr/product/37607/42/cover500/k302032931_1.jpg'
+      },
       '마당을 나온 암탉': {
         title: '마당을 나온 암탉',
         author: '황선미 글 · 김환영 그림',
@@ -1866,7 +1893,7 @@
       '어린 왕자': {
         title: '어린 왕자',
         author: '앙투안 드 생텍쥐페리 저 · 김화영 역',
-        publisher: '열린책들',
+        publisher: '문학동네',
         year: '2015',
         callNumber: '863-생832ㅇ',
         regNumber: 'EM00000421',
@@ -1876,7 +1903,157 @@
         categoryLabel: '줄글책',
         kdcLabel: 'KDC 863 프랑스문학 (세계명작선)',
         desc: '사막에 불시착한 조종사와 B612 별에서 온 어린 왕자의 순수한 사유',
-        coverKey: 'book-cover-general'
+        coverUrl: 'https://image.aladin.co.kr/product/91/48/cover500/8954603092_3.jpg'
+      },
+      '수박 수영장': {
+        title: '수박 수영장',
+        author: '안녕달 글·그림',
+        publisher: '창비',
+        year: '2015',
+        callNumber: '그 813.8-안64ㅅ',
+        regNumber: 'EM00001999',
+        location: '글샘터 도서관 (본관 3층 그림책코너)',
+        status: '대출가능 (소장 3권 / 대출 0권)',
+        category: 'picture',
+        categoryLabel: '그림책',
+        kdcLabel: 'KDC 그 813.8 한국창작그림책',
+        desc: '커다란 수박이 쩌억 갈라지며 온 마을 사람들이 모여드는 환상적인 수영장',
+        coverUrl: 'https://image.aladin.co.kr/product/6365/38/cover500/8936446819_1.jpg'
+      },
+      '알사탕': {
+        title: '알사탕',
+        author: '백희나 글·그림',
+        publisher: '책읽는곰',
+        year: '2017',
+        callNumber: '그 813.8-백64ㅇ',
+        regNumber: 'EM00002014',
+        location: '글샘터 도서관 (본관 3층 그림책코너)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'picture',
+        categoryLabel: '그림책',
+        kdcLabel: 'KDC 그 813.8 한국창작그림책',
+        desc: '마법의 알사탕을 먹고 다른 존재들의 속마음을 듣게 되는 동동이의 성장담',
+        coverUrl: 'https://image.aladin.co.kr/product/3432/38/cover500/8927903773_2.jpg'
+      },
+      '구름빵': {
+        title: '구름빵',
+        author: '백희나 글·그림 · 김향수 사진',
+        publisher: '한솔수북',
+        year: '2004',
+        callNumber: '그 813.8-백64ㄱ',
+        regNumber: 'EM00001969',
+        location: '글샘터 도서관 (본관 3층 그림책코너)',
+        status: '대출가능 (소장 3권 / 대출 0권)',
+        category: 'picture',
+        categoryLabel: '그림책',
+        kdcLabel: 'KDC 그 813.8 한국창작그림책',
+        desc: '나뭇가지에 걸린 조각구름을 반죽해 구운 마법의 빵 이야기',
+        coverUrl: 'https://image.aladin.co.kr/product/23403/9/cover500/k962637315_1.jpg'
+      },
+      '달 샤베트': {
+        title: '달 샤베트',
+        author: '백희나 글·그림',
+        publisher: '스토리보울',
+        year: '2010',
+        callNumber: '그 813.8-백64ㄷ',
+        regNumber: 'EM00001984',
+        location: '글샘터 도서관 (본관 3층 그림책코너)',
+        status: '대출가능 (소장 2권 / 대출 1권)',
+        category: 'picture',
+        categoryLabel: '그림책',
+        kdcLabel: 'KDC 그 813.8 한국창작그림책',
+        desc: '무더운 여름밤 녹아내린 달빛으로 빚은 시원한 샤베트의 온기',
+        coverUrl: 'https://image.aladin.co.kr/product/34073/1/cover500/k742931474_1.jpg'
+      },
+      '아몬드': {
+        title: '아몬드',
+        author: '손원평 저',
+        publisher: '창비',
+        year: '2017',
+        callNumber: '813.7-손68ㅇ',
+        regNumber: 'EM00003420',
+        location: '글샘터 도서관 (본관 3층)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'text',
+        categoryLabel: '줄글책',
+        kdcLabel: 'KDC 813.7 한국청소년문학 (창비청소년문학)',
+        desc: '감정을 느끼지 못하는 소년 윤재의 특별한 성장과 타인에 대한 공감',
+        coverUrl: 'https://image.aladin.co.kr/product/31893/32/cover500/k212833749_2.jpg'
+      },
+      '흔한남매 1': {
+        title: '흔한남매 1',
+        author: '백승운 글 · 유난희 그림',
+        publisher: '미래엔아이세움',
+        year: '2019',
+        callNumber: '만 813.8-백84ㅎ-1',
+        regNumber: 'EM00004501',
+        location: '글샘터 도서관 (본관 3층 만화코너)',
+        status: '대출가능 (소장 3권 / 대출 1권)',
+        category: 'comic',
+        categoryLabel: '만화책',
+        kdcLabel: 'KDC 만 813.8 어린이 코믹스',
+        desc: '에이미와 으뜸이 남매의 배꼽 잡는 현실 남매 일상을 담은 인기 만화',
+        coverUrl: 'https://image.aladin.co.kr/product/19404/61/cover500/k712635217_1.jpg'
+      },
+      'Why? 인공지능': {
+        title: 'Why? 인공지능',
+        author: '조영선 글 · 이영호 그림',
+        publisher: '예림당',
+        year: '2018',
+        callNumber: '만 004-조68ㅇ',
+        regNumber: 'EM00002059',
+        location: '글샘터 도서관 (본관 3층 만화코너)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'comic',
+        categoryLabel: '만화책',
+        kdcLabel: 'KDC 만 004 지식학습만화',
+        desc: '미래 사회를 바꿀 인공지능 기술의 원리와 머신러닝을 재미있게 다룬 학습만화',
+        coverUrl: 'https://image.aladin.co.kr/product/1698/96/cover500/897599435x_2.jpg'
+      },
+      '100층짜리 집': {
+        title: '100층짜리 집',
+        author: '이와이 도시오 글·그림',
+        publisher: '살림어린이',
+        year: '2009',
+        callNumber: '그 833.8-이64ㅂ',
+        regNumber: 'EM00001420',
+        location: '글샘터 도서관 (본관 3층 그림책코너)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'picture',
+        categoryLabel: '그림책',
+        kdcLabel: 'KDC 그 833.8 번역창작그림책',
+        desc: '세로로 길게 넘겨보며 10층마다 다른 동물들을 만나는 독특한 공간 그림책',
+        coverUrl: 'https://image.aladin.co.kr/product/382/62/cover500/4890136177_1.jpg'
+      },
+      '만복이네 떡집': {
+        title: '만복이네 떡집',
+        author: '김리리 글 · 이승현 그림',
+        publisher: '비룡소',
+        year: '2010',
+        callNumber: '813.8-김24ㅁ',
+        regNumber: 'EM00002410',
+        location: '글샘터 도서관 (본관 3층)',
+        status: '대출가능 (소장 3권 / 대출 0권)',
+        category: 'text',
+        categoryLabel: '줄글책',
+        kdcLabel: 'KDC 813.8 한국아동문학 (난책읽기가좋아)',
+        desc: '입만 열면 나쁜 말이 튀어나오는 만복이가 신비한 떡을 먹고 변해가는 유쾌한 동화',
+        coverUrl: 'https://image.aladin.co.kr/product/716/52/cover500/8949161346_2.jpg'
+      },
+      '해리 포터': {
+        title: '해리 포터와 마법사의 돌 1',
+        author: 'J.K. 롤링 저 · 강동혁 역',
+        publisher: '문학수첩',
+        year: '2019',
+        callNumber: '843-롤78ㅎ-1',
+        regNumber: 'EM00000512',
+        location: '글샘터 도서관 (본관 3층)',
+        status: '대출가능 (소장 2권 / 대출 1권)',
+        category: 'text',
+        categoryLabel: '줄글책',
+        kdcLabel: 'KDC 843 영미판타지소설',
+        desc: '호그와트 마법학교에 입학한 소년 마법사 해리 포터의 경이로운 모험',
+        coverUrl: 'https://image.aladin.co.kr/product/21381/39/cover500/scm3316538202700.jpg'
       },
       '데미안': {
         title: '데미안',
@@ -1891,7 +2068,52 @@
         categoryLabel: '줄글책',
         kdcLabel: 'KDC 853 독일문학 (세계문학전집)',
         desc: '한 사람의 내면적 성장과 자아실현의 길을 깊이 있게 성찰한 고전',
-        coverKey: 'book-cover-general'
+        coverUrl: 'https://image.aladin.co.kr/product/26/0/cover500/s452139198_1.jpg'
+      },
+      '자전거 도둑': {
+        title: '자전거 도둑',
+        author: '박완서 저 · 한병호 그림',
+        publisher: '다림',
+        year: '1999',
+        callNumber: '813.8-박64ㅈ',
+        regNumber: 'EM00000912',
+        location: '글샘터 도서관 (본관 3층)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'text',
+        categoryLabel: '줄글책',
+        kdcLabel: 'KDC 813.8 한국현대문학 (아동문학)',
+        desc: '청계천 세운상가 꼬마 점원 수남이의 도덕적 갈등과 성장을 담은 대표작',
+        coverUrl: 'https://image.aladin.co.kr/product/21/65/cover500/8987721213_3.jpg'
+      },
+      '나쁜 어린이 표': {
+        title: '나쁜 어린이 표',
+        author: '황선미 글 · 권사우 그림',
+        publisher: '웅진주니어',
+        year: '1999',
+        callNumber: '813.8-황54ㄴ',
+        regNumber: 'EM00000781',
+        location: '글샘터 도서관 (본관 3층)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'text',
+        categoryLabel: '줄글책',
+        kdcLabel: 'KDC 813.8 한국문학 (웅진푸른교실)',
+        desc: '선생님의 노란 스티커에 맞서 초록 스티커를 만드는 건우의 동심을 그린 동화',
+        coverUrl: 'https://image.aladin.co.kr/product/21/56/cover500/8901066971_1.jpg'
+      },
+      '마법천자문': {
+        title: '마법천자문 1',
+        author: '시리얼 글·그림',
+        publisher: '아울북',
+        year: '2003',
+        callNumber: '만 813.8-시24ㅁ-1',
+        regNumber: 'EM00002074',
+        location: '글샘터 도서관 (본관 3층 만화코너)',
+        status: '대출가능 (소장 2권 / 대출 0권)',
+        category: 'comic',
+        categoryLabel: '만화책',
+        kdcLabel: 'KDC 만 813.8 한자학습만화',
+        desc: '손오공과 함께 한자 마법으로 세상을 구하는 모험 학습만화',
+        coverUrl: 'https://image.aladin.co.kr/product/44/24/cover500/8950936003_1.jpg'
       },
       '슬램덩크': {
         title: '슬램덩크 신장재편판 1',
@@ -1906,7 +2128,7 @@
         categoryLabel: '만화책',
         kdcLabel: 'KDC 만 833.6 일본만화 (스포츠 코믹스)',
         desc: '북산고 농구부의 뜨거운 열정과 성장을 그린 불후의 명작 코믹스',
-        coverKey: 'book-cover-comic'
+        coverUrl: 'https://image.aladin.co.kr/product/263/73/cover500/8901088347_1.jpg'
       },
       '달빛 산책': {
         title: '달빛 산책',
@@ -1952,284 +2174,86 @@
         kdcLabel: 'KDC 만 020 도서관학습만화',
         desc: '글샘터 도서관 속 숨겨진 책의 비밀을 찾아 떠나는 흥미진진한 지식 만화',
         coverKey: 'book-cover-comic'
-      },
-      '구름빵': {
-        title: '구름빵',
-        author: '백희나 글·그림 · 김향수 사진',
-        publisher: '한솔수북',
-        year: '2004',
-        callNumber: '그 813.8-백94ㄱ',
-        regNumber: 'EM00001024',
-        location: '글샘터 도서관 (본관 3층 그림책코너)',
-        status: '대출가능 (소장 3권 / 대출 0권)',
-        category: 'picture',
-        categoryLabel: '그림책',
-        kdcLabel: 'KDC 그 813.8 한국창작그림책',
-        desc: '나뭇가지에 걸린 조각구름을 반죽해 구운 마법의 빵 이야기',
-        coverKey: 'book-cover-picture'
-      },
-      '달 샤베트': {
-        title: '달 샤베트',
-        author: '백희나 글·그림',
-        publisher: '스토리보울',
-        year: '2010',
-        callNumber: '그 813.8-백94ㄷ',
-        regNumber: 'EM00001533',
-        location: '글샘터 도서관 (본관 3층 그림책코너)',
-        status: '대출가능 (소장 2권 / 대출 1권)',
-        category: 'picture',
-        categoryLabel: '그림책',
-        kdcLabel: 'KDC 그 813.8 한국창작그림책',
-        desc: '무더운 여름밤 녹아내린 달빛으로 빚은 시원한 샤베트의 온기',
-        coverKey: 'book-cover-picture'
-      },
-      '수박 수영장': {
-        title: '수박 수영장',
-        author: '안녕달 글·그림',
-        publisher: '창비',
-        year: '2015',
-        callNumber: '그 813.8-안64ㅅ',
-        regNumber: 'EM00002140',
-        location: '글샘터 도서관 (본관 3층 그림책코너)',
-        status: '대출가능 (소장 3권 / 대출 0권)',
-        category: 'picture',
-        categoryLabel: '그림책',
-        kdcLabel: 'KDC 그 813.8 한국창작그림책',
-        desc: '커다란 수박이 쩌억 갈라지며 온 마을 사람들이 모여드는 환상적인 수영장',
-        coverKey: 'book-cover-picture'
-      },
-      '알사탕': {
-        title: '알사탕',
-        author: '백희나 글·그림',
-        publisher: '책읽는곰',
-        year: '2017',
-        callNumber: '그 813.8-백94ㅇ',
-        regNumber: 'EM00002891',
-        location: '글샘터 도서관 (본관 3층 그림책코너)',
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: 'picture',
-        categoryLabel: '그림책',
-        kdcLabel: 'KDC 그 813.8 한국창작그림책',
-        desc: '마법의 알사탕을 먹고 다른 존재들의 속마음을 듣게 되는 동동이의 성장담',
-        coverKey: 'book-cover-picture'
-      },
-      '아몬드': {
-        title: '아몬드',
-        author: '손원평 저',
-        publisher: '창비',
-        year: '2017',
-        callNumber: '813.7-손68ㅇ',
-        regNumber: 'EM00003420',
-        location: '글샘터 도서관 (본관 3층)',
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: 'text',
-        categoryLabel: '줄글책',
-        kdcLabel: 'KDC 813.7 한국청소년문학 (창비청소년문학)',
-        desc: '감정을 느끼지 못하는 소년 윤재의 특별한 성장과 타인에 대한 공감',
-        coverKey: 'book-cover-general'
-      },
-      '흔한남매': {
-        title: '흔한남매 1',
-        author: '백승운 글 · 유난희 그림',
-        publisher: '미래엔아이세움',
-        year: '2019',
-        callNumber: '만 813.8-백84ㅎ-1',
-        regNumber: 'EM00004501',
-        location: '글샘터 도서관 (본관 3층 만화코너)',
-        status: '대출가능 (소장 3권 / 대출 1권)',
-        category: 'comic',
-        categoryLabel: '만화책',
-        kdcLabel: 'KDC 만 813.8 어린이 코믹스',
-        desc: '에이미와 으뜸이 남매의 배꼽 잡는 현실 남매 일상을 담은 인기 만화',
-        coverKey: 'book-cover-comic'
-      },
-      'Why? 인공지능': {
-        title: 'Why? 인공지능',
-        author: '조영선 글 · 이영호 그림',
-        publisher: '예림당',
-        year: '2018',
-        callNumber: '만 004-조64ㅇ',
-        regNumber: 'EM00004120',
-        location: '글샘터 도서관 (본관 3층 만화코너)',
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: 'comic',
-        categoryLabel: '만화책',
-        kdcLabel: 'KDC 만 004 지식학습만화',
-        desc: '미래 사회를 바꿀 인공지능 기술의 원리와 머신러닝을 재미있게 다룬 학습만화',
-        coverKey: 'book-cover-comic'
-      },
-      '마법천자문': {
-        title: '마법천자문 1',
-        author: '시리얼 글·그림',
-        publisher: '아울북',
-        year: '2003',
-        callNumber: '만 813.8-시32ㅁ-1',
-        regNumber: 'EM00001150',
-        location: '글샘터 도서관 (본관 3층 만화코너)',
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: 'comic',
-        categoryLabel: '만화책',
-        kdcLabel: 'KDC 만 813.8 한자학습만화',
-        desc: '손오공과 함께 한자 마법으로 세상을 구하는 모험 학습만화',
-        coverKey: 'book-cover-comic'
-      },
-      '나쁜 어린이 표': {
-        title: '나쁜 어린이 표',
-        author: '황선미 글 · 권사우 그림',
-        publisher: '웅진주니어',
-        year: '1999',
-        callNumber: '813.8-황54ㄴ',
-        regNumber: 'EM00000781',
-        location: '글샘터 도서관 (본관 3층)',
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: 'text',
-        categoryLabel: '줄글책',
-        kdcLabel: 'KDC 813.8 한국문학 (웅진푸른교실)',
-        desc: '선생님의 노란 스티커에 맞서 초록 스티커를 만드는 건우의 동심을 그린 동화',
-        coverKey: 'book-cover-general'
-      },
-      '자전거 도둑': {
-        title: '자전거 도둑',
-        author: '박완서 저',
-        publisher: '다림',
-        year: '1999',
-        callNumber: '813.8-박64ㅈ',
-        regNumber: 'EM00000912',
-        location: '글샘터 도서관 (본관 3층)',
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: 'text',
-        categoryLabel: '줄글책',
-        kdcLabel: 'KDC 813.8 한국현대문학 (아동문학)',
-        desc: '청계천 세운상가 꼬마 점원 수남이의 도덕적 갈등과 성장을 담은 대표작',
-        coverKey: 'book-cover-general'
-      },
-      '만복이네 떡집': {
-        title: '만복이네 떡집',
-        author: '김리리 글 · 이승현 그림',
-        publisher: '비룡소',
-        year: '2010',
-        callNumber: '813.8-김24ㅁ',
-        regNumber: 'EM00002410',
-        location: '글샘터 도서관 (본관 3층)',
-        status: '대출가능 (소장 3권 / 대출 0권)',
-        category: 'text',
-        categoryLabel: '줄글책',
-        kdcLabel: 'KDC 813.8 한국아동문학 (난책읽기가좋아)',
-        desc: '입만 열면 나쁜 말이 튀어나오는 만복이가 신비한 떡을 먹고 변해가는 유쾌한 동화',
-        coverKey: 'book-cover-general'
-      },
-      '100층짜리 집': {
-        title: '100층짜리 집',
-        author: '이와이 도시오 글·그림',
-        publisher: '살림어린이',
-        year: '2009',
-        callNumber: '그 833.8-이64ㅂ',
-        regNumber: 'EM00001420',
-        location: '글샘터 도서관 (본관 3층 그림책코너)',
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: 'picture',
-        categoryLabel: '그림책',
-        kdcLabel: 'KDC 그 833.8 번역창작그림책',
-        desc: '세로로 길게 넘겨보며 10층마다 다른 동물들을 만나는 독특한 공간 그림책',
-        coverKey: 'book-cover-picture'
-      },
-      '해리 포터': {
-        title: '해리 포터와 마법사의 돌 1',
-        author: 'J.K. 롤링 저 · 강동혁 역',
-        publisher: '문학수첩',
-        year: '2019',
-        callNumber: '843-롤78ㅎ-1',
-        regNumber: 'EM00000512',
-        location: '글샘터 도서관 (본관 3층)',
-        status: '대출가능 (소장 2권 / 대출 1권)',
-        category: 'text',
-        categoryLabel: '줄글책',
-        kdcLabel: 'KDC 843 영미판타지소설',
-        desc: '호그와트 마법학교에 입학한 소년 마법사 해리 포터의 경이로운 모험',
-        coverKey: 'book-cover-general'
       }
     };
 
-    // 문정초 독서로 DLS 지능형 서지 조회 및 KDC 분류 엔진
+    // 문정초 독서로 DLS 소장 도서 서지 검색 엔진 (나래 님 지시: 실제 소장 도서 전용 검색 및 실제 표지 연동)
     function queryMoonjungDlsEngine(rawQuery) {
       if (!rawQuery) return null;
-      const cleanQ = rawQuery.trim().replace(/\s+/g, '');
+      const cleanQ = rawQuery.trim().replace(/\s+/g, '').toLowerCase();
 
-      // 1. Exact or partial match in catalog
+      // 1. 도서명 및 키워드 매칭 (예: '키' 검색 시 '키다리 아저씨' 정확 매칭)
       for (const [key, book] of Object.entries(MOONJUNG_DLS_CATALOG)) {
-        const cleanKey = key.replace(/\s+/g, '');
-        const cleanTitle = book.title.replace(/\s+/g, '');
-        if (cleanQ.includes(cleanKey) || cleanKey.includes(cleanQ) || cleanTitle.includes(cleanQ)) {
+        const cleanKey = key.replace(/\s+/g, '').toLowerCase();
+        const cleanTitle = book.title.replace(/\s+/g, '').toLowerCase();
+        if (cleanKey.includes(cleanQ) || cleanTitle.includes(cleanQ) || cleanQ.includes(cleanKey) || cleanQ.includes(cleanTitle)) {
           return book;
         }
       }
 
-      // 2. KDC classification rule engine for any arbitrary book (서울문정초 글샘터 규격 서지 동적 생성)
-      let cat = 'text';
-      let catLabel = '줄글책';
-      let kdcNum = '813.8';
-      let kdcLabel = 'KDC 813.8 한국문학 (동화·문고)';
-      let coverKey = 'book-cover-general';
-      let loc = '글샘터 도서관 (본관 3층)';
-
-      const lowerQ = rawQuery.toLowerCase();
-      if (lowerQ.includes('만화') || lowerQ.includes('코믹') || lowerQ.includes('웹툰') || lowerQ.includes('why') || lowerQ.includes('실험왕') || lowerQ.includes('남매') || lowerQ.includes('쿠키런') || lowerQ.includes('드래곤') || lowerQ.includes('슬램덩크')) {
-        cat = 'comic';
-        catLabel = '만화책';
-        kdcNum = '만 813.8';
-        kdcLabel = 'KDC 만 813.8 어린이 코믹스·학습만화';
-        coverKey = 'book-cover-comic';
-        loc = '글샘터 도서관 (본관 3층 만화코너)';
-      } else if (lowerQ.includes('그림') || lowerQ.includes('동화') || lowerQ.includes('유아') || lowerQ.includes('수박') || lowerQ.includes('샤베트') || lowerQ.includes('구름빵') || lowerQ.includes('100층') || lowerQ.includes('알사탕') || lowerQ.includes('백희나') || lowerQ.includes('안녕달')) {
-        cat = 'picture';
-        catLabel = '그림책';
-        kdcNum = '그 813.8';
-        kdcLabel = 'KDC 그 813.8 한국창작그림책';
-        coverKey = 'book-cover-picture';
-        loc = '글샘터 도서관 (본관 3층 그림책코너)';
+      // 2. 저자명 매칭 (예: '백희나' 검색 시 백희나 작가 도서 매칭)
+      for (const [key, book] of Object.entries(MOONJUNG_DLS_CATALOG)) {
+        const cleanAuthor = book.author.replace(/\s+/g, '').toLowerCase();
+        if (cleanAuthor.includes(cleanQ) || cleanQ.includes(cleanAuthor.slice(0, 3))) {
+          return book;
+        }
       }
 
-      // Generate consistent hash-based registration number
-      let hash = 0;
-      for (let i = 0; i < rawQuery.length; i++) {
-        hash = (hash << 5) - hash + rawQuery.charCodeAt(i);
-        hash |= 0;
-      }
-      const regId = 'EM' + String(Math.abs(hash) % 89999 + 10000).padStart(8, '0');
-      const authorInitial = rawQuery.slice(0, 1);
+      // 3. 미등록 도서는 null 반환 (임의의 책에 엉뚱한 표지를 덮어씌우지 않음)
+      return null;
+    }
 
-      return {
-        title: rawQuery.trim(),
-        author: '문정초 소장 장서',
-        publisher: '글샘터 아카이브',
-        year: '2024',
-        callNumber: `${kdcNum}-${authorInitial}01`,
-        regNumber: regId,
-        location: loc,
-        status: '대출가능 (소장 2권 / 대출 0권)',
-        category: cat,
-        categoryLabel: catLabel,
-        kdcLabel: kdcLabel,
-        desc: `서울문정초등학교 글샘터 도서관 소장 서지 (${catLabel} 표준 목록).`,
-        coverKey: coverKey
-      };
+    function getBookCoverSrc(book) {
+      if (!book) return ASSET_DATA['book-base-idle'];
+      if (book.coverUrl) return book.coverUrl;
+      if (book.coverKey && ASSET_DATA[book.coverKey]) return ASSET_DATA[book.coverKey];
+      return ASSET_DATA['book-base-idle'];
     }
 
     // MOONJUNG DLS SEARCH ENGINE (메인 검색창 연동)
     function searchMoonjungDls() {
       playPopSound();
-      const query = document.getElementById('bookSearchInput').value.trim();
+      const input = document.getElementById('bookSearchInput');
+      const query = input ? input.value.trim() : '';
       if (!query) {
-        alert('검색할 문정초 도서명을 입력해 주세요 (예: 마당을 나온 암탉, 어린 왕자, 수박 수영장, 흔한남매...)');
+        alert('검색할 문정초 도서명을 입력해 주세요 (예: 키다리 아저씨, 마당을 나온 암탉, 수박 수영장, 어린 왕자...)');
         return;
       }
 
       const book = queryMoonjungDlsEngine(query);
+      const previewCard = document.getElementById('searchResultPreview');
+
       if (!book) {
-        alert('문정초 독서로 DLS 소장 도서를 찾을 수 없습니다.');
+        // 소장 목록 미등록 시: 엉뚱한 표지를 띄우지 않고, 명확한 안내 및 문정초 소장 도서 퀵 추천 칩 표출
+        previewCard.innerHTML = `
+          <div class="flex items-center justify-between border-b border-charcoal/15 pb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[9px] bg-coral/20 text-coral font-black px-1.5 py-0.5 rounded border border-coral/40">소장 서지 미등록</span>
+              <span class="font-mono text-[10px] text-charcoal/60 font-bold">검색어: "${query}"</span>
+            </div>
+            <span class="font-mono text-[9px] bg-charcoal/10 text-charcoal/70 font-bold px-1.5 py-0.5 rounded">문정초 글샘터</span>
+          </div>
+          <div class="py-2.5 flex flex-col gap-2 text-center">
+            <p class="text-xs font-black text-charcoal">문정초 독서로 DLS에 등록되지 않은 검색어입니다.</p>
+            <p class="text-[10px] text-charcoal/70 font-medium">실제 문정초 글샘터 도서관에 소장된 도서를 선택해 보세요:</p>
+            <div class="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+              <button onclick="setAndSearchInput('키다리 아저씨')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">키다리 아저씨</button>
+              <button onclick="setAndSearchInput('수박 수영장')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">수박 수영장</button>
+              <button onclick="setAndSearchInput('마당을 나온 암탉')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">마당을 나온 암탉</button>
+              <button onclick="setAndSearchInput('어린 왕자')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">어린 왕자</button>
+              <button onclick="setAndSearchInput('알사탕')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">알사탕</button>
+              <button onclick="setAndSearchInput('흔한남매 1')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">흔한남매 1</button>
+              <button onclick="setAndSearchInput('Why? 인공지능')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">Why? 인공지능</button>
+            </div>
+          </div>
+        `;
+        previewCard.classList.remove('hidden');
+        searchedBookMetadata = null;
         return;
       }
 
+      // 소장 도서 매칭 성공 시: 실제 해당 도서의 고유 표지 사진 및 DLS 서지 카드 렌더링
+      const coverSrc = getBookCoverSrc(book);
       searchedBookMetadata = {
         title: book.title,
         author: book.author,
@@ -2243,19 +2267,44 @@
         inferredLabel: book.categoryLabel,
         kdcLabel: book.kdcLabel,
         desc: book.desc,
-        thumb: ASSET_DATA[book.coverKey] || ASSET_DATA['book-cover-general']
+        thumb: coverSrc
       };
 
-      // Render Moonjung DLS Standard Catalog Card
-      document.getElementById('searchResultTitle').innerText = book.title;
-      document.getElementById('searchResultAuthor').innerText = `${book.author} · ${book.publisher} (${book.year})`;
-      document.getElementById('searchResultCallNum').innerText = book.callNumber;
-      document.getElementById('searchResultStatusBadge').innerText = book.status.split(' ')[0];
-      document.getElementById('searchResultCategory').innerText = `DLS 분류: ${book.categoryLabel} (${book.kdcLabel})`;
-      document.getElementById('searchResultDesc').innerText = book.desc;
-      document.getElementById('searchResultRegNum').innerText = `등록번호: ${book.regNumber} | 소장위치: ${book.location}`;
-      document.getElementById('searchResultImg').src = ASSET_DATA[book.coverKey] || ASSET_DATA['book-cover-general'];
-      document.getElementById('searchResultPreview').classList.remove('hidden');
+      previewCard.innerHTML = `
+        <div class="flex items-start justify-between border-b border-charcoal/15 pb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[9px] bg-mint/40 text-charcoal font-black px-1.5 py-0.5 rounded border border-mint/80">서울문정초 글샘터</span>
+            <span class="font-mono text-[10px] text-charcoal/80 font-black">${book.callNumber}</span>
+          </div>
+          <span class="font-mono text-[9px] bg-coral/20 text-coral font-black px-1.5 py-0.5 rounded">${book.status.split(' ')[0]}</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-16 rounded overflow-hidden border border-charcoal flex-shrink-0 bg-white shadow-xs flex items-center justify-center">
+            <img id="searchResultImg" src="${coverSrc}" alt="${book.title}" class="w-full h-full object-cover" onerror="this.src=ASSET_DATA['book-base-idle']">
+          </div>
+          <div class="min-w-0 flex-1 flex flex-col gap-0.5">
+            <div id="searchResultTitle" class="font-black text-xs text-charcoal truncate">${book.title}</div>
+            <div id="searchResultAuthor" class="text-[11px] text-charcoal/80 font-bold truncate">${book.author} · ${book.publisher} (${book.year})</div>
+            <div class="text-[10px] font-mono text-coral font-black mt-0.5" id="searchResultCategory">DLS 분류: ${book.categoryLabel} (${book.kdcLabel})</div>
+            <div class="text-[9px] text-charcoal/60 font-medium truncate" id="searchResultDesc">${book.desc}</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1 border-t border-charcoal/10">
+          <div class="text-[9px] font-mono text-charcoal/60 truncate mr-2">등록번호: ${book.regNumber} | 소장위치: ${book.location}</div>
+          <button id="searchLaunchBtn" onclick="launchBookDocentFromSearch()" class="brutal-btn bg-coral text-white font-black text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0 whitespace-nowrap shadow-xs">
+            도슨트 & DLS 대조 ➔
+          </button>
+        </div>
+      `;
+      previewCard.classList.remove('hidden');
+    }
+
+    function setAndSearchInput(title) {
+      const input = document.getElementById('bookSearchInput');
+      if (input) input.value = title;
+      searchMoonjungDls();
     }
 
     function launchBookDocentFromSearch() {
