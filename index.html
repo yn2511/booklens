@@ -367,14 +367,14 @@
         </div>
       </div>
 
-      <!-- Quick Test Samples (과제 3 데이터셋 연계) -->
+      <!-- Quick Test Samples (과제 3 데이터셋 연계 - 시연 예시) -->
       <div class="bg-cream rounded-2xl p-3.5 brutal-card flex flex-col gap-2">
         <div class="flex items-center justify-between">
           <span class="text-xs font-black text-charcoal flex items-center gap-1.5">
             <span class="w-2.5 h-2.5 rounded-full bg-coral inline-block border border-charcoal"></span>
-            <span>과제 3 데이터셋 빠른 테스트</span>
+            <span>과제 3 데이터셋 빠른 테스트 <span class="text-coral font-bold">(시연 예시)</span></span>
           </span>
-          <span class="font-mono text-[10px] text-charcoal/80 font-bold">CLICK TO TEST</span>
+          <span class="font-mono text-[9px] bg-coral/15 text-coral border border-coral/30 px-1.5 py-0.5 rounded font-black tracking-tight">시연 예시</span>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1060,7 +1060,7 @@
             • <span class="font-black">파국적 망각(Catastrophic Forgetting) 차단:</span> ImageNet에서 사전 학습된 범용 저수준 시각 특징(Low-level Visual Features: 엣지, 질감, 코너)을 보존하기 위해 하위 특징 추출 계층(Conv1~Layer3)을 동결(Freeze)했습니다.
           </p>
           <p class="text-[11px] font-bold text-charcoal leading-relaxed">
-            • <span class="font-black">상위 층 선별 튜닝:</span> 고수준 도서 도메인 의미론(High-level Semantics)을 학습하는 Layer4 및 FC Head만 선별 학습시켜, 계산 비용을 대폭 줄이면서도 최고 정확도 96.67%를 달성했습니다.
+            • <span class="font-black">상위 층 선별 튜닝:</span> 고수준 도서 도메인 의미론(High-level Semantics)을 학습하는 Layer4 및 FC Head만 선별 학습시켜, 계산 비용을 대폭 줄이면서도 실측 최고 정확도 97.33% (Macro-F1 0.9731)를 달성했습니다.
           </p>
         </div>
 
@@ -1765,7 +1765,7 @@
     let isModelLoading = false;
     let modelLoadError = null;
 
-    const ONNX_MODEL_URL = 'https://raw.githubusercontent.com/yn2511/booklens/main/models/booklens_resnet18.onnx';
+    const ONNX_MODEL_URL = 'models/booklens_resnet18.onnx';
 
     async function toggleOrLoadOnnxModel() {
       if (ortSession) {
@@ -2882,7 +2882,7 @@
       document.getElementById('reportTitle').innerText = title;
       document.getElementById('reportAuthor').innerText = author;
       const confBadge = document.getElementById('reportConfBadge');
-      if (confBadge) confBadge.innerText = `${conf} 확신`;
+      if (confBadge) confBadge.innerText = isCustom ? `${conf} 확신` : `${conf} 확신 (시연 예시)`;
       const reportCodeEl = document.getElementById('reportCode');
       if (reportCodeEl) reportCodeEl.innerText = isCustom ? `SCAN-${Date.now().toString().slice(-4)}` : data.code;
       
@@ -2898,9 +2898,9 @@
       if (editorialRankBadge) editorialRankBadge.innerText = '#1';
       const editorialMetaPath = document.getElementById('editorialMetaPath');
       if (editorialMetaPath) {
-        const engineTag = (cvResult && cvResult.inferenceEngine === 'onnx-resnet18') 
-          ? 'ResNet-18 ONNX (실시간 딥러닝 97.3%)' 
-          : 'ResNet-18 (실측 검증 모델)';
+        const engineTag = isCustom 
+          ? ((cvResult && cvResult.inferenceEngine === 'onnx-resnet18') ? 'ResNet-18 ONNX (실시간 딥러닝 97.3%)' : 'ResNet-18 (실측 검증 모델)')
+          : '시연 예시 프리셋';
         editorialMetaPath.innerText = `// ${engineTag} / ${categoryLabel.split(' ')[0]}`;
       }
       const subTitleEl = document.getElementById('subReportTitle');

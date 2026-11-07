@@ -6,6 +6,6 @@
   "demo_url": "https://booklens.cloud",
   "data_type": "과제3 book_dataset 494장 (그림책 118장, 줄글책 192장, 만화책 184장) + 서울문정초 독서로(DLS) 소장 도서 17종 표지",
   "training": "Transfer Learning (ImageNet 사전학습 ResNet-18 파인튜닝) + CosineAnnealingLR + 복합 증강",
-  "models": ["Scratch small_cnn (Baseline)", "ResNet-18 전이학습 + 복합 증강 + 6단계 OOD 게이트 (Proposed)"],
-  "primary_metric": "Test Accuracy: 97.33% / Macro-F1: 0.9731 / OOD AUROC: 0.934"
+  "models": ["Scratch SmallCNN (Baseline)", "ResNet-18 전이학습 + 복합 증강 + 6단계 OOD 게이트 (Proposed)"],
+  "primary_metric": "Test Accuracy: 97.33% / Macro-F1: 0.9731"
 }
