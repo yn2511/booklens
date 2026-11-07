@@ -2,7 +2,7 @@
 
 ## 0. 프로젝트 정보
 - **학번 / 성명**: 202533791 윤나래 (가천대학교 IT융합대학 컴퓨터공학과 2학년)
-- **데모 공개 URL**: https://booklens.cloud (Cloudflare Pages 실시간 배포)
+- **데모 공개 URL**: https://booklens.cloud (Cloudflare Workers 실시간 배포)
 - **GitHub 저장소**: https://github.com/yn2511/booklens
 - **수업 정보**: 기계학습프로그래밍 (지도교수: 조윤실 교수님, 2026-2학기)
 
@@ -80,6 +80,8 @@
 ---
 
 ## 5. 평가 결과
+> **⚠️ 모델 실측 학습 및 검증 현황 안내**: 현재 기말 과제용 정밀 실측 학습 파이프라인(ResNet-18 vs SmallCNN Baseline)을 Colab에서 가동 중이며, 아래 기재된 수치는 초기 계획서의 가설 설계치(96.67%)입니다. 실제 Colab 학습 완료 후 실측 지표(Test Accuracy, Macro-F1, Confusion Matrix)로 최종 갱신될 예정입니다.
+
 ### (1) 지표 비교표 (Test Set 90장 기준)
 | 모델 / 실험 구성 | 학습 파라미터 수 | Test Accuracy | Macro-F1 | 특이사항 및 성능 평가 |
 | :--- | :---: | :---: | :---: | :--- |
@@ -121,7 +123,7 @@
 ---
 
 ## 7. 배포
-- **배포 플랫폼**: Cloudflare Pages (글로벌 엣지 CDN 및 무중단 배포)
+- **배포 플랫폼**: Cloudflare Workers (글로벌 엣지 런타임 및 무중단 배포, 서비스명: booklens-app)
 - **공개 데모 URL**: https://booklens.cloud
 
 ---
