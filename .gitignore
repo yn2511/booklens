@@ -8,6 +8,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.pt
+*.pth
+*.onnx
+models/
+
 
 # OS
 .DS_Store
