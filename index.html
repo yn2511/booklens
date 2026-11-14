@@ -265,7 +265,7 @@
           <div class="text-right shrink-0">
             <div class="text-xl font-black font-mono text-coral leading-none tracking-tight" id="nonBookConfidenceScore">REJECT</div>
             <div class="text-[9px] font-mono text-charcoal/50 font-bold mt-0.5 flex items-center justify-end gap-0.5">
-              <span class="text-coral">★</span> <span>BLOCKED</span>
+              <span class="text-coral">BLOCKED</span>
             </div>
           </div>
         </div>
@@ -279,16 +279,17 @@
         <!-- Metric Table -->
         <div class="bg-white rounded-xl p-2.5 border border-charcoal/20 text-[11px] font-mono font-bold text-charcoal flex flex-col gap-1">
           <div class="grid grid-cols-2 gap-2 text-[10px] text-charcoal/80">
-            <div>• Free Energy: <b id="nonBookEnergy" class="text-coral font-black">2.62</b> (기준 3.25+)</div>
-            <div>• 신뢰도 마진: <b id="nonBookMargin" class="text-coral font-black">0.3%p</b> (기준 18%p+)</div>
-            <div>• 중앙 텍스처: <b id="nonBookCenterEdge" class="text-charcoal font-black">7.2%</b> (기준 12%+)</div>
-            <div>• 휘도 대비: <b id="nonBookContrast" class="text-charcoal font-black">12.4</b> (기준 28+)</div>
+            <div>• 로짓 활성도 logSumExp: <b id="nonBookEnergy" class="text-charcoal font-black">0.00</b> (기준 0.60+)</div>
+            <div>• Free Energy: <b id="nonBookFreeEnergy" class="text-charcoal font-black">0.00</b> (-logSumExp)</div>
+            <div>• 신뢰도 마진: <b id="nonBookMargin" class="text-charcoal font-black">0.0%p</b> (표시용·차단 조건 아님)</div>
+            <div>• 중앙 표지 텍스처: <b id="nonBookCenterEdge" class="text-charcoal font-black">0.0%</b> (기준 5.0%+)</div>
+            <div>• 휘도 표준편차: <b id="nonBookContrast" class="text-charcoal font-black">0.0</b> (기준 34+)</div>
           </div>
         </div>
 
         <div class="flex items-center gap-2 pt-1">
           <button onclick="dismissNonBookAlert()" class="flex-1 brutal-btn bg-mustard text-charcoal font-black text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-brutal-sm">
-            <span>📷 책 표지 다시 맞추기</span>
+            <span>책 표지 다시 맞추기</span>
           </button>
           <button onclick="forceProceedAnalysis()" class="brutal-btn bg-white text-charcoal/70 font-bold text-[11px] py-2.5 px-3 rounded-xl border border-charcoal/30">
             그래도 강제 분석
@@ -321,7 +322,7 @@
         </div>
 
         <div class="flex gap-1.5">
-          <input id="bookSearchInput" type="text" placeholder="문정초 소장 도서 검색 (예: 키다리 아저씨, 마당을 나온 암탉, 수박 수영장...)" class="flex-1 bg-stage border-2 border-charcoal rounded-xl px-3 py-2 text-xs font-bold text-charcoal focus:outline-none focus:border-coral" onkeydown="if(event.key==='Enter') searchMoonjungDls()">
+          <input id="bookSearchInput" type="text" placeholder="문정초 소장 도서 검색 (예: 키다리 아저씨, 마당을 나온 암탉, 수박 수영장...)" class="min-w-0 flex-1 bg-stage border-2 border-charcoal rounded-xl px-3 py-2 text-xs font-bold text-charcoal focus:outline-none focus:border-coral" onkeydown="if(event.key==='Enter') searchMoonjungDls()">
           <button onclick="searchMoonjungDls()" class="brutal-btn bg-coral text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shrink-0">
             <span id="searchBtnIcon">DLS 검색</span>
           </button>
@@ -392,7 +393,7 @@
 
           <!-- Sample 2: 마당을 나온 암탉 (줄글책 - 난관극복 & DLS 검수) -->
           <button onclick="startAnalysisPreset('hen')" class="brutal-btn bg-stage hover:bg-coral/10 p-2 rounded-xl flex flex-col items-center gap-1.5 text-center group relative border-2 border-coral shadow-brutal-sm">
-            <span class="absolute -top-2 -right-1 bg-coral text-white font-mono text-[8px] font-black px-1 rounded-full shadow-xs">★난관극복</span>
+            <span class="absolute -top-2 -right-1 bg-coral text-white font-mono text-[8px] font-black px-1 rounded-full shadow-xs">실패 3회 끝 수정</span>
             <div class="w-12 h-16 rounded overflow-hidden border border-charcoal bg-white flex items-center justify-center relative shadow-xs">
               <img id="sampleCoverHen" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="마당을 나온 암탉" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
             </div>
@@ -522,15 +523,32 @@
         <!-- 우측: 모바일에서는 아이콘 중심으로 축소 -->
         <div class="flex items-center gap-1.5 shrink-0">
           <button id="btn-audio-docent" onclick="toggleTtsSpeech()" class="brutal-btn bg-mustard text-charcoal h-8 px-2 rounded-lg text-[11px] font-bold border-2 border-charcoal shadow-brutal-sm flex items-center gap-1" title="음성 도슨트">
-            🔊 <span class="hidden sm:inline">음성</span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <span class="hidden sm:inline">음성</span>
           </button>
           <button id="btn-save-bookmark" onclick="stampTicket()" class="brutal-btn bg-white hover:bg-stage text-charcoal h-8 px-2 rounded-lg text-[11px] border-2 border-charcoal shadow-brutal-sm flex items-center justify-center" title="대출증 보관">
-            ⭐
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.5L6 21z"></path></svg>
           </button>
           <button id="btn-copy-report" onclick="copyDocentReport()" class="brutal-btn bg-white hover:bg-stage text-charcoal h-8 px-2 rounded-lg text-[11px] border-2 border-charcoal shadow-brutal-sm flex items-center justify-center" title="리포트 복사">
-            📋
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path></svg>
           </button>
         </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- OUTCOME: 문정초 글샘터 관련 도서 · 대체 도서 추천 (512차원 임베딩 유사도) -->
+      <!-- ========================================== -->
+      <div id="relatedOutcomeCard" class="bg-[#F8F7F2] border-2 border-charcoal rounded-2xl p-3.5 shadow-brutal flex flex-col gap-2">
+        <div class="flex items-start justify-between gap-2 border-b border-charcoal/15 pb-2">
+          <div class="min-w-0">
+            <div class="font-black text-sm text-charcoal leading-tight">문정초 글샘터 관련 도서 · 대체 도서</div>
+            <div class="font-mono text-[10px] text-charcoal/60 font-bold mt-0.5" id="relatedOutcomeMeta">// ResNet-18 512차원 임베딩 · 코사인 유사도</div>
+          </div>
+          <span class="font-mono text-[9px] bg-charcoal text-cream font-black px-1.5 py-0.5 rounded shrink-0">OUTCOME</span>
+        </div>
+        <div id="relatedOutcomeList" class="flex flex-col gap-1.5"></div>
+        <div id="relatedOutcomeEmpty" class="hidden text-[11px] font-bold text-charcoal/60 bg-white/70 border border-charcoal/20 rounded-lg p-2.5 leading-relaxed"></div>
+        <div class="text-[9px] font-mono text-charcoal/50 leading-relaxed">동일 도서 제외 · 유사도 상위 3권 · 청구기호·소장위치·대출상태는 문정초 DLS 서지 기준</div>
       </div>
 
       <!-- Editorial Result Card (Inspired by taste-skill & impeccable reference) -->
@@ -561,7 +579,7 @@
           <div class="text-right shrink-0">
             <div class="text-2xl font-black font-mono text-coral leading-none tracking-tight" id="editorialConfScore">97.4%</div>
             <div class="text-[9px] font-mono text-charcoal/50 font-bold mt-0.5 flex items-center justify-end gap-0.5">
-              <span class="text-coral">★</span> <span>CONFIDENCE</span>
+              <span class="text-coral">CONFIDENCE</span>
             </div>
           </div>
         </div>
@@ -571,7 +589,7 @@
           <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-charcoal/25 bg-white text-charcoal/80">ResNet-18</span>
           <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-charcoal/25 bg-white text-charcoal/80">CosineLR</span>
           <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-charcoal/25 bg-white text-charcoal/80">3-Frame TTA</span>
-          <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-mint/60 bg-mint/20 text-charcoal font-black">OOD: PASSED</span>
+          <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-mint/60 bg-mint/20 text-charcoal font-black" id="oodGateBadge">OOD GATE</span>
         </div>
 
         <!-- Visual 10-Slot Tactical Confidence Bar Chart (Direct homage to IMG_1875!) -->
@@ -694,12 +712,12 @@
 
       <!-- 문정초등학교 독서로(DLS) 하이브리드 교차 검수 게이트 카드 (Late Fusion) -->
       <div id="dlsVerificationCard" class="bg-[#F8F7F2] border-2 border-charcoal rounded-2xl p-3.5 shadow-brutal flex flex-col gap-2.5 relative overflow-hidden">
-        <img id="stickerFairyInspect" src="data:image/png;base64,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" alt="Fairy Inspect" class="absolute -top-1 -right-1 w-14 h-14 object-contain pointer-events-none drop-shadow-md z-10">
-        <div class="flex items-center justify-between border-b border-charcoal/15 pb-2">
+        <img id="stickerFairyInspect" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADRCAMAAADFe88zAAAAwFBMVEWjoZpkYl7s6+3t6ujr5d7rpSfg3NOfYiJXLRchGhT8kG3PuJ/rZUZdRiXWVDjgz7WKhHmrq6uSOCj//6uOdWV/f3//rKy6giUjVF///3//f3///wD/AAB9goM2PkJ/f/+8wbl9gH2/v///AP//f/8AAP8/QD+q1NT/wCsAAAD9+OoeSFIDAwTv59MhS1T+/v7vYkT78tzk1rrr7eYQFRbn3MXRx7LwpycPJy0VNDvY1s0jUVspKCc3NjMYO0NYVlMLRABAAAAAQHRSTlP//yFcn//h/////////////wP/A/8CA///AgIBAf//Av//BgECAf8G/wD+///8/wX////9//7/////////////w1JAqgAAKW9JREFUeNrlfQlD4kjafwUwJI0IttrXzOy+1/8AUsSQQwgJfP9v9T5HVaVyIdDMjL1buz2ttgq/PPdZYvFrnfBnf4FY/GqIw0H47wMY0C4Gg8G/B+BwgaQNEXAY/ntQGKCORu5oNPz3oDDClUs8cvQTYvwLsXQ4jJd84lH43//ygMNF6C71iYeLx391wE8LQ2A4w6sN8i8DeBAOEWlWCPxrFF6LWHxQ/m2dLwsCPA8cBoznFweMVhYxhE/h4vGlhTocIdJj4JEQD/4VKIxwXwgI/PlSBzRYDMkmFX6SsxA/ggNyqXkCJ+2jAA4fwWskyEM4o6H6pDJJQ9LRWTAOhLLFw+HiMp8r/AiAmYnDJ/wvOlIjVy5jOACoQgPiqnwOJ7ibFqyoweVCL/MXZGnGjHSVsjI8aGsNZYbaxwrGd3fBXH2HBEb4xQCH/0M0GgyGrrSsrMIzhH/8AtQPh/pBOMHb292UmZqU9eLHLwUYaDsEVMNYLruOBCElVVPh/foGxzOI3cvNsfj7wILgguIZjZpo4zzLjJiOkNX5s7wEhkbAb9OgFFKROPylKDyUNbFd5sJxigCO0yJ37gQ+0RfO3dgLEva4Lvap/ybA/wwx2nNtuAAWsSbl0RHHSkz1KYLp3d2dQewrj+vXABwCXOBlC45LYAtHZJK1cYvEogQKM+A7kOLjRAURvwJg0FVI3TpaAJvrL0TLMnAc0YY8ZcRGa8nBryDDT78thhXcGHAA2kxjjWS6yTbzIiFBRqGugItgigT2Alcb4g+vpUNMOVZ2FVRREiQVWrnBk6JoSwmBkYMKLCjjCvH47W1cWaXB5WmAvxRwiIDDoTFEoHmNgVkCZWebmtKGf01Wq9XWEuhj8Hbn86cyHl6TrxV/goSCjNaCVf0xZVkXQxvuUZDIwttHwhqPA8BvspkokwAAr3fBUdMYfUsmcDwaXFWHELcCSXHsjy8c1f0Gfx4fH39rvKXwcTEYVW5ToHnZRiul4mopo2U8Ddar1X4b+EJBdvxxovzoH1dlAMRPc+kAncPFwrjxAz6hZuLHwRApjt85CgeaVKKw4UoLbCqjyFJTh2/7NdAYIKsv+EfWz1eman8aMHoQwyFWfDC4gyPdWLquSx8PMZyBJ8KAhyqoBX48sqcEyGSm4EZE56jhTifBdntYr9eHgAN/+AK7WNfWW8TVQJW0gh4CNQQ+k9sRAcRSAuwBKqsvGCmobxFJ4MglElLONlGdqxV5UYyzbDKZH0GQd6v1fh0cldoSf1eKJ2Q7A2iXp490KYNh8DpE3qhi5kh9wGDhM0A6mWRpSs9AOsF6vdr7gWQP9G/JaVHREoN2Vy7POdIdDhTe2AmOUmlm/kq6SSONVs4Iau23uqirVzvbv3bD3/5CwBzGoj2Nl+cfZWJliRkLBLhJFZlRcBFthJTN2k8wLrZ7QGz71ydcrNCcTrMlrqPvcNCircyEcI5lkdApCox6KvfYuFaFIpQiL/2FxI1SIG0adT4rJyHApXkC7jDscWzC79Wnj4taJvBqwGgPhjW5jYU4UhgbJEU5PcJxpqXPX4AAKG7gRXxpynDTSOnqyWTWyxyC/A8/YD3NKiHscFsZ4mDIB1Xl/9yCwgNV9dBgnZIcXqBnVuNxmWbg+icE2jAn4oUPLPKiEHdycnWy4EAOFxskpO6gy00fooU0YRiojeEQZO/lZwGH4WNVtxRHAOTrMFbFdkDCyneIMzGFcIg9ZqfCG4HI8g9tgJXfkf9iCw7XWsf8neIbfh8Mm6lASl4PbiDDKnQntABWB3btN6q+lmIICJYXC0OGvoq8QN33Ff0xIcAFK+iGXIZKVEcduUA5/GmW/gJ8QwLsAoipSG01DN5CutkYX1i5TfTfCRjf52DKJMU3poT4HLgoxOxS5+RUtn1oZPJR5y9ym+IuLuXnEB4k8U0ZkA4meyJTC6Y+4DdwaMuUzkrlHZKRZZfiPLhoiQ+VJa7XhkOqt4TD6slLsBbOXEedo4bFFhc6V+ZB5sq8MFgpOw1KBLgrB/n5WdvjiPBm78quJcT7SogHNgQKTKoQWwpSoWgfxLIrkysuw1u1HeRU8QAvsB60o74CmJbWQrdYsrGdSI0XLdEkO99rOQaVEKctm1QLsZOjyPLcBeBOV95LXMTO4cgSq2ewOxtpE1MJ8CYlUU6Rw7V7TB9lG3j9iP9kZ3JzhxDbPB1aMYnEEFvIKmHiqIqNLfQXAH4JddFDUgr52dgiZusKn07H6ROxSgOiIoEj+DyaTJaXHBDi9QpiRJV9/24VQAeaCBiDZVUIgmyRcWrkOsAYL4yU90/FgSoXhVijvvfKwNmhmnB6DmxRurzsoBCvV9oS/26lH1wTk2COwDaOOUeU6IeGFwMOwy+q6QCju902mVPEE9VyUcY8wTOYZVk2M48i4r8mG3pLMyEvxAsvWglxPDDp93DgmsKTI9s/RLYgvILCITylAT/LPPDX6+A5mpDKUlG75mwKZDHA00d9ph5KmiHebLK8+JAQrxtCDN6zUs8iCIR+G5XLJ0gE5MAuT5xLYfBLpeXJA28BAWcVIzNWRNbh7qQzjPtS4mn4cwVeeMyWEKsyamiaEUWQdKn8if72xysobCxdGVCuOGc1SzKDsc5kJk/yqdxghAB6+hJr1ONOuyED1kZDBGVuk1fTIa96nC4EXKl+1wm2GKsF8yzi15DZO7FOddKJmFxF34YQyyEnv4eavqVc2nbfeCHq+QwvVVrGAOfHgPHuAmciz4nsWpCvo29TiAHul4VSWC28lZwZCl/M0vwsQTVs+WUDJ0fVM5tcal+kvBJwHuzgSRtL/Bj+roiQBUUdr/ViDHi4eLoMMBB4yK8ZrPb4osExI9fwIuKqszlNx1L0/VPJQnxUNBsohk6TxJbfmo3MrwQ8UB6Ho7KH0wyVVSom11Brc5pvA/+0ECccE2Ntg199qnIKHXiB+Ndp6XDxXy53HQDefeBl5CaK65gzlSfxBuJ0YmtLtWE50K0uzgm8yg7X40nRiIaewsfHx0aOM2R/Jk4SAuzE5FFcqX1kr9Cj76/KC+8L8ZDTTKL2A82HOW8HGzXAod3mZXc6LizAa7/EN53JSXQd4h6ejoXf2b1jC/HeCLHLadM48eUJ5jkGMbmWNi5h1+ap8DXEXjGamAlVJIlhP7E0ZpZAhtNoBsowu1LftnnanQvhUFb3eNoS740Qp26sC01RnXfsRqiibCfBhBVnDUYj+PZYYmHMBabBiqDi9JGJwsGtFMsswgzOlTzd4eOrM3/HEltCrMykY+HdwMcYy2w2dSVd70/UgF+ayXXM64Zg7l4I8UgVa1fs3kHcDyS+0qKmXboqqMrjvT8X7Iw7zYCLpLLA0SZCvEuTH4yMzgoHLcDIwB1ZPxdnokLjtAp2O3wPf3F6O8BgfYuS4UoxxwRc/K4lZp1kMTTmXqSirSrBKhEeDAYN1xL5OeyueeJM1PfH75zqAK2Fr7iD57q5qRDD67DdPGKxpsDGHvmOEJMfVdZ/KRF5WdU1lCc9GHYA1g2cVBJz7TICMDaE/vw8HCPEGxTizS0NU4S/vhAu14D9Lnus3Wl32TLB9DulZvBUWlZ4FA7+q8nSoZ4JEkp/FMfKrQBPXbtac3K1UIjhV26u5unuBxU7NkjRgThNLEusVZJWWIB1E9V46Mj5jmG78qCTczH1EcGhxkejQ0BjD3iGRlCotE+mJMTRhYDF5KSzNQ3cDi+pLsR+FRMDgavX5/6BDeWc8AUwclUZLdlReXhZaDfNiE6OtJ4KI8mhEmJfCXGEQjy7TIgNBWW3gOZNBs5PudN2/6l6ggCYMt4R0Vs9kFH40qSwTq8LKs2btF+G9M5Nk5/LVDBCjBZ+dhmJj0m/EGdtgjrOKUv8XP2AVs7Y9BRpsySTkgXy6UcLMHdfxEb9WT3Z2heIXFXuXK2NEF9micV86WqadQBuo1vGRdNyyAQtMZWY4qSsM3QV+xNrG5XVUS4NByMtNE33OCuD0rX4UIDtX4MQe0glEOKzeRrZRSxFrxDniVvrdup5CFMUqRUKp/Vu6y5fpOp0TL5o2Cw1CuwTVNFu2mEqhAnY6NcE9IpbsMQpCvE73mUuRJ7nmXimApc4YZjEPyy+KpKkcMBsiGl/YqtMZIOh6xp7zi/ndgFWjmNZdBrHrLBDmLJmid/jacCZJIlylKfxCWfraF5DJCX9BPBz3HI/tBDneeVFb2SNMSWqLi3BaIR7Aauu3EYlH372GDhx7RFjzpIs8XuGaR5UxznpXZouEGTVmBgiyZfHthCjdwmWuLJJDQJzVxC8z4kqh/dTOHFMGTCqE/kZ0776/aDt38PDOUuI3TnyZ2K393cbpqluwqR3wdHEcem4bUvMMTEEflFDYxn6UtjAYIadfVoNwFTQjRqclGj9GvgIWFni6JwQMe6sRTQpnNvuhvL30jZgcqdXSWBUFvwm672m7GzJIol1JNzRp/U9bADGXyN7EJMQr1GIMQlwM+9SQytRfFS4GAiR9rnTmqOjTdRgZ8vF6RwBEaYrp660pM0qUYXYUe70M/JSujwDsBTHEvvyxKmIydH+MWir0oh927kkS7zaBWUVJlQBsepUNQw9CjtbD0NVUtZ+UB/iQlZJAHKnCfC7llgkEIo42KGWiH4hFkLVve3jdFRlHG2Jueq9qfqNdds1OG08FSIHYTeFFeCWM2tLMiKmX5Or2gNb4mjzjnfpglHLdZYuOfYKsZwbCldnSoFAvf48JzOhI+FqcGCTGr8j0UDkMFwM2jIcLhaj7vDEJrJhFG2JJ+dY4qzS7xSNOb1CrNR4YQMWWIv6BGfSYYmXKkqgN5dW71SWFo62GSaW5lAobedIo5rOf6Zv0EIMrgdo6dOW2G2mISv/otU2kNfzedi9uVzOPvGZ2EKsYuKo6ki23+achty049CePiXA/48LCx2uVg0xdd8LrExDjOaQEJ+2xEXZcobF6aKaJcSgJeUnfaQlxCsuyEc6d5VuIrv4IJyp1YEyXHxpa+kX7Uy7lYjpbjJb2OICvsNFIV6vt76yxLNTjlY7Be30p/LsDCa5lsuJAZxav5QYDNU02eCIXauGYXC06x43d7oImibiJSgmLwwiYWZrbMQuslmhLHHGMXE/T8ddeSljauqA4xwzLcLNl9xJR1m8isAWYC3EKRNYVq50ZLvGme5Lc8OuFE8obZ5m91QLcOWssuI6KndaUHb6hBCLxAoXwC45mDTKnDZPZ9RVjTBJ/vBwEeFTB0uTO00xMZKCXEnT62k6iiLq0qJOx3hU97YE139dOyKm9xIZL8Z2z49Bpi2xoyxxr3d5PNoJOh1BNAFLUQS+N/5K09B346kfFJoJIoPXNsgOFXxUNWCjO6ek6nncVFpHTV3H9VUQwmrhkKq9V7ciaW62EENcPQmwqLVXQizTXhKbN77Mi2OelxwQGHcx1RXD6de3Ozo0DH13N9VTaJUM140FxcQe8BYKccNO4xci8147HExdanGtRKD+DQao+YCYmoQYLMM7QhwX5l/K0qijau4DtSK4YeM3Bvp1rA9CZj6IGHG98M5CnCSZxIBtw1mdDvcB3+tEGeMOwEMr1Uv4IlWeaiI+gqSt1yzEmNjq9S5lkdsxrgJcWoEikHf6xpw8Rp5G8sIf+HisQ3CcYtq0YmIegAAls9lEHUkLzgFEpqelo/UwZN9DJ/O5TmOnYTXiiLw/zOTtwVE8KcTSOFkO+h8c1QdJleEXiU9sjAgRK5MXnwCIsjUl3U5s8RTTJkNgUWv0QMlipP2Akd3iYYppzNMx1+OYxLLWHGMQPwdUxTOWuJenHRPUg7ZyimbmQ9BE/90b8vDd2POxrOTDt3rI5Iare0tM2HmhwbYgqzfrFAz4+6KrPmxaCCKdCKvXOVLDqlh/WBtL3GuYtMlN6yGQwYtbSAAqUBRcozUIdxzHrgs+Q4JfG/citiwxBZ9qbtNW/UpVO0nbvRSmw6HWJELuWtT0MiMdGyNgTmxF/SGicJYdIZCw8b6xivL/yOvpcA/Zuq+/RQtxhmiDADd66LeaSuu9RqwsuwviVXNhGVDHq9zIXr+6CJDA++AdIV4qxRMX9YiggddP0NUH6sJ/aLMUPnWQ7jsv6XmS04QyeUdwV/zx671XLu2ieFUglhyP1t1pUQ3Ysd7KVaMXT8l1xE5I4h1K0baIo5OGKRPaA2gS2OWNHKCaxzjfH9cUFHx29D1A3MfUIMTrHQ6Ifb7/9PDZYwpHFhcqM6OLD92AQ1Uh5NwG/1gjhjOuFxfGD+8JsfaXJy0JLjzCC1SksknTgi/d0psCrydxjxBvAe34/v517Hnz3NGt0togKX+zqpd2yjCuTxup36eaNWmOOaoZOH6QU7DEaxMTv5/ncRp4ncDCG7dRxUvH83BVWJcUu+SLEtqpk6E7ecRgUAip6mkbhTfXvcZ9Uy1mSAdonC+ZSdArN5h1QEbp+PWa3GlwdpZ9FZfITmxhxCd0HgQFGOQXS8JdRAQS+2Ngas9pF2/AnHv3n+6Bts5/kLcAxBEJZv6OS6ttKYp0zmrUP4pnplaEnllXRciKtTdkAlCIAfC2iKK0T4jlDPxCM3lGK2ZiE8OzPRqDTMQ12VVwUXci4HG98TIVa0RLnIzjOjQcRAMk4MU9P2Pax9DGVJcaHN1sPVSqOkvUGLeqRVRkJrUgKX6ohLgjuyjbkWyV6MK9WOO3r+RxLhv6SvP0dDq++2rlFWMM6j0Q3HvPO2q0VCVJRek93396touBkWlKPD2Kp9aDwsMEN9e1GNPEXaAQ4Ol5dkycLttttZ2h7DI7ZigQZGXBHh0rvE3gyz+8Magtk9kVYIII7WeFNiW02OMKGv3506d7tE5RlQqY67m0ZvlQtFrfzSxH1QARWUqbFBdn8pQl3tDEWf1UyZlPM1u9gnLIUYKRoRMjwLEFnM3xUnhj7+1Nx4kOKuVPr5+9KcQeFdql65TwGADu6+sr8CS71hF17isnYDQMT47TVoME+EPJpGJrlmYVWWBhHGPiYtltiavQvR68o3KgzYWAuWJo5Z+w70F/IeA7z+wZOgZjElyNdkmCK8UUtDWjhX8mhylS7Kn1u9tKxjf7pcMfugMxPQZJZ6YaUKecju+1xLIHMMWI6HOAhvbr7MxI1d8EeKoBu8Hnz15BStkIbiSOhTf+RHAR8avytyS14+g6K26KPD0wHb6Eo9hi6XqtmJ1sFOOSDFO/JZ505d/U0wfx/TquCMxcrI4hNQF+4wLff/r3KJFS7dmSmAVTrExY6fjJ0XFwrUuQmKKjO3h3rcWj1tOOau6wI4hIERnEWBfGVWJr09TFs24C04NkCdYKmB3LCq7R0sDSb8yZjg8aiYhLHAa2mFj5U4X29fUhoEJ0eRQTs4pqNOjYmNdkabUOiUZRjdKrzbdHm02mC+MgxLI7Jp714F3+4ZOT5a0tjRU38CLgMRpi7pxNwPb6pVyy4KJWvq+jRY72my45brd9l8KqoYfrSGYrkDkqnYkThzy+dABXCYV42bbEckLTam03k42SL04BRk8LzBLb4Sy4B4Pk4WiwcHyjlevHbxR1ZNyzzKXhabFzOUGjrRjYuBwRD0STacqkLcRnlU1twJWOjmv62WJ8/w4cj3HBH7++AsqxH/isldtwgaNr+hVX//SsJxL1XWAswaVuvFZVucgUb5TTJWeOih+UEM/Obsr7xxQB39m12TjWgbDh6OP0bqp96aMHgD4jYcHDuNda2T73r5+twAqIO+xZxNMGXG9R23T1vRJk+Uw1NS3EF/Q+lEjht7HViBZXKlq/69x/AI5WOqv4/Prw8IAZPm/82nMUR0vcW0YTG70b5G2WVn3gy9I3ibvu3Q2bWZRpS5yzEGcXsfTb2I+1CY7juCHDGB0CR///McWz4Jm9PiBhIdbv4mbmaOUyjFQFPDxrvVRYFYpNz2IUtdJ5VJjd+JQEOD8mrgCjku4CbAWHCVDz7Y7JJgKC+3oPgF97AH/WuRTasU2Tp+cBHkq7xLThLW5duW6M6dmdVkKcnivEwqfQP8mXsaWz6kr6H+BXmvj/6L8S4IcH73MfR3vJOuAMWD3r/g7gJ90GnlU1NV2gawAGpzjA3XwnLHFvkpVSs1pLxy0SQ6Tk32Hk4P1DpYMA8D0Bfuih8D3Il57gem+RWgfgudKgKfV8Ra3uTXwIfrCDmJi2Ebq9MXF3ySkBhgY7/IcN2ChpihvgO7yvOk2LIswcPfb6CDwOsFmOC2PD8MfiYgq7dZ21aREYjNIhoC5ALjFBzHS+EPtIYuXrU2QUa+D0BzO4YIPflOIVwf0rc3SnCMNzGD94yTd8J2os6+VswCrhkZEMw//U0HuTwtgJBSyUkDtthHizOZ+nUWsRT3MoqG0SOYdI3zGlLJVT7ytF/OCNG4DvXx881Q+y2leTtufL8A9llhLH5uVm30rEkwDrHXe3bEse2zrfEhceai2/NIF/bCV4kL6UztKuU+m9PijADx3KeXtYrQ67rb/aA0/nXA5+OZ/CtTLxUk3yNfFKh1ZMrNgS75JLLTFh4jR7XAuIgTxHH/gZ8H4NTJ1G0bXF0UDfwF/vycNdranYJThp93T2mkfVV5ur0CFCT1LaPUFop9xC15ZouvZySwyGBkssXAO23Y5YFIB1ijVj0+CFIswE/vy5CZgzayuqVqs8+bIxAP8u4EE1tRlZa3waOYsDpaX9AF+oEuLZ+ST2qbAQ1Ab+8z8KH9l5/GYXWU6I8KtP+3kILZ2Oif/391qOrHB4WXO0CD1OfSTJnl5jF9BfIMQRjm3Jcw1TnqCRxbIhRD+O+I8ct185ENTjl8AeYb3Jcr0VR4MINx1Lj9ZdrjRHXwE4DHUK7xh4+VJNMUWRLrNj7VZMKIFHfvRuT8or74uJu4uooLTeCPHb2IPj+4UPyMeonKkYPuV+I1XG+vxa+ZX3TZW1YwleXUdh3gI9rLK0WaPKUVCaS01cYoLHP9OdzidCL4LEMtOUulh8rPxPp9zI8hXifW+KcMd+UhtBvFfmFvzKOmAv8LdBciCwKz16snz3OjXRt8MRl7KUjsgxu5PzOCItp+TS4YpXiWohTvuFOFfT7kFSznPO7wYeAguwgQc7O6bTqQdgEf/bV6++Jeo/ayJ8X/Ouduv9yg8Sf7vdrThyE8v3b0IQ/WvvcqdWyX7WlbaDArzasjvNWxC6LTFOBONKbDhbbPXgvQmAeBw8g+4ac3+W+kP3c0wasZUS4bF3b+MFFe1/ww5INMK7w4qbIOQVgKlfPK7IQy2DQriNQR46CRfGd0naI8S0uodYboUrsXFWYUc/GVDPSk7VIrqe44568JJj1nS8P1tWuAbY3/L7IBGmDxJveRVgbNo6sSJ7WgEOqKbWXycWaMCUfNF/v4E/euBtL45ue9VzXInV5WzV3R40R39uAEYjbLDqFu7l+zcSic710T1rQPGZ+74GvEMfFl5VCfFmuanRJz4idfXDYW262ifB6gAcbs0KZ9RNmsXdwbMR4XpoiKWV3bdv1a/Xi5jeU9LdFH5cDLogc8Jlp3XWLsDullWPEOdl8A/zfshOatV+2K4Sq18lPZkeqUS4ldWB37Te71lezBx1+t4uddG7/n04cs0ygBiXOo84lDpoEIfAIUO4RyFOG0KcF4FFXmCH1V7zxXZb27hzajmPb1vhpl+5S1hFsx1OkrR3dOeMzaXhd1xHveDd1Hir1UC5nUIBRjSgdP39mrPTaWQLcT43xkuzQ6L5O2lY+BMbttxKhMctAqPXs4NDgcx+p2ezrgSsE39Vq3H4OLQAk7Hf8l0qIMQ0trVZzjLTh+GvanhpBpcd322jVaV/G1FdhJtZHbAQwNHM08htqt7/M0vxQ7y14unp6cvT41NYpzCrIPAoDvCKqlkcq3op7RNPdjV25rPf0o9+2ybNMlR/WKWSOsjRrbxdsN+roGG/3po9tOH1FG4vHmYZ3lWAkcY++DnbJJeTCZhs9Kn8HQaphu9repQyBr48F3DxuSc0ZKV1IArv0VzM9QzL7a49UIBTmuCl4IT+v1V2lP/aboHNLIjrGlOvE4znkmYvUq/WwuC/LzR8pfROst3iQLYe2weN9XJDwNx+WuqoWxF5vTocSHeQm7nuoKz6nEzH6tuuPQAne+Pm+z4rjF8Ef5oway/mvEuJLwbsWIAN56LfWDlUFlH5PwflBu7BiLR3ZvVoLSmPXqdRuoevKMlGX+/bt8RXZZZzrjO5ZL80+dhZQHkGG/CJo76DNDQmC4Kko2F01tnXlslSA66VHO4fiMCfwfV25qA0URu6Z8SFVwAemA1E65VN4A6Eq1Wd4LuElVySL88BzJu6Ha9thekJYP986Uw2G5Hs9qv1eYHwNRvER+wNJE0P+X0a77e0QNAvO5tuZQsuJVrmnIM32R0uMQHaZDoXYBTKhGOx9Z8GmPM/c248PAlYq7SK1MF2RU307wKWtKY4SmebtMCcNInww4OF1pnTLgWMg9crc8VHfN6lj5csxdfbq48cFla4WmjRY/5WeyLAzcB6RWdMVNNaM54opHR4FngqNHzg4hJY+XJaFls0/hg4EPOsgyRenn3p4wUr09GzNojX6z7AYIjBHylpCBU+3Co/awemusi79fHMIq+ka7Ykty7PA++e/UpUUgEZXsT6Tb06OVvBeYHwNYAHuhNzHtBSHju6V09gTx72UUS4uHe3JW9EuVnlc5/BNYCxysxtrKqBRhSB99mjIR906g6HSogQLL2AL3pmo3/+gqmq93RSYvJmv7dEFo0xJa6mc4qaXIf8zJ1PV+kcTu1wzKtRId7VYHaxUxqIKKsecKUr2cczeZJ4GN4eMK30VGKIIVHC+TN2Lnb4DnzvOdMtAw673TsMqdgbitWNJmnj2mG9ACxVLK0u/5DZ3PGVcjI+Dkouc07i2AtgRmfegnjpTR7mvmfq3aWHnKgFQ77nzLON2eDKvWvoZtG0QzrLMnOdC958MZsZ7cxDYOmGug3UvYCS7qxKtjVliGB9RVi3pgDpMofw5hTGpIB11SplNQlwEiSTbIalN9MsnjLgAwB25hN96UXEnew87bvJuFWPckNyQxPBrKXxZqNku6rnxEhgAjBLrZvJ3GF47r2PF18/FDaTmkkC0cNhl2QyAwjW2BZ53YSXYVYtjKiQZjTlLFNWy/QH8M4yvCoAr6zdabOj7NxWbWNsZ/tk7F5wbevlF0z9H7zr3Erx8VIvlavdLKtMnlB3yx4lz3DLRm8ufBmvo8VOXKBYhm26maTrdJKdrZ8U2LJNWL5ScUitaOGfBnixeAzpGgQzK4BmUTUhbpbc3RKlILECXD8f8eorWxQny1RdxopcnWI38oz2SsCzknMfJGFf+TUM1usAG8sRNWUNL0C7uPaiR1QQA3WhfaY6iUseB8CJD0CLujrKHL9wqAsXx23SbDKfP8+d+Qa114wu+tioa7iw+RuACx+NnabsQYPtyBiPzHa/wWW3mF57leej6RdQG2sPEAjNSIjx0g4mMsCaMXEzMX9WA++eHUDwndIpPROZe9qDw7xNwmwsW2HySIN9eXoM+7tIbwx4Ef4IB9xNbgsxpS6l9ob5Ip50g6Htw4PabDBOkNhCnTxFz2qDEpzBk1tXUgvuWt4lsQN9WU5oZVf/AsB0z6BqvjWdxCltYdaDXRFrZrRHOIymzl2A+4WrDTRTgQ8AZKFIvpEnTrRtJoIiut7xn1QHej81+acApmhCUjs55sRRiMG0yAlBpCtmM0VloOcxsAD7B/aJKfQAR8zFRwPKefdNKSkrT1UZHu6S/fE9/DK4Hu7PXbj8yIlMSU0fexRisMQT5QvP1OW5c+WP3RnE/vbb2vTerDGMmh6n6FWBmsKhlC1mBRM9WEeUDdV1x4ufPz8DWN8eYgtxhs4Ez7BllJPAxPUB/nGsEd95fpUU23MBg4IqagyCb6YkKNcnIho8CsNFx62rfwPganc8kov6lyYZLZvARgfyhA8qTt9bgKcBF0gA1XZLkRTEuBiF7FfA7Ts+qnaCfXU/wjC8FdyfBjxc1oUY76qRRFn0hE34iPd/GMDjYGuq4EGw3pt80A6+Qhlu/M+WK6oY9N0O7c8DrnbHU+tflqZ0oen2sP+2X6vEAJHf994qwBDsYB9FlsfofqrEBcA9QkTJJD6sLkpF/nWA9eoxVU0sqZK22q/tRAhGykngW4DtvqSECyY8QJ7Do9rtWIWbu2g/EGDQ05YQA0/yFfY6t4UOhG+4966yS7aNxTsUk8R3eM0J3X+zXld9daPFjUn8c4DNRUxbldHam3zTQQkqFenRK+4BXJ+XJl5hIUiKjwhYzWYeud/UUJZZdArsfeDj24bY3ljduXZmzasz4/NzkX8ZYLUENE8wi0klNQ5xMAWDbXfaygRFYuzSm7I4o5EbtwEfdLFR3zb8oQAPdLcP3r4cqN3ZZrlyERyUzgU3oiDABNrXV7e1e4VcbhJaq0HO5i2NfztghOyaLtnCL+1Eogiw5ZAJ7MdbaimljTQ8vsE3kEJUjQdH6KSlDezWyZePBDg0uz9quwtUfUJ7TRgKYLM7LlYCxJ7aoEI9JKyUBurO5FSrv3N7Rf9yCmOLdU9BO/FXB93C5i7XOHMInO3fqRTAiEO9ARA6/K6vzlSA1zQRJVR+Pfz9AwEmtpbdDQsHZWFwz+jy6FNnf54kb9Oiypy/cGwQvvBvyXn8ixvuM6bw4ENReEHbTlz7dkWpL8HQlSfyEh3/zS+oRc/3qgEjw64voQK8qwDTRW0D5PuPEjxorgbGHGKnIqoeiF6NM6IKbGRgROBx92deBP+3XRtRsfVEdfWvzf3ZLiWwwg/F0iFnDkNKl4Ym8aPpuw/UWkvtb/ClSvVq36MeA6SGYwKsi8k48L0YhB8I8MIMZH9/CvVYfdVIrjoSRKPjsN5EZuYedepnb13GgtccDm7E1eJmvEJjyo8LZV/4CgqjozsaRwc20cLfrDu7lKarZbXcW5kncUMFyBztWsvzuTW/6OhuaNxkBsaN12gla50PCHAPsSnNSfdGkfENKYy6ZRi3RiNsUskRO5NIsIGNQCWLpLZKnP6gIrCWBBdbmj8WYBVJsB9thn1WJhrk7RqD4Yjm1u0SSXXH1WHPBD7syIpj1lZtlpOjmwRO4lbMDP+vyqixqOYdlHnBLvOwliypzosuOqt1KDQdwVnNPZJa9wbfIo64oQybQjmltUx4rOaYKymHh/MlbGp51woOtf1em0DxuLxZuudGdjh8MuIrptjLYk11OLp1+7e+apCOQIpkb2ZFrX7OtapD4Lq3wYdhaeVQ43L0nd29tVbbWYcn3MNQG+GdJqzpTdat5RMdQn8UllYDfOA3blXXdBXXPqs93oN3AdtdULVOVXWH4QdSWiO9HpIWA9TapnlIKR6+m9B3gtWqs8F8tfITNVf45YO4lty9lfPmh8bb3elbcXt52gC2G5LNlCyrevdG2YDbAFZTx16wbvVNr1bvd/e2WHrVbEA3wXH4MbT0UFqTtk1+3KvJ7ZNKi4PhqhNbz/WvdIdwzjL8QQBziYkXMDVovF6pLumTFNbLFnxqaVlbioufWeKrDuHvHwHwU82qtGYBVDbuJIVDvYvP2DRliM2YI0cc//wQWvqfuqRmzyhVjM1aWuLFzScygWoLMHbpGidNZxAOqrN8dIOY+BaA1fVFZbBvz3pg8MDUGZ5OmWjHVHDXsXKkKYBIcMP3rVK2twSc7LvGARR1TrV/gtLS68upL2Sq6nCqTVcv4h59lGhJAbaG5a0T8Lo/dzA4lZbCxKRVdpE4yFgWRVGWR5GZltlbFF1uCNgxSY6KvNvAd9UY5O/vqXqwTfGJaXGQie8fBLDyG9CMGgWrslnBUeq1xy/vBdSDhW7f7MY7/DApHn0jl77ig/XNqkpWtBa192cRetYtyNEwHAw+EGBlRgtqy8I2K2oN1bmdM2eo4Bf9BuI8dN36SIR0R7cri98mWlI7bZexVrCB7wjXkr6z326I6XxMbmMJ1ZWuS0sIMEr6UHnp36v8TuziVo7c5sbLyGOAYf2GPjmt4P+eePhxMYx7leuFuTck8WP4pGQ2vEGW48/IeDwuOvfZuMCNTy/XqobFbZvwbpu1pH02zQtJR+FlAwm3x/cnAgaJG9B2FzouFU4vrfr9SoAX/61qpnwaGdnbyuHHAEy6qxLX8De7o/svIN1fD1j1catz65bBW53/BelpmmeriIXwAAAAAElFTkSuQmCC" alt="Fairy Inspect" class="absolute -top-1 -right-1 w-10 h-10 object-contain pointer-events-none drop-shadow-md z-10">
+        <div class="flex items-center justify-between gap-2 border-b border-charcoal/15 pb-2 pr-11">
           <div class="flex items-center gap-2 min-w-0">
             <img id="badgeHybridCrosscheck" src="data:image/png;base64,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" alt="Crosscheck Badge" class="w-6 h-6 object-contain shrink-0 drop-shadow-sm">
             <span class="w-2 h-2 rounded-full bg-coral animate-ping shrink-0"></span>
-            <span class="font-mono text-[11px] text-charcoal font-black tracking-tight truncate">// Moonjung-DLS / Hybrid Verification Gate</span>
+            <span class="font-mono text-[11px] text-charcoal font-black tracking-tight truncate">// DLS HYBRID GATE</span>
           </div>
           <span id="dlsStatusBadge" class="font-mono text-[9px] bg-mint/40 text-charcoal font-black px-2 py-0.5 rounded border border-mint/80 shrink-0">DLS VERIFIED</span>
         </div>
@@ -708,12 +726,12 @@
         <div class="bg-white p-2.5 rounded-xl border border-charcoal/20 flex flex-col gap-1.5 shadow-xs">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-mono text-charcoal font-black flex items-center gap-1">
-              <span>🔍 문정초 독서로 DLS 소장 서지 실시간 대조 (Late Fusion)</span>
+              <span>문정초 독서로 DLS 소장 서지 실시간 대조 (Late Fusion)</span>
             </span>
             <span class="text-[9px] font-mono text-charcoal/60 font-bold">서울문정초 글샘터</span>
           </div>
           <div class="flex gap-1.5">
-            <input id="dlsCrossCheckInput" type="text" placeholder="대조할 도서명 입력 (예: 마당을 나온 암탉, 어린 왕자...)" class="flex-1 bg-stage border border-charcoal/40 rounded-lg px-2.5 py-1.5 text-xs font-bold text-charcoal focus:outline-none focus:border-coral" onkeydown="if(event.key==='Enter') runDlsInteractiveCrossCheck()">
+            <input id="dlsCrossCheckInput" type="text" placeholder="대조할 도서명 입력 (예: 마당을 나온 암탉, 어린 왕자...)" class="min-w-0 flex-1 bg-stage border border-charcoal/40 rounded-lg px-2.5 py-1.5 text-xs font-bold text-charcoal focus:outline-none focus:border-coral" onkeydown="if(event.key==='Enter') runDlsInteractiveCrossCheck()">
             <button onclick="runDlsInteractiveCrossCheck()" class="brutal-btn bg-charcoal text-cream font-black text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 shrink-0">
               <span id="btnDlsCrossCheckText">대조하기</span>
             </button>
@@ -735,7 +753,7 @@
         <div class="grid grid-cols-2 gap-2 text-[11px]">
           <div class="bg-white p-2.5 rounded-xl border border-charcoal/20 flex flex-col gap-0.5 shadow-xs">
             <span class="text-[9px] font-mono text-charcoal/50 font-bold">1단계: ResNet-18 Vision</span>
-            <div class="font-black text-charcoal truncate" id="dlsVisionPred">그림책 (54.2%)</div>
+            <div class="font-black text-charcoal truncate" id="dlsVisionPred">그림책 (—)</div>
             <span class="text-[9px] text-coral font-bold truncate" id="dlsVisionNote">모호성 감지 (Margin 10.4%p)</span>
           </div>
           <div class="bg-white p-2.5 rounded-xl border border-charcoal/20 flex flex-col gap-0.5 shadow-xs">
@@ -748,7 +766,7 @@
         <!-- Cross-Check Conclusion & Stamp Row -->
         <div class="flex items-center justify-between bg-white/90 p-2.5 rounded-xl border border-charcoal/20">
           <div class="min-w-0 pr-2">
-            <div class="text-[10px] font-mono text-charcoal/60 font-bold">★ 하이브리드 최종 확정 (Late Fusion)</div>
+            <div class="text-[10px] font-mono text-charcoal/60 font-bold">하이브리드 최종 확정 (Late Fusion)</div>
             <div class="text-xs font-black text-charcoal truncate" id="dlsFinalVerdict">줄글책 (문고판) · DLS 교차 검증 통과</div>
             <div class="text-[10px] text-charcoal/70 font-medium mt-0.5 leading-tight" id="dlsExplanation">시각 모델의 삽화 집중 한계를 도서관 서지 DB로 완벽 보정</div>
           </div>
@@ -805,14 +823,7 @@
           </div>
         </div>
 
-        <!-- Section 4: AI 연계 추천 도서 3선 -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-black text-charcoal">AI 연계 추천 도서 3선</span>
-            <span class="font-mono text-[10px] bg-mustard/30 text-charcoal px-2 py-0.5 rounded font-bold border border-charcoal/30">초등 권장 · 성장 문학</span>
-          </div>
-          <div id="reportSimilarBooks" class="flex flex-col gap-1.5"></div>
-        </div>
+      </div>
 
         <!-- Section 5: 나래도서관 인생 도서관 대출증 (Pass Ticket) -->
         <div id="libraryPassTicket" class="bg-stage rounded-xl p-3.5 border-2 border-charcoal relative overflow-hidden bg-cover bg-center">
@@ -988,7 +999,7 @@
                 </tr>
                 <tr class="bg-coral/15 font-black text-charcoal">
                   <td class="p-2 flex items-center gap-1">
-                    <span class="text-coral">★</span> 제안 모델
+                    <span class="font-black text-coral">제안 모델</span>
                   </td>
                   <td class="p-2 text-coral">ResNet-18 + 복합 증강 + CosineLR</td>
                   <td class="p-2 text-right font-mono text-coral text-xs font-black">97.33%</td>
@@ -999,11 +1010,11 @@
 
           <!-- 교수님용 핵심 연구노트 박스 -->
           <div class="mt-3 p-3 rounded-xl bg-amber-50 text-amber-950 text-xs border border-amber-200 leading-relaxed shadow-brutal-sm">
-            <p class="font-bold mb-1">💡 실측 전이학습(Transfer Learning)의 우수성 고찰:</p>
+            <p class="font-bold mb-1">실측 전이학습(Transfer Learning)의 우수성 고찰:</p>
             <p class="text-[11px] text-amber-900">
               `book_dataset` 494장을 계층적 분할(Train 345 / Val 74 / Test 75)하여 Colab 환경에서 실측 학습한 결과, ResNet-18 미세조정 모델이 Test Accuracy 97.33%, Macro-F1 0.9731로 베이스라인(86.67%) 대비 +10.66%p 대폭 향상되었습니다.
             </p>
-            <p class="font-bold text-stone-900 mt-2 mb-0.5">🔍 실측 혼동 행렬 및 오답 분석:</p>
+            <p class="font-bold text-stone-900 mt-2 mb-0.5">실측 혼동 행렬 및 오답 분석:</p>
             <p class="text-[11px] text-stone-600">
               만화책(28장)은 100% 전원 완벽하게 식별되었으며, 테스트셋 75장 중 오답은 단 2건(그림책 1장→줄글책, 줄글책 1장→만화책)에 불과했습니다.
             </p>
@@ -1262,7 +1273,8 @@
         }, 300);
       }
 
-      // 백그라운드 ResNet-18 ONNX 모델 자동 프리로드
+      // 카탈로그 512차원 임베딩 및 ONNX 모델 백그라운드 프리로드
+      loadCatalogEmbeddings();
       setTimeout(() => {
         loadOnnxModel();
       }, 1200);
@@ -1537,26 +1549,26 @@
         author: '황선미 글 · 김환영 그림',
         code: 'TXT-813.8-H1',
         coverKey: 'book-cover-hen',
-        confidence: '54.2%',
-        isAmbiguous: true,
-        visionWinner: '그림책 (54.2%)',
-        visionRunnerUp: '줄글책 (43.8%)',
-        margin: '10.4%p',
-        probs: { picture: '54.2%', text: '43.8%', comic: '2.0%' },
+        confidence: '81.6%',
+        isAmbiguous: false,
+        visionWinner: '줄글책 (81.6%)',
+        visionRunnerUp: '만화책 (14.9%)',
+        margin: '66.7%p',
+        probs: { picture: '3.5%', text: '81.6%', comic: '14.9%' },
         dlsCrossCheck: {
           library: '서울문정초등학교 도서관',
           kdc: 'KDC 813.8 한국문학 (동화·문고)',
           catalogClass: '사계절 아동문고 (줄글책)',
           verifiedType: 'text_book',
           status: 'DLS VERIFIED',
-          finalLabel: '줄글책 (문고판) · DLS 교차 검증 통과',
-          reason: 'Vision 모델이 표지 삽화(82.4%)에 집중하여 그림책으로 오인식했으나, 문정초 독서로 DLS(KDC 813.8) 서지 대조를 통해 줄글책으로 최종 확정함.'
+          finalLabel: '줄글책 (문고판) · DLS 서지 일치',
+          reason: 'ResNet-18 실측 로짓 [-1.604, 1.540, -0.159] → 줄글책 81.6% · 문정초 독서로 DLS(KDC 813.8) 서지 분류와 일치함.'
         },
         gradCam: {
-          illustrationAttention: '82.4%',
-          typographyAttention: '17.6%',
-          focusArea: '중앙 닭 수채화 일러스트 텍스처',
-          explanation: '표지 전면의 82% 이상을 차지하는 암탉 수채화 일러스트에 ResNet-18 가중치가 쏠려 모델 스스로 모호성(Margin 10.4%p)을 감지함.'
+          illustrationAttention: '—',
+          typographyAttention: '—',
+          focusArea: '표지 전면 삽화 영역',
+          explanation: '표지별 주의 영역 비율은 미측정입니다. 실제 역전파 Grad-CAM 히트맵은 docs/gradcam_real_results.png 참조.'
         },
         mbti: '자유를 꿈꾸는 사색가 (INFP형 독서가)',
         mbtiDesc: '어려운 환경 속에서도 생명과 모성애의 숭고한 가치를 깊이 있게 사유하는 내면 중심의 사색가 유형',
@@ -1567,7 +1579,7 @@
           { title: '2. 어린 왕자 (생텍쥐페리)', desc: '눈에 보이지 않는 진정한 소중함의 탐색' },
           { title: '3. 나쁜 어린이 표 (황선미)', desc: '순수한 아이들의 마음과 갈등의 치유' }
         ],
-        tts: '이 책은 황선미 작가의 대표 줄글동화 마당을 나온 암탉입니다. 표지 삽화 점유율이 80퍼센트를 넘어 시각 모델은 그림책으로 오인식할 뻔했으나, 문정초등학교 독서로 서지 정보와 교차 검수하여 줄글책으로 최종 확정되었습니다.'
+        tts: '이 책은 황선미 작가의 대표 줄글동화 마당을 나온 암탉입니다. 표지 삽화 비중이 높은 문고판이지만, ResNet-18 모델은 줄글책 81.6퍼센트로 판정했고, 문정초등학교 독서로 서지 정보와도 일치했습니다.'
       },
       comic: {
         category: '만화책',
@@ -1601,7 +1613,7 @@
     // REAL-TIME COMPUTER VISION INFERENCE ENGINE WITH OOD (NON-BOOK / FLOOR) FILTER
     let cachedLastCvResult = null;
 
-    function checkIsBookPresent(gray, width, height, avgSat, blackRatio, freeEnergy = 4.0, margin = 0.5, winnerConf = 0.8) {
+    function checkIsBookPresent(gray, width, height, avgSat, blackRatio, logSumExp = 2.0, margin = 0.5, winnerConf = 0.8) {
       let sum = 0;
       const numPixels = width * height;
       for (let i = 0; i < numPixels; i++) sum += gray[i];
@@ -1699,16 +1711,27 @@
       const textScore = textPeriodicityScore / (height - 2);
       const orthogonalRatio = edgeCount > 0 ? (horizEdges + vertEdges) / edgeCount : 0;
 
-      // Multi-modal OOD Decision (Physics Priors + Energy Score + Softmax Margin)
-      const isDark = (centerShadowRatio > 0.35) || (centerMean < 38) || (deepShadowRatio > 0.40 && centerMean < 48);
-      const isFlat = (stdDev < 28) || (edgeDensity < 0.04) || (stdDev < 38 && quadrantSpread < 14);
-      const isUniform = (edgeDensity > 0.40 && quadrantSpread < 16 && avgSat < 0.18);
-      const isCenterWeak = (centerEdgeDensity < 0.12 && edgeDensity < 0.22);
-      const isLowEnergy = (freeEnergy < 3.25);
-      const isLowMargin = (margin < 0.18);
-      const isLowConf = (winnerConf < 0.55);
+      // ---------------------------------------------------------------------
+      // OOD 판정 = 물리 게이트 + 로짓 활성도 게이트
+      // 임계치는 2026-11-14 실측 캘리브레이션으로 정했다 (tools/ood_calibrate.py).
+      //   · 문정초 DLS 표지 21권: stdDev 37.5~97.1 / edgeDensity 0.115~0.777 /
+      //     centerEdgeDensity 0.087~0.837 / centerMean 69.2~236.8 / logSumExp 0.77~3.10
+      //   · 비도서 배경(단색·암전·노이즈·그라데이션·바닥): stdDev 0~28.1 / logSumExp 0.92~1.32
+      //   → 표지를 자르지 않도록 stdDev 34, edgeDensity 0.06, centerEdgeDensity 0.05 로 낮췄다.
+      //   · 옛 코드는 확률값에 log를 취해 Free Energy가 항상 -1.50으로 고정됐고,
+      //     그 때문에 실제 표지까지 전부 차단됐다. 로짓 기반 E(x) = -logsumexp(logits)로 교체.
+      //   · 신뢰도 마진·확신도는 실제 표지에서도 0.002까지 떨어져(수박 수영장 실측)
+      //     차단 근거로 쓰지 않고 모호성 경고로만 남긴다.
+      // ---------------------------------------------------------------------
+      const freeEnergy = -logSumExp;          // E(x) = -log Σ exp(logit_i), T=1
+      const isDark = (centerShadowRatio > 0.40) || (centerMean < 45) || (deepShadowRatio > 0.45 && centerMean < 60);
+      const isFlat = (stdDev < 34) || (edgeDensity < 0.06) || (stdDev < 36 && quadrantSpread < 5);
+      const isUniform = (edgeDensity > 0.85 && quadrantSpread < 20 && avgSat < 0.12);
+      const isCenterWeak = (centerEdgeDensity < 0.05 && edgeDensity < 0.08);
+      const isLowActivation = Number.isFinite(logSumExp) && (logSumExp < 0.60);
+      const isAmbiguous = (margin < 0.18) || (winnerConf < 0.55);
 
-      const isOod = isDark || isFlat || isUniform || isCenterWeak || isLowEnergy || isLowMargin || isLowConf;
+      const isOod = isDark || isFlat || isUniform || isCenterWeak || isLowActivation;
       const isBook = !isOod;
 
       let rejectReason = '';
@@ -1720,13 +1743,14 @@
         rejectReason = '도서 표지 미감지: 균일 노이즈 또는 직물/카펫 텍스처 감지';
       } else if (isCenterWeak) {
         rejectReason = '도서 표지 미감지: 중앙 표지 텍스처 부재 (비도서 사물 또는 빈 배경 감지)';
-      } else if (isLowEnergy || isLowMargin || isLowConf) {
-        rejectReason = `도서 표지 미감지: 비도서 배경 (낮은 신뢰도 ${(winnerConf * 100).toFixed(1)}%, 마진 ${(margin * 100).toFixed(1)}%p)`;
+      } else if (isLowActivation) {
+        rejectReason = `도서 표지 미감지: 모델 활성도 미달 (logSumExp ${logSumExp.toFixed(2)} < 0.60)`;
       }
 
       return {
         isBook,
         rejectReason,
+        isAmbiguous,
         stdDev: stdDev.toFixed(1),
         quadrantSpread: quadrantSpread.toFixed(1),
         edgeDensity: (edgeDensity * 100).toFixed(1) + '%',
@@ -1735,9 +1759,11 @@
         textScore: (textScore * 100).toFixed(1) + '%',
         centerMean: centerMean.toFixed(1),
         centerShadowRatio: (centerShadowRatio * 100).toFixed(1) + '%',
+        logSumExp: logSumExp.toFixed(2),
         freeEnergy: freeEnergy.toFixed(2),
         margin: (margin * 100).toFixed(1) + '%p',
         winnerConf: (winnerConf * 100).toFixed(1) + '%',
+        flags: { dark: isDark, flat: isFlat, uniform: isUniform, blank: isCenterWeak, lowActivation: isLowActivation },
         rawEdgeDensity: edgeDensity,
         rawStdDev: stdDev
       };
@@ -1765,11 +1791,14 @@
     let isModelLoading = false;
     let modelLoadError = null;
 
-    const ONNX_MODEL_URL = 'models/booklens_resnet18.onnx';
+    const ONNX_MODEL_URLS = [
+      'models/booklens_resnet18.onnx',
+      'https://raw.githubusercontent.com/yn2511/booklens/main/models/booklens_resnet18.onnx'
+    ];
 
     async function toggleOrLoadOnnxModel() {
       if (ortSession) {
-        alert('✅ ResNet-18 ONNX 딥러닝 모델이 브라우저 메모리에 로드되어 실시간 가속 중입니다! (정확도 97.33% / F1 0.9731)');
+        alert('ResNet-18 ONNX 딥러닝 모델이 브라우저 메모리에 로드되어 실시간 가속 중입니다. (정확도 97.33% / F1 0.9731)');
         return;
       }
       if (isModelLoading) return;
@@ -1793,11 +1822,20 @@
         ort.env.wasm.numThreads = 1;
         ort.env.wasm.proxy = false;
 
-        ortSession = await ort.InferenceSession.create(ONNX_MODEL_URL, {
-          executionProviders: ['wasm']
-        });
+        let lastErr = null;
+        for (const modelUrl of ONNX_MODEL_URLS) {
+          try {
+            ortSession = await ort.InferenceSession.create(modelUrl, {
+              executionProviders: ['wasm']
+            });
+            break;
+          } catch (e) {
+            lastErr = e;
+          }
+        }
+        if (!ortSession) throw (lastErr || new Error('ONNX 모델 로드 실패'));
 
-        console.log('✅ ResNet-18 ONNX 모델 로드 완료!');
+        console.log('ResNet-18 ONNX 모델 로드 완료');
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-mint';
         if (text) text.innerText = 'ResNet-18 ONNX 활성 (정확도 97.3%)';
         return ortSession;
@@ -1865,6 +1903,8 @@
 
       let prob_pic, prob_txt, prob_com;
       let inferenceEngine = 'canvas';
+      let onnxLogits = null;
+      let embedding = null;
 
       // 1. ONNX ResNet-18 세션이 준비되어 있으면 실제 딥러닝 추론 실행
       if (ortSession) {
@@ -1887,6 +1927,9 @@
           const results = await ortSession.run(feeds);
           const output = results.output.data;
 
+          // 로짓 원값 (Softmax 이전). Free Energy는 반드시 이 값으로 계산한다.
+          onnxLogits = [output[0], output[1], output[2]];
+
           const maxLogit = Math.max(output[0], output[1], output[2]);
           const exp0 = Math.exp(output[0] - maxLogit);
           const exp1 = Math.exp(output[1] - maxLogit);
@@ -1896,18 +1939,31 @@
           prob_pic = exp0 / sumExp;
           prob_txt = exp1 / sumExp;
           prob_com = exp2 / sumExp;
+
+          // 512차원 임베딩 (GlobalAveragePool → Flatten). 관련 도서 추천의 입력 벡터.
+          if (results.embedding && results.embedding.data && results.embedding.data.length === 512) {
+            const raw = results.embedding.data;
+            let norm = 0;
+            for (let i = 0; i < 512; i++) norm += raw[i] * raw[i];
+            norm = Math.sqrt(norm) || 1;
+            embedding = new Float32Array(512);
+            for (let i = 0; i < 512; i++) embedding[i] = raw[i] / norm;
+          }
+
           inferenceEngine = 'onnx-resnet18';
-          console.log('✅ ResNet-18 ONNX 실제 추론 완료:', { prob_pic, prob_txt, prob_com });
+          console.log('ResNet-18 ONNX 추론 완료', { logits: onnxLogits, prob: [prob_pic, prob_txt, prob_com], emb512: !!embedding });
         } catch (e) {
           console.warn('ONNX inference error, falling back to canvas:', e);
         }
       }
 
-      // 2. Fallback: Canvas Heuristic CV
+      // 2. Fallback: Canvas Heuristic CV (ONNX 미로드/오프라인)
+      let canvasScores = null;
       if (inferenceEngine === 'canvas') {
         let l_pic = 5.2 * avgSat + 2.2 * edgeDensity + 1.2 * textScore - 3.2 * blackRatio;
         let l_txt = 5.2 * edgeDensity + 4.6 * textScore - 3.2 * avgSat - 1.5 * blackRatio;
         let l_com = 5.8 * blackRatio + 2.8 * edgeDensity - 1.5 * avgSat - 1.0 * textScore;
+        canvasScores = [l_pic, l_txt, l_com];
 
         const T = 1.0;
         const maxL = Math.max(l_pic, l_txt, l_com);
@@ -1932,10 +1988,16 @@
       const margin = winner.prob - runnerUp.prob;
       const isAmbiguous = margin < 0.14 || winner.prob < 0.58;
 
-      const freeEnergy = -Math.log(Math.exp(prob_pic) + Math.exp(prob_txt) + Math.exp(prob_com));
+      // 3. Energy Score: E(x) = -log Σ exp(logit_i)  (T=1)
+      //    확률값에 log를 취하면 항상 -1.50 부근으로 고정되어 표지까지 차단되던 버그를 교체.
+      const scoreVec = onnxLogits || canvasScores || [0, 0, 0];
+      const maxScore = Math.max(scoreVec[0], scoreVec[1], scoreVec[2]);
+      const sumExpScores = Math.exp(scoreVec[0] - maxScore) + Math.exp(scoreVec[1] - maxScore) + Math.exp(scoreVec[2] - maxScore);
+      const logSumExp = maxScore + Math.log(sumExpScores);
+
       const customImgUrl = canvas.toDataURL('image/jpeg', 0.85);
 
-      const oodCheck = checkIsBookPresent(gray, 224, 224, avgSat, blackRatio, freeEnergy, margin, winner.prob);
+      const oodCheck = checkIsBookPresent(gray, 224, 224, avgSat, blackRatio, logSumExp, margin, winner.prob);
 
       return {
         winner: winner.type,
@@ -1951,7 +2013,10 @@
         margin: (margin * 100).toFixed(1) + '%p',
         customImgUrl,
         oodCheck,
-        inferenceEngine
+        inferenceEngine,
+        logits: onnxLogits ? onnxLogits.map(v => Number(v.toFixed(4))) : null,
+        logSumExp: Number(logSumExp.toFixed(4)),
+        embedding
       };
     }
 
@@ -2228,7 +2293,7 @@
         categoryLabel: '만화책',
         kdcLabel: 'KDC 만 833.6 일본만화 (스포츠 코믹스)',
         desc: '북산고 농구부의 뜨거운 열정과 성장을 그린 불후의 명작 코믹스',
-        coverUrl: 'https://image.aladin.co.kr/product/263/73/cover500/8901088347_1.jpg'
+        coverUrl: 'https://image.aladin.co.kr/product/16082/5/cover500/k092533843_1.jpg'
       },
       '달빛 산책': {
         title: '달빛 산책',
@@ -2308,6 +2373,213 @@
       if (book.coverUrl) return book.coverUrl;
       if (book.coverKey && ASSET_DATA[book.coverKey]) return ASSET_DATA[book.coverKey];
       return ASSET_DATA['book-base-idle'];
+    }
+
+    // =========================================================================
+    // OUTCOME: ResNet-18 512차원 임베딩 코사인 유사도 기반 관련 도서 추천
+    // 카탈로그 임베딩은 tools/precompute_catalog.py 로 생성한 실제 모델 출력값이다.
+    // 입력: 표지 이미지 → ONNX /avgpool → Flatten(512) → L2 정규화
+    // =========================================================================
+    // =========================================================================
+    // MOONJUNG DLS 21권 512차원 임베딩 (외부 JSON 경량 분리: data/catalog_embeddings.json)
+    // =========================================================================
+    const DLS_EMBEDDING_DIM = 512;
+    let DLS_EMBEDDING_CATALOG = [];
+    let catalogLoadPromise = null;
+    const CATALOG_EMB_URLS = [
+      'data/catalog_embeddings.json',
+      'https://raw.githubusercontent.com/yn2511/booklens/main/data/catalog_embeddings.json'
+    ];
+
+    async function loadCatalogEmbeddings() {
+      if (DLS_EMBEDDING_CATALOG.length) return DLS_EMBEDDING_CATALOG;
+      if (catalogLoadPromise) return catalogLoadPromise;
+      catalogLoadPromise = (async () => {
+        for (const url of CATALOG_EMB_URLS) {
+          try {
+            const res = await fetch(url, { cache: 'default' });
+            if (!res.ok) continue;
+            const data = await res.json();
+            if (Array.isArray(data) && data.length) {
+              DLS_EMBEDDING_CATALOG = data.map(b => ({
+                ...b,
+                emb: b.emb || b.embedding
+              }));
+              return DLS_EMBEDDING_CATALOG;
+            }
+          } catch (_) {}
+        }
+        return [];
+      })();
+      return catalogLoadPromise;
+    }
+
+    function cosineSimilarity(a, b) {
+      if (!a || !b || a.length !== b.length) return 0;
+      let dot = 0, na = 0, nb = 0;
+      for (let i = 0; i < a.length; i++) {
+        dot += a[i] * b[i];
+        na += a[i] * a[i];
+        nb += b[i] * b[i];
+      }
+      const denom = Math.sqrt(na) * Math.sqrt(nb);
+      return denom > 0 ? dot / denom : 0;
+    }
+
+    function normalizeTitle(t) {
+      return (t || '').replace(/[\s()[\]{}·.,]/g, '').toLowerCase();
+    }
+
+    function isSameTitle(a, b) {
+      const x = normalizeTitle(a);
+      const y = normalizeTitle(b);
+      if (!x || !y) return false;
+      return x === y || x.indexOf(y) >= 0 || y.indexOf(x) >= 0;
+    }
+
+    function relatedBooksFromEmbedding(embedding, excludeTitle) {
+      if (!embedding) return [];
+      return DLS_EMBEDDING_CATALOG
+        .map(book => ({ book, sim: cosineSimilarity(embedding, book.emb) }))
+        .filter(item => {
+          if (isSameTitle(item.book.title, excludeTitle)) return false;
+          if (item.sim >= 0.99) return false;   // 사실상 같은 표지
+          return true;
+        })
+        .sort((a, b) => b.sim - a.sim)
+        .slice(0, 3);
+    }
+
+    // 카탈로그끼리의 최대 비동일 유사도는 0.813(흔한남매 1 ~ 도서관 탐험 1, 실측)이고
+    // 같은 표지를 다시 넣으면 0.99 이상이 나온다. 0.95를 '동일 표지' 판정선으로 둔다.
+    const SAME_COVER_SIM = 0.95;
+
+    function rankCatalogByEmbedding(embedding) {
+      if (!embedding) return [];
+      return DLS_EMBEDDING_CATALOG
+        .map(book => ({ book, sim: cosineSimilarity(embedding, book.emb) }))
+        .sort((a, b) => b.sim - a.sim);
+    }
+
+    // 추천 근거를 한 줄로: 같은 분야 대체도서인지, 그림책↔줄글책 징검다리인지
+    function outcomeReason(book, scannedCat) {
+      const kdc = (book.kdcLabel || '').replace(/^KDC\s*/, '');
+      if (book.category === scannedCat) return `동일 분야 대체도서 · ${kdc}`;
+      if (scannedCat === 'picture' && book.category === 'text') return `그림책 → 줄글책 징검다리 · ${kdc}`;
+      if (scannedCat === 'text' && book.category === 'picture') return `줄글책 → 그림책 쉬어가기 · ${kdc}`;
+      if (book.category === 'comic') return `읽기 부담 낮은 만화 분야 · ${kdc}`;
+      return `인접 분야 확장 · ${kdc}`;
+    }
+
+    async function renderRelatedOutcome(queryEmbedding, scannedTitle, scannedCat) {
+      const listEl = document.getElementById('relatedOutcomeList');
+      const emptyEl = document.getElementById('relatedOutcomeEmpty');
+      const metaEl = document.getElementById('relatedOutcomeMeta');
+      if (!listEl) return;
+
+      await loadCatalogEmbeddings();
+      if (!queryEmbedding && scannedTitle) {
+        const hit = DLS_EMBEDDING_CATALOG.find(b => isSameTitle(b.title, scannedTitle));
+        if (hit) queryEmbedding = hit.emb;
+      }
+
+      const engine = (window.currentActiveDocentCvResult && window.currentActiveDocentCvResult.inferenceEngine === 'onnx-resnet18')
+        ? '표지 실시간 추론'
+        : 'DLS 사전계산 벡터';
+      if (metaEl) metaEl.innerText = `// ResNet-18 512차원 임베딩 · 코사인 유사도 ${DLS_EMBEDDING_CATALOG.length}권 · ${engine}`;
+
+      if (!queryEmbedding) {
+        listEl.innerHTML = '';
+        if (emptyEl) {
+          emptyEl.classList.remove('hidden');
+          emptyEl.innerText = '표지 임베딩이 없어 관련 도서를 계산하지 못했습니다. ONNX 모델을 먼저 불러온 뒤 다시 스캔해 주세요.';
+        }
+        return;
+      }
+
+      const ranked = rankCatalogByEmbedding(queryEmbedding);
+      if (!ranked.length) {
+        listEl.innerHTML = '';
+        if (emptyEl) {
+          emptyEl.classList.remove('hidden');
+          emptyEl.innerText = '문정초 소장 21권 중 비교 가능한 다른 도서가 없습니다.';
+        }
+        return;
+      }
+
+      const best = ranked[0];
+      const sameBook = (best.sim >= SAME_COVER_SIM || isSameTitle(best.book.title, scannedTitle)) ? best : null;
+      const list = ranked.filter(item => !sameBook || item.book !== sameBook.book).slice(0, 3);
+
+      if (sameBook && metaEl) {
+        metaEl.innerText = `// 512차원 임베딩 · 스캔 표지 = 「${sameBook.book.title}」 ${(sameBook.sim * 100).toFixed(1)}% (동일 표지 판정) · 관련 ${list.length}권`;
+      }
+
+      // 동일 표지로 판정된 경우: 도서명을 문정초 DLS 서지로 바로잡아 보여준다
+      if (sameBook) {
+        const titleEl = document.getElementById('reportTitle');
+        const authorEl = document.getElementById('reportAuthor');
+        const subTitleEl = document.getElementById('subReportTitle');
+        const subAuthorEl = document.getElementById('subReportAuthor');
+        const ticketEl = document.getElementById('ticketTitle');
+        if (titleEl) titleEl.innerText = sameBook.book.title;
+        if (authorEl) authorEl.innerText = sameBook.book.author;
+        if (subTitleEl) subTitleEl.innerText = sameBook.book.title;
+        if (subAuthorEl) subAuthorEl.innerText = `${sameBook.book.author} · DLS 서지 일치`;
+        if (ticketEl) ticketEl.innerText = `${sameBook.book.title} (${sameBook.book.categoryLabel})`;
+
+        // DLS 대조 카드도 실제 서지로 맞춘다
+        const kdcEl = document.getElementById('dlsMetaKdc');
+        const typeEl = document.getElementById('dlsMetaType');
+        const verdictEl = document.getElementById('dlsFinalVerdict');
+        const expEl = document.getElementById('dlsExplanation');
+        if (kdcEl) kdcEl.innerText = sameBook.book.kdcLabel;
+        if (typeEl) typeEl.innerText = `${sameBook.book.categoryLabel} (${sameBook.book.callNumber})`;
+        if (verdictEl) verdictEl.innerText = `${sameBook.book.categoryLabel} (${sameBook.book.title}) · DLS 서지 일치`;
+        if (expEl) expEl.innerText = `표지 임베딩이 「${sameBook.book.title}」과 ${(sameBook.sim * 100).toFixed(1)}% 일치하여 이 서지로 확정. 등록번호 ${sameBook.book.regNumber}, 소장위치 ${sameBook.book.location}.`;
+        const dlsInputEl = document.getElementById('dlsCrossCheckInput');
+        if (dlsInputEl) dlsInputEl.value = sameBook.book.title;
+      }
+
+      if (!list.length) {
+        listEl.innerHTML = '';
+        if (emptyEl) {
+          emptyEl.classList.remove('hidden');
+          emptyEl.innerText = '문정초 소장 21권 중 비교 가능한 다른 도서가 없습니다.';
+        }
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add('hidden');
+
+      listEl.innerHTML = list.map((item, idx) => {
+        const b = item.book;
+        const simPct = (item.sim * 100).toFixed(1);
+        const barPct = Math.max(2, Math.min(100, item.sim * 100));
+        const available = (b.status || '').indexOf('대출가능') === 0;
+        const location = (b.location || '').replace('글샘터 도서관 ', '').replace('(본관 3층)', '').trim();
+        const callLine = location ? `${b.callNumber} · ${location}` : b.callNumber;
+        return `
+        <div class="bg-white border border-charcoal/25 rounded-xl p-2 flex items-center gap-2">
+          <span class="font-mono text-[9px] font-black text-charcoal/45 shrink-0">0${idx + 1}</span>
+          <img src="${b.thumb}" alt="${b.title}" class="w-9 h-12 object-cover rounded border border-charcoal/40 bg-stage shrink-0">
+          <div class="min-w-0 flex-1 flex flex-col gap-0.5">
+            <div class="flex items-center gap-1.5">
+              <span class="font-black text-[11px] text-charcoal truncate">${b.title}</span>
+              <span class="font-mono text-[8px] text-charcoal/50 shrink-0">${b.categoryLabel}</span>
+            </div>
+            <div class="text-[9px] text-charcoal/60 font-bold truncate">${b.author}</div>
+            <div class="flex items-center gap-1.5">
+              <div class="flex-1 bg-stage rounded-full h-1 border border-charcoal/20 overflow-hidden">
+                <div class="bg-charcoal h-full" style="width:${barPct}%"></div>
+              </div>
+              <span class="font-mono text-[10px] font-black text-charcoal shrink-0">${simPct}%</span>
+            </div>
+            <div class="text-[9px] font-mono text-charcoal/70 truncate">${callLine}</div>
+            <div class="text-[9px] text-charcoal/55 font-bold leading-snug">${outcomeReason(b, scannedCat)}</div>
+          </div>
+          <span class="font-mono text-[8px] ${available ? 'bg-mint/40 text-charcoal' : 'bg-coral/20 text-coral'} px-1 py-0.5 rounded border border-charcoal/25 shrink-0">${available ? '대출가능' : '대출중'}</span>
+        </div>`;
+      }).join('');
     }
 
     // MOONJUNG DLS SEARCH ENGINE (메인 검색창 연동)
@@ -2466,7 +2738,7 @@
       
       let visionWinner = currentCv ? currentCv.winnerLabel : (currentData ? currentData.category : '그림책');
       let visionCat = currentCv ? currentCv.winner : (currentData ? (currentData.category === '그림책' ? 'picture' : (currentData.category === '줄글책' ? 'text' : 'comic')) : 'picture');
-      let conf = currentCv ? currentCv.confidence : (currentData ? currentData.confidence : '54.2%');
+      let conf = currentCv ? currentCv.confidence : (currentData ? currentData.confidence : '—');
 
       // Update 2-Column Comparison
       const dlsVisionPredEl = document.getElementById('dlsVisionPred');
@@ -2568,7 +2840,9 @@
         document.getElementById('nonBookAlertBox').classList.remove('hidden');
         document.getElementById('nonBookContrast').innerText = cvResult.oodCheck.stdDev;
         document.getElementById('nonBookCenterEdge').innerText = cvResult.oodCheck.centerEdgeDensity;
-        document.getElementById('nonBookEnergy').innerText = cvResult.oodCheck.freeEnergy;
+        document.getElementById('nonBookEnergy').innerText = cvResult.oodCheck.logSumExp;
+        const nonBookFreeEnergyEl = document.getElementById('nonBookFreeEnergy');
+        if (nonBookFreeEnergyEl) nonBookFreeEnergyEl.innerText = cvResult.oodCheck.freeEnergy;
         document.getElementById('nonBookMargin').innerText = cvResult.oodCheck.margin;
         document.getElementById('nonBookConfidenceScore').innerText = cvResult.oodCheck.winnerConf;
         
@@ -2879,6 +3153,15 @@
         badgeImg.src = ASSET_DATA[badgeMap[category]];
         badgeImg.classList.remove('hidden');
       }
+      const oodBadgeEl = document.getElementById('oodGateBadge');
+      if (oodBadgeEl) {
+        const passed = !(isCustom && cvResult && cvResult.oodCheck && !cvResult.oodCheck.isBook);
+        oodBadgeEl.innerText = passed ? 'OOD: PASSED' : 'OOD: FORCED';
+        oodBadgeEl.className = passed
+          ? 'font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-mint/60 bg-mint/20 text-charcoal font-black'
+          : 'font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-coral/60 bg-coral/15 text-coral font-black';
+      }
+
       document.getElementById('reportTitle').innerText = title;
       document.getElementById('reportAuthor').innerText = author;
       const confBadge = document.getElementById('reportConfBadge');
@@ -2956,14 +3239,8 @@
       document.getElementById('reportTarget').innerText = data.target;
       document.getElementById('reportTheme').innerText = isCustom && cvResult.customSynopsis ? cvResult.customSynopsis.slice(0, 80) + '...' : data.theme;
 
-      // Dynamic similar books
-      const simContainer = document.getElementById('reportSimilarBooks');
-      simContainer.innerHTML = data.similar.map(b => `
-        <div class="p-2 rounded-lg bg-stage border border-charcoal flex items-center justify-between">
-          <span class="font-black text-xs text-charcoal">${b.title}</span>
-          <span class="text-[10px] font-bold text-charcoal/70">${b.desc}</span>
-        </div>
-      `).join('');
+      // Dynamic similar books -> 512차원 임베딩 코사인 유사도 기반 관련 도서 추천으로 대체
+      // (populateReport 끝에서 renderRelatedOutcome() 호출)
 
       // Reset Grad-CAM to raw cover by default
       setGradCamView(false);
@@ -2984,7 +3261,7 @@
       // Populate Moonjung DLS Hybrid Verification Card
       const dlsCrossCheckInputEl = document.getElementById('dlsCrossCheckInput');
       if (dlsCrossCheckInputEl) {
-        dlsCrossCheckInputEl.value = (isCustom && cvResult.customTitle) ? cvResult.customTitle : (data ? data.title : '');
+        dlsCrossCheckInputEl.value = title;
       }
 
       const dlsVisionPredEl = document.getElementById('dlsVisionPred');
@@ -3025,6 +3302,15 @@
       }
 
       document.getElementById('ticketTitle').innerText = `${title} (${isCustom ? cvResult.winnerLabel : data.category})`;
+
+      // OUTCOME: 스캔 표지와 문정초 DLS 21권의 실제 512차원 임베딩 코사인 유사도
+      let queryEmbedding = null;
+      if (isCustom && cvResult && cvResult.embedding) queryEmbedding = cvResult.embedding;
+      if (!queryEmbedding) {
+        const hit = DLS_EMBEDDING_CATALOG.find(b => isSameTitle(b.title, title));
+        if (hit) queryEmbedding = hit.emb;
+      }
+      renderRelatedOutcome(queryEmbedding, title, category);
       
       document.getElementById('ticketSealImg').classList.add('hidden');
       document.getElementById('stampActionBtn').classList.remove('hidden');
@@ -3060,7 +3346,7 @@
       const text = `[BookLens AI 도슨트 리포트]\n• 도서명: ${title}\n• 저자: ${author}\n• 도서 형태: ${genre}\n• 독서 성향: ${mbti}\n\nhttps://booklens.cloud`;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
-          alert('도슨트 리포트 요약이 클립보드에 복사되었습니다! 📋');
+          alert('도슨트 리포트 요약이 클립보드에 복사되었습니다.');
         }).catch(() => {
           alert('클립보드 복사에 실패했습니다.');
         });

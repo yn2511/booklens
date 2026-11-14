@@ -1,11 +1,20 @@
 {
   "student_id": "202533791",
   "name": "윤나래",
-  "title": "BookLens AI: 실시간 도서 표지 인식(전이학습)과 실환경 영상 왜곡 극복 및 DLS 연계 도서 큐레이션 융합 시스템",
+  "title": "BookLens AI: 표지 한 장으로 문정초 소장 관련 도서까지 찾아주는 도서관 렌즈",
   "github_url": "https://github.com/yn2511/booklens",
   "demo_url": "https://booklens.cloud",
-  "data_type": "과제3 book_dataset 494장 (그림책 118장, 줄글책 192장, 만화책 184장) + 서울문정초 독서로(DLS) 소장 도서 17종 표지",
-  "training": "Transfer Learning (ImageNet 사전학습 ResNet-18 파인튜닝) + CosineAnnealingLR + 복합 증강",
-  "models": ["Scratch SmallCNN (Baseline)", "ResNet-18 전이학습 + 복합 증강 + 6단계 OOD 게이트 (Proposed)"],
-  "primary_metric": "Test Accuracy: 97.33% / Macro-F1: 0.9731"
+  "task": "도서 표지 촬영 → 비도서 차단(OOD) → 도서 형태 3분류 + ResNet-18 512차원 임베딩 유사도로 문정초 글샘터 소장 21권 중 관련·대체 도서 3권 추천 (청구기호·소장위치·대출상태 포함)",
+  "data_type": "과제3 book_dataset 494장 (그림책 118 / 줄글책 192 / 만화책 184) + 서울문정초 독서로(DLS) 소장 도서 21권 서지·표지 + 비도서 평가셋 15장(합성 10, 실사 5)",
+  "split": "Train 345 / Val 74 / Test 75 (stratified, seed=42)",
+  "training": "Transfer Learning (ImageNet 사전학습 ResNet-18 전체 파인튜닝) + RandomFlip/Rotation/ColorJitter + CosineAnnealingLR",
+  "models": [
+    "1. Scratch SmallCNN (Baseline, 94,083 params)",
+    "2. ResNet-18 전이학습 + 복합 증강 + CosineLR + OOD 게이트 (Proposed, 11,178,051 params)"
+  ],
+  "primary_metric": "Test Accuracy 97.33% / Macro-F1 0.9731 (Baseline 86.67% / 0.8374)",
+  "outcome_metric": "소장 21권 표지 재식별 유사도 98.8~100%, 비동일 표지 최대 유사도 0.813 → 동일 표지 판정선 0.95",
+  "ood_gate": "로짓 기반 Free Energy E=-logsumexp(logits) + 물리 게이트(암전/단조/균일노이즈/중앙텍스처). 실측 표지 21장 통과, 비도서 배경 4종(단색·암전·노이즈·바닥) 브라우저 차단",
+  "artifact": "models/booklens_resnet18.onnx (출력 2개: output 3차원 로짓 + embedding 512차원, 44.7MB)",
+  "notes": "측정하지 않은 값(레이턴시·AUROC 등)은 기재하지 않음. 21권 임베딩은 data/catalog_embeddings.json으로 분리하여 index.html을 약 812KB로 경량화함."
 }

@@ -2,6 +2,18 @@
 library_ui_assets/
 shutter_assets/
 stickers_256/
+assets/catalog_src/
+assets/catalog/
+assets/ood_samples/
+
+# Local helper scripts & intermediate build files (not for GitHub web demo repo)
+tools/
+data/catalog_embeddings.js
+data/catalog_parsed.json
+data/ood_calibration.json
+src/
+models/*.pth
+models/model_card.md
 
 # Python
 __pycache__/
