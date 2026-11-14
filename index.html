@@ -548,6 +548,14 @@
         </div>
         <div id="relatedOutcomeList" class="flex flex-col gap-1.5"></div>
         <div id="relatedOutcomeEmpty" class="hidden text-[11px] font-bold text-charcoal/60 bg-white/70 border border-charcoal/20 rounded-lg p-2.5 leading-relaxed"></div>
+        <div id="dlsLiveCard" class="hidden flex flex-col gap-2 bg-white/70 border border-charcoal/20 rounded-lg p-2.5">
+          <div class="text-[11px] font-bold text-charcoal/70 leading-relaxed">문정초 확인 목록(21권)에 없는 책이에요. 제목으로 학교 도서관 전체 장서를 바로 확인해 보세요.</div>
+          <div class="flex gap-1.5">
+            <input id="dlsLiveInput" type="text" placeholder="제목으로 문정초 장서 확인" maxlength="80" class="flex-1 min-w-0 font-mono text-[11px] font-bold border border-charcoal/30 rounded-lg px-2 py-1.5 bg-white placeholder:text-charcoal/40 focus:outline-none focus:border-charcoal" />
+            <button id="dlsLiveBtn" type="button" class="text-[11px] font-black text-charcoal border-2 border-charcoal rounded-lg px-2.5 py-1.5 bg-cream shadow-brutal-sm hover:-translate-y-0.5 transition-transform shrink-0">확인</button>
+          </div>
+          <div id="dlsLiveResult" class="hidden text-[11px] font-bold text-charcoal leading-relaxed"></div>
+        </div>
         <div class="text-[9px] font-mono text-charcoal/50 leading-relaxed">동일 도서 제외 · 유사도 상위 3권 · 청구기호·소장위치·대출상태는 문정초 DLS 서지 기준</div>
       </div>
 
@@ -2500,6 +2508,49 @@
       return `인접 분야 확장 · ${kdc}`;
     }
 
+    const DLS_PROXY_URL = 'https://booklens-dls-proxy.10narae10.workers.dev/dls-search';
+    function setDlsLiveVisible(show) {
+      const card = document.getElementById('dlsLiveCard');
+      if (!card) return;
+      card.classList.toggle('hidden', !show);
+      if (!show) {
+        const r = document.getElementById('dlsLiveResult');
+        if (r) { r.classList.add('hidden'); r.innerHTML = ''; }
+      }
+    }
+    async function checkDlsLive(rawTitle) {
+      const title = (rawTitle || '').replace(/\s+/g, ' ').trim();
+      const rEl = document.getElementById('dlsLiveResult');
+      const btn = document.getElementById('dlsLiveBtn');
+      if (!rEl || !title) return;
+      rEl.classList.remove('hidden');
+      rEl.className = 'text-[11px] font-bold text-charcoal/60 leading-relaxed';
+      rEl.innerText = '문정초 장서 확인 중...';
+      if (btn) btn.disabled = true;
+      try {
+        const r = await fetch(DLS_PROXY_URL + '?title=' + encodeURIComponent(title));
+        if (!r.ok) throw new Error('proxy_' + r.status);
+        const j = await r.json();
+        if (j.error) throw new Error(j.error);
+        if (j.found && j.books && j.books.length) {
+          const b = j.books[0];
+          const more = (j.total || 0) > 1 ? ` 외 ${j.total - 1}권` : '';
+          rEl.className = 'text-[11px] font-bold text-charcoal leading-relaxed';
+          rEl.innerHTML = `「${b.title}」 문정초 도서관에 있어요${more}.<br><span class="font-mono text-[10px] text-charcoal/70">청구기호 ${b.callNo || '-'} · ${b.location || '도서관'} · ${b.loanStatus || '대출상태는 도서관에서 확인'}</span>`;
+        } else {
+          rEl.className = 'text-[11px] font-bold text-charcoal leading-relaxed';
+          rEl.innerText = `「${title}」은(는) 문정초 도서관에 없는 책이에요. (독서로 실시간 검색 기준)`;
+        }
+      } catch (e) {
+        rEl.className = 'text-[11px] font-bold text-charcoal/60 leading-relaxed';
+        rEl.innerText = '지금은 학교 도서관(독서로) 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.';
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+    document.getElementById('dlsLiveBtn')?.addEventListener('click', () => checkDlsLive(document.getElementById('dlsLiveInput')?.value));
+    document.getElementById('dlsLiveInput')?.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') checkDlsLive(ev.target.value); });
+
     async function renderRelatedOutcome(queryEmbedding, scannedTitle, scannedCat) {
       const listEl = document.getElementById('relatedOutcomeList');
       const emptyEl = document.getElementById('relatedOutcomeEmpty');
@@ -2523,6 +2574,7 @@
           emptyEl.classList.remove('hidden');
           emptyEl.innerText = '표지 임베딩이 없어 관련 도서를 계산하지 못했습니다. ONNX 모델을 먼저 불러온 뒤 다시 스캔해 주세요.';
         }
+        setDlsLiveVisible(false);
         return;
       }
 
@@ -2538,6 +2590,11 @@
 
       const best = ranked[0];
       const sameBook = (best.sim >= SAME_COVER_SIM || isSameTitle(best.book.title, scannedTitle)) ? best : null;
+      setDlsLiveVisible(!sameBook);
+      if (!sameBook) {
+        const inEl = document.getElementById('dlsLiveInput');
+        if (inEl && scannedTitle) inEl.value = scannedTitle;
+      }
       const list = ranked.filter(item => !sameBook || item.book !== sameBook.book).slice(0, 3);
 
       if (sameBook && metaEl) {
