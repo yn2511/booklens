@@ -16,5 +16,6 @@
   "outcome_metric": "소장 21권 표지 재식별 유사도 98.8~100%, 비동일 표지 최대 유사도 0.813 → 동일 표지 판정선 0.95",
   "ood_gate": "로짓 기반 Free Energy E=-logsumexp(logits) + 물리 게이트(암전/단조/균일노이즈/중앙텍스처). 실측 표지 21장 통과, 비도서 배경 4종(단색·암전·노이즈·바닥) 브라우저 차단",
   "artifact": "models/booklens_resnet18.onnx (출력 2개: output 3차원 로짓 + embedding 512차원, 44.7MB)",
-  "notes": "측정하지 않은 값(레이턴시·AUROC 등)은 기재하지 않음. 21권 임베딩은 data/catalog_embeddings.json으로 분리하여 index.html을 약 812KB로 경량화함."
+  "notes": "측정하지 않은 값(레이턴시·AUROC 등)은 기재하지 않음. 21권 임베딩은 data/catalog_embeddings.json으로 분리하여 index.html을 약 812KB로 경량화함.",
+  "deployed_model": "v1 (Test 97.33% / Macro-F1 0.9731) — models/booklens_resnet18.onnx · data/catalog_embeddings.json 모두 v1 산출물. notebooks/BookLens_재학습_v2.ipynb (Test 96.00%, 6에폭 조기종료)는 Val Loss·Train Acc·조기종료 검증용 재학습이며 배포 모델이 아님"
 }
