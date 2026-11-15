@@ -1,5 +1,7 @@
 # BookLens v2 재학습 실행 가이드
 
+> **역할: 검증용 재학습 (배포 모델 아님).** 실제 booklens.cloud 배포 모델은 v1 (Test 97.33%, `models/booklens_resnet18.onnx`, 21권 임베딩 `data/catalog_embeddings.json`도 v1 산출물)입니다. 이 가이드의 v2 (Test 96.00%, 6에폭 조기종료)는 Val Loss·Train Acc·조기종료 로직 검증을 위한 재학습 기록입니다.
+
 ## v1과 달라진 점 (교수님 피드백 대응)
 - **Val Loss·Train Acc 기록**: v1은 Train Loss / Val Acc / Val F1만 기록했지만, v2는 5개 지표(Train Loss, Train Acc, Val Loss, Val Acc, Val Macro-F1)를 매 에포크 출력합니다.
 - **조기종료(Early Stopping)**: Val F1이 3회 연속 개선되지 않으면 자동 종료합니다 (`PATIENCE = 3`). 최대 에포크는 15로 늘렸습니다.
