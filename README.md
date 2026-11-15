@@ -82,6 +82,8 @@
 | Baseline | SmallCNN (Scratch) | **94,083** | Conv 3단 + GAP + Dropout(0.4) + FC. 사전학습 없음 |
 | Proposed | ResNet-18 (ImageNet 전이학습, 전체 파인튜닝) | **11,178,051** | 잔차 연결, CosineAnnealingLR, 마지막 GAP 출력 512차원을 임베딩으로 사용 |
 
+> **배포 모델 기준 (v1 고정)**: booklens.cloud에 배포된 모델은 이 문서의 ResNet-18(v1, Test 97.33% / Macro-F1 0.9731)입니다. `models/booklens_resnet18.onnx`와 `data/catalog_embeddings.json`은 모두 v1 산출물입니다. `notebooks/BookLens_재학습_v2.ipynb`(Test 96.00%, 6에폭 조기종료)와 드라이브 `BookLens_Models_Backup`의 v2 ONNX는 배포용이 아니라 Val Loss·Train Acc·조기종료 로직 검증을 위한 재학습 기록입니다.
+
 ### (2) 학습 설정
 - Optimizer: AdamW (lr=1e-4, weight_decay=1e-2)
 - Scheduler: CosineAnnealingLR (T_max=8, eta_min=1e-6)
@@ -188,6 +190,7 @@ booklens/
 ├── data/catalog_embeddings.json    # 문정초 소장 21권 사전계산 512차원 임베딩·썸네일
 ├── models/booklens_resnet18.onnx   # 출력 2개: output(3) + embedding(512)
 ├── notebooks/BookLens_AI_최종프로젝트.ipynb
+├── notebooks/BookLens_재학습_v2.ipynb     # 검증용 재학습(배포 아님): Val Loss·Train Acc·조기종료 로직 검증
 ├── requirements.txt
 ├── submission.json
 └── docs/                           # 혼동행렬, Grad-CAM, UI 캡처, 발표 노트
