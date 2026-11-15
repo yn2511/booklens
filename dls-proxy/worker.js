@@ -42,9 +42,15 @@ async function fetchWithTimeout(url, opts, ms) {
     clearTimeout(timer);
   }
 }
+const DLS_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Referer': 'https://read365.edunet.net/PureScreen/SchoolSearch?schoolName=%EC%84%9C%EC%9A%B8%EB%AC%B8%EC%A0%95%EC%B4%88%EB%93%B1%ED%95%99%EA%B5%90&provCode=B10&neisCode=B100000919',
+  'Origin': 'https://read365.edunet.net'
+};
 async function loanStatusOf(bookKey) {
   try {
-    const r = await fetchWithTimeout(`${STATE_URL}?bookKey=${bookKey}&neisCode=${NEIS}&provCode=${PROV}`, null, 5000);
+    const r = await fetchWithTimeout(`${STATE_URL}?bookKey=${bookKey}&neisCode=${NEIS}&provCode=${PROV}`, { headers: DLS_HEADERS }, 5000);
     const j = await r.json();
     const d = j && j.data;
     if (!d) return null;
@@ -78,7 +84,7 @@ export default {
         coverYn: 'N', facet: 'N'
       };
       const r = await fetchWithTimeout(SEARCH_URL, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36', 'Accept': 'application/json, text/plain, */*', 'Referer': 'https://read365.edunet.net/PureScreen/SchoolSearch?schoolName=%EC%84%9C%EC%9A%B8%EB%AC%B8%EC%A0%95%EC%B4%88%EB%93%B1%ED%95%99%EA%B5%90&provCode=B10&neisCode=B100000919', 'Origin': 'https://read365.edunet.net' }, body: JSON.stringify(body)
+        method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, DLS_HEADERS), body: JSON.stringify(body)
       }, 8000);
       if (!r.ok) throw new Error('dls_status_' + r.status);
       const j = await r.json();
