@@ -371,7 +371,7 @@
             <div class="min-w-0 flex-1 flex flex-col gap-0.5">
               <div id="searchResultTitle" class="font-black text-xs text-charcoal truncate">도서 제목</div>
               <div id="searchResultAuthor" class="text-[11px] text-charcoal/80 font-bold truncate">저자 · 출판사</div>
-              <div class="text-[10px] font-mono text-coral font-black mt-0.5" id="searchResultCategory">DLS 분류: 줄글책 (KDC 813.8 한국아동문학)</div>
+              <div class="text-[10px] font-mono text-coral font-black mt-0.5" id="searchResultCategory">서지 KDC: 813.8 · 형태 표기는 앱 카탈로그 기준(DLS 판정 아님)</div>
               <div class="text-[9px] text-charcoal/60 font-medium truncate" id="searchResultDesc">도서 서지 정보</div>
             </div>
           </div>
@@ -3005,7 +3005,7 @@
           <div class="min-w-0 flex-1 flex flex-col gap-0.5">
             <div id="searchResultTitle" class="font-black text-xs text-charcoal truncate">${book.title}</div>
             <div id="searchResultAuthor" class="text-[11px] text-charcoal/80 font-bold truncate">${book.author} · ${book.publisher} (${book.year})</div>
-            <div class="text-[10px] font-mono text-coral font-black mt-0.5" id="searchResultCategory">DLS 분류: ${book.categoryLabel} (${book.kdcLabel})</div>
+            <div class="text-[10px] font-mono text-coral font-black mt-0.5" id="searchResultCategory">서지 KDC: ${kdcCodeOnly(book.kdcLabel)} · 형태 표기는 앱 카탈로그 기준(DLS 판정 아님)</div>
             <div class="text-[9px] text-charcoal/60 font-medium truncate" id="searchResultDesc">${book.desc}</div>
           </div>
         </div>
