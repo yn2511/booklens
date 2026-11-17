@@ -803,7 +803,7 @@
         <!-- Cross-Check Conclusion & Stamp Row -->
         <div class="flex items-center justify-between bg-white/90 p-2.5 rounded-xl border border-charcoal/20">
           <div class="min-w-0 pr-2">
-            <div class="text-[10px] font-mono text-charcoal/60 font-bold">최종 표시 (서지 확인 우선 · 모델 예측은 왼쪽에 따로 표시)</div>
+            <div class="text-[10px] font-mono text-charcoal/60 font-bold">소장 확인 · 형태는 모델 예측</div>
             <div class="text-xs font-black text-charcoal truncate" id="dlsFinalVerdict">대조 대기</div>
             <div class="text-[10px] text-charcoal/70 font-medium mt-0.5 leading-tight" id="dlsExplanation">도서를 스캔하거나 대조할 도서명을 입력하면 결과가 표시됩니다.</div>
             <div class="hidden text-[10px] text-charcoal/80 font-bold mt-1 leading-tight border-t border-dashed border-charcoal/25 pt-1" id="dlsReferenceNote" aria-live="polite"></div>
@@ -2687,11 +2687,9 @@
     // 추천 근거를 한 줄로: 같은 분야 대체도서인지, 그림책↔줄글책 징검다리인지
     function outcomeReason(book, scannedCat) {
       const kdc = (book.kdcLabel || '').replace(/^KDC\s*/, '');
-      if (book.category === scannedCat) return `동일 분야 대체도서 · ${kdc}`;
-      if (scannedCat === 'picture' && book.category === 'text') return `그림책 → 줄글책 징검다리 · ${kdc}`;
-      if (scannedCat === 'text' && book.category === 'picture') return `줄글책 → 그림책 쉬어가기 · ${kdc}`;
-      if (book.category === 'comic') return `읽기 부담 낮은 만화 분야 · ${kdc}`;
-      return `인접 분야 확장 · ${kdc}`;
+      // 순위는 모델 512차원 표지 특징의 코사인 유사도 기준. 주제가 같다는 뜻이 아님.
+      const same = book.category === scannedCat ? '모델 예측과 같은 형태 · ' : '';
+      return `${same}표지 특징 유사 · 문정초 소장 확인 · ${kdc}`;
     }
 
     const DLS_PROXY_URL = 'https://booklens-dls-proxy.10narae10.workers.dev/dls-search';
@@ -2740,31 +2738,9 @@
     // 최종 분류 단일 출처: 제목 옆 분류, 티켓, 독서 성향(페르소나), 읽기 문구가 항상 같은 값을 보게 한다.
     // 모델 예측(reportState.modelCat)과 서지 확인(finalSource)은 분리해서 보존한다.
     const __KOR_CAT = { picture: '그림책', text: '줄글책', comic: '만화책' };
-    function applyFinalClassification(cat, srcLabel) {
-      if (!__KOR_CAT[cat]) return;
-      const st = window.reportState = Object.assign({}, window.reportState || {}, { finalCat: cat, finalSource: srcLabel });
-      const kor = __KOR_CAT[cat];
-      const gl = document.getElementById('genreBadgeLabel');
-      if (gl) gl.innerText = `${kor} (${srcLabel})`;
-      const badgeMap = { picture: 'badge_genre_picture', text: 'badge_genre_text', comic: 'badge_genre_comic' };
-      const bi = document.getElementById('genreBadgeImg');
-      if (bi && ASSET_DATA[badgeMap[cat]]) bi.src = ASSET_DATA[badgeMap[cat]];
-      const t = document.getElementById('reportTitle');
-      const tk = document.getElementById('ticketTitle');
-      if (t && tk) tk.innerText = `${t.innerText} (${kor})`;
-      const s0 = SAMPLE_DATA[cat];
-      if (s0) {
-        const m = document.getElementById('reportMbti'); if (m) m.innerText = s0.mbti;
-        const md = document.getElementById('reportMbtiDesc'); if (md) md.innerText = s0.mbtiDesc;
-        const tg = document.getElementById('reportTarget'); if (tg) tg.innerText = s0.target;
-      }
-      const cv = window.currentActiveDocentCvResult;
-      if (cv && cv.winnerLabel && window.__ttsBase) {
-        window.currentTtsText = cv.winnerLabel === kor
-          ? window.__ttsBase
-          : window.__ttsBase.replace(cv.winnerLabel, `${kor}(서지 확인 기준, 모델 예측은 ${cv.winnerLabel})`);
-      }
-    }
+    // 형태(그림책/줄글책/만화책)와 독서 성향은 직접 학습한 모델의 예측만 사용한다.
+    // 서지(독서로) 조회는 "문정초 소장 확인" 용도이며 형태/성향을 바꾸지 않는다.
+    function applyFinalClassification() { /* 의도적으로 비움: 서지 결과로 모델 예측을 덮어쓰지 않음 */ }
 
     async function renderRelatedOutcome(queryEmbedding, scannedTitle, scannedCat) {
       const listEl = document.getElementById('relatedOutcomeList');
@@ -2810,7 +2786,7 @@
         const inEl = document.getElementById('dlsLiveInput');
         if (inEl && scannedTitle) inEl.value = scannedTitle;
       }
-      const list = ranked.filter(item => !sameBook || item.book !== sameBook.book).slice(0, 3);
+      const list = ranked.filter(item => (!sameBook || item.book !== sameBook.book) && !item.book.unverified).slice(0, 3);
 
       const __engine = window.currentActiveDocentCvResult?.inferenceEngine || 'canvas';
       const __isDemo = (__engine !== 'onnx-resnet18');
@@ -2832,8 +2808,7 @@
         if (subTitleEl) subTitleEl.innerText = sameBook.book.title;
         if (subAuthorEl) subAuthorEl.innerText = `${sameBook.book.author} · ${__isDemo ? '내장 서지 시연' : '내장 서지 일치'}`;
         const __modelLbl = (window.reportState && window.reportState.modelLabel) || sameBook.book.categoryLabel;
-        if (ticketEl) ticketEl.innerText = sameBook.book.unverified ? `${sameBook.book.title} (모델 예측 ${__modelLbl})` : `${sameBook.book.title} (${sameBook.book.categoryLabel})`;
-        if (!__isDemo && !sameBook.book.unverified) applyFinalClassification(sameBook.book.category, '내장 서지 대조');
+        if (ticketEl) ticketEl.innerText = `${sameBook.book.title} (모델 예측 ${__modelLbl})`;
 
         // DLS 대조 카드도 실제 서지로 맞춘다
         const kdcEl = document.getElementById('dlsMetaKdc');
@@ -2843,17 +2818,16 @@
         const badgeEl2 = document.getElementById('dlsStatusBadge');
         const unv = sameBook.book.unverified ? ' (시연용 목록 도서 — 실제 소장 미확인)' : '';
         if (kdcEl) kdcEl.innerText = sameBook.book.kdcLabel;
-        if (typeEl) typeEl.innerText = sameBook.book.unverified ? '서지 미확정 (시연용 목록)' : `${sameBook.book.categoryLabel} (${sameBook.book.callNumber})`;
+        if (typeEl) typeEl.innerText = sameBook.book.unverified ? '소장 미확인 (시연용 목록)' : `청구기호 ${sameBook.book.callNumber}`;
         if (__isDemo) {
           if (verdictEl) verdictEl.innerText = `${sameBook.book.categoryLabel} (${sameBook.book.title}) · 내장 서지 시연 (서지 대조 전)`;
           if (expEl) expEl.innerText = `「${sameBook.book.title}」은(는) 내장 서지 목록의 책입니다. 이 리포트는 실제 표지 분석이 아니라 내장 서지 기반 시연입니다.${unv}`;
           if (badgeEl2) { badgeEl2.innerText = '서지 기반 시연'; badgeEl2.className = 'font-mono text-[9px] bg-charcoal/10 text-charcoal/70 font-black px-2 py-0.5 rounded border border-charcoal/25 shrink-0'; }
         } else {
-          const __differs = !!(window.reportState && window.reportState.modelCat && window.reportState.modelCat !== sameBook.book.category);
-          if (verdictEl) verdictEl.innerText = sameBook.book.unverified ? `서지 미확정 · 모델 예측 ${__modelLbl} (시연용 목록 도서)` : (__differs ? `${sameBook.book.categoryLabel} (${sameBook.book.title}) · 서지 확인 기준 (모델 예측 ${__modelLbl}과 다름)` : `${sameBook.book.categoryLabel} (${sameBook.book.title}) · 내장 서지 일치`);
+          if (verdictEl) verdictEl.innerText = sameBook.book.unverified ? `소장 미확인 · 형태는 모델 예측 ${__modelLbl}` : `소장 확인: ${sameBook.book.title} · 형태는 모델 예측 ${__modelLbl}`;
           const __vn = document.getElementById('dlsVisionNote');
-          if (__vn) __vn.innerText = sameBook.book.unverified ? '모델 예측만 있음 (서지 미확정)' : (__differs ? '모델 예측, 서지 확인과 다름' : '모델 예측과 서지 확인이 같음');
-          if (sameBook.book.unverified) { const __gl = document.getElementById('genreBadgeLabel'); if (__gl) __gl.innerText = `${__modelLbl} (모델 예측, 서지 미확정)`; }
+          if (__vn) __vn.innerText = '형태는 모델 예측만 사용';
+          if (sameBook.book.unverified) { const __gl = document.getElementById('genreBadgeLabel'); if (__gl) __gl.innerText = `${__modelLbl} (모델 예측)`; }
           if (expEl) expEl.innerText = `표지 임베딩이 「${sameBook.book.title}」과 ${(sameBook.sim * 100).toFixed(1)}% 일치하여 이 서지로 확정. ISBN ${sameBook.book.isbn || '미기재'}, 소장위치 ${sameBook.book.location}.${unv}`;
           if (badgeEl2) {
             badgeEl2.innerText = sameBook.book.unverified ? '시연용 · 소장 미확인' : '내장 서지 일치';
@@ -3140,28 +3114,15 @@
       if (refNoteEl) { refNoteEl.innerText = ''; refNoteEl.classList.add('hidden'); }
       if (dlsVisionPredEl) dlsVisionPredEl.innerText = `${visionWinner} (${conf})`;
       if (dlsMetaKdcEl) dlsMetaKdcEl.innerText = book.kdcLabel;
-      if (dlsMetaTypeEl) dlsMetaTypeEl.innerText = `${book.categoryLabel} (${book.callNumber})`;
+      if (dlsMetaTypeEl) dlsMetaTypeEl.innerText = book.unverified ? '소장 미확인 (시연용 목록)' : `청구기호 ${book.callNumber}`;
 
-      const isMismatch = (visionCat !== book.category);
-
-      if (isMismatch) {
-        if (dlsVisionNoteEl) dlsVisionNoteEl.innerText = `모델 예측 ${visionWinner}, 서지 확인과 다름`;
-        if (dlsFinalVerdictEl) dlsFinalVerdictEl.innerText = `${book.categoryLabel} (${book.title}) · 서지 확인 기준 최종 표시`;
-        if (dlsExplanationEl) dlsExplanationEl.innerText = `모델 예측은 ${visionWinner}이었고, 내장 소장 서지(${book.callNumber}) 분류는 ${book.categoryLabel}입니다. 최종 표시는 서지 확인 결과를 따르며 모델 예측도 왼쪽에 그대로 남겨 둡니다.${unverifiedNote}`;
-        if (dlsStatusBadgeEl) {
-          dlsStatusBadgeEl.innerText = '서지 기준 표시';
-          dlsStatusBadgeEl.className = 'font-mono text-[9px] bg-coral text-white font-black px-2 py-0.5 rounded border border-coral shrink-0 animate-pulse';
-        }
-        applyFinalClassification(book.category, '내장 서지 대조');
-      } else {
-        if (dlsVisionNoteEl) dlsVisionNoteEl.innerText = '모델 예측과 서지 확인이 같음';
-        if (dlsFinalVerdictEl) dlsFinalVerdictEl.innerText = `${book.categoryLabel} (${book.title}) · 내장 서지 일치`;
-        if (dlsExplanationEl) dlsExplanationEl.innerText = `모델 예측(${visionWinner})과 내장 소장 서지(${book.callNumber})의 분류가 같습니다.${unverifiedNote}`;
-        if (dlsStatusBadgeEl) {
-          dlsStatusBadgeEl.innerText = '내장 서지 일치';
-          dlsStatusBadgeEl.className = 'font-mono text-[9px] bg-mint/40 text-charcoal font-black px-2 py-0.5 rounded border border-mint/80 shrink-0';
-        }
-        applyFinalClassification(book.category, '내장 서지 대조');
+      // 같은 책이 소장 목록에 있음을 확인. 형태와 독서 성향은 모델 예측을 그대로 둔다.
+      if (dlsVisionNoteEl) dlsVisionNoteEl.innerText = '형태는 모델 예측만 사용';
+      if (dlsFinalVerdictEl) dlsFinalVerdictEl.innerText = `소장 확인: ${book.title} · 형태는 모델 예측 ${visionWinner}`;
+      if (dlsExplanationEl) dlsExplanationEl.innerText = `문정초 소장 서지(${book.callNumber})에서 같은 책을 확인했습니다. 형태(그림책/줄글책/만화책)는 직접 학습한 모델의 예측이며 서지 결과로 바꾸지 않습니다.${unverifiedNote}`;
+      if (dlsStatusBadgeEl) {
+        dlsStatusBadgeEl.innerText = '소장 확인';
+        dlsStatusBadgeEl.className = 'font-mono text-[9px] bg-mint/40 text-charcoal font-black px-2 py-0.5 rounded border border-mint/80 shrink-0';
       }
 
       reStampDlsAnimation();
