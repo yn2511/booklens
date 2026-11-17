@@ -415,7 +415,7 @@
               <img id="sampleCoverHen" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="마당을 나온 암탉" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
             </div>
             <div>
-              <span class="font-mono text-[9px] bg-coral/20 text-coral font-black px-1 rounded">DLS검수</span>
+              <span class="font-mono text-[9px] bg-coral/20 text-coral font-black px-1 rounded">카탈로그 줄글책</span>
               <div class="font-black text-xs text-charcoal truncate max-w-[75px]">암탉(줄글)</div>
             </div>
           </button>
@@ -3513,7 +3513,7 @@
       const __realOnnx = isCustom && cvResult && cvResult.inferenceEngine === 'onnx-resnet18';
       if (oodBadgeEl) {
         const passed = !(isCustom && cvResult && cvResult.oodCheck && !cvResult.oodCheck.isBook);
-        oodBadgeEl.innerText = !__realOnnx ? 'OOD: 미적용' : (passed ? 'OOD: PASSED' : 'OOD: FORCED');
+        oodBadgeEl.innerText = !__realOnnx ? '표지 감지 미적용(시연값)' : (passed ? '표지 감지 통과(정확도 보증 아님)' : '표지 미감지(강제 분석)');
         oodBadgeEl.className = !__realOnnx
           ? 'font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-charcoal/25 bg-charcoal/5 text-charcoal/60 font-black'
           : (passed
