@@ -2685,10 +2685,15 @@
     }
 
     // 추천 근거를 한 줄로: 같은 분야 대체도서인지, 그림책↔줄글책 징검다리인지
+    // 내장 목록의 KDC 설명 문구는 공식 명칭으로 검증하지 않았으므로 화면에는 분류번호만 표시한다.
+    function kdcCodeOnly(label) {
+      const m = String(label || '').match(/^KDC\s*((?:만\s*)?[0-9]+(?:\.[0-9]+)?(?:-[^\s]+)?)/);
+      return m ? `KDC ${m[1]}` : 'KDC 미표기';
+    }
     function outcomeReason(book, scannedCat) {
-      const kdc = (book.kdcLabel || '').replace(/^KDC\s*/, '');
+      const kdc = kdcCodeOnly(book.kdcLabel);
       // 순위는 모델 512차원 표지 특징의 코사인 유사도 기준. 주제가 같다는 뜻이 아님.
-      const same = book.category === scannedCat ? '모델 예측과 같은 형태 · ' : '';
+      const same = book.category === scannedCat ? '모델 예측과 같은 형태 · ' : '예측 형태와 다름 · ';
       return `${same}표지 특징 유사 · 문정초 소장 확인 · ${kdc}`;
     }
 
@@ -2786,7 +2791,13 @@
         const inEl = document.getElementById('dlsLiveInput');
         if (inEl && scannedTitle) inEl.value = scannedTitle;
       }
-      const list = ranked.filter(item => (!sameBook || item.book !== sameBook.book) && !item.book.unverified).slice(0, 3);
+      const __cands = ranked.filter(item => (!sameBook || item.book !== sameBook.book) && !item.book.unverified);
+      // 추천 기준: 모델이 예측한 형태와 같은 문정초 소장 확인 도서를 먼저 고르고, 그 안에서 표지 특징 유사도 순으로 정렬한다.
+      // 같은 형태의 소장 확인 도서가 3권보다 적으면 나머지는 다른 형태 도서를 유사도 순으로 채우고 그렇게 표시한다.
+      const __predCat = (window.reportState && window.reportState.modelCat) || scannedCat;
+      const __sameForm = __cands.filter(item => item.book.category === __predCat);
+      const __otherForm = __cands.filter(item => item.book.category !== __predCat);
+      const list = [...__sameForm, ...__otherForm].slice(0, 3);
 
       const __engine = window.currentActiveDocentCvResult?.inferenceEngine || 'canvas';
       const __isDemo = (__engine !== 'onnx-resnet18');
@@ -2817,7 +2828,7 @@
         const expEl = document.getElementById('dlsExplanation');
         const badgeEl2 = document.getElementById('dlsStatusBadge');
         const unv = sameBook.book.unverified ? ' (시연용 목록 도서 — 실제 소장 미확인)' : '';
-        if (kdcEl) kdcEl.innerText = sameBook.book.kdcLabel;
+        if (kdcEl) kdcEl.innerText = kdcCodeOnly(sameBook.book.kdcLabel);
         if (typeEl) typeEl.innerText = sameBook.book.unverified ? '소장 미확인 (시연용 목록)' : `청구기호 ${sameBook.book.callNumber}`;
         if (__isDemo) {
           if (verdictEl) verdictEl.innerText = `${sameBook.book.categoryLabel} (${sameBook.book.title}) · 내장 서지 시연 (서지 대조 전)`;
@@ -2838,6 +2849,11 @@
         if (dlsInputEl) dlsInputEl.value = sameBook.book.title;
       }
 
+      if (metaEl && __sameForm.length < 3) {
+        metaEl.innerText += __sameForm.length === 0
+          ? ' · 예측 형태와 같은 소장 확인 도서 없음, 다른 형태를 유사도 순으로 표시'
+          : ` · 예측 형태와 같은 소장 확인 도서 ${__sameForm.length}권, 나머지는 다른 형태`;
+      }
       if (!list.length) {
         listEl.innerHTML = '';
         if (emptyEl) {
@@ -3113,7 +3129,7 @@
       // 같은 책으로 확인된 경우에만 서지 확인 결과를 반영한다.
       if (refNoteEl) { refNoteEl.innerText = ''; refNoteEl.classList.add('hidden'); }
       if (dlsVisionPredEl) dlsVisionPredEl.innerText = `${visionWinner} (${conf})`;
-      if (dlsMetaKdcEl) dlsMetaKdcEl.innerText = book.kdcLabel;
+      if (dlsMetaKdcEl) dlsMetaKdcEl.innerText = kdcCodeOnly(book.kdcLabel);
       if (dlsMetaTypeEl) dlsMetaTypeEl.innerText = book.unverified ? '소장 미확인 (시연용 목록)' : `청구기호 ${book.callNumber}`;
 
       // 같은 책이 소장 목록에 있음을 확인. 형태와 독서 성향은 모델 예측을 그대로 둔다.
