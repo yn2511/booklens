@@ -253,12 +253,14 @@
         <div class="absolute bottom-2.5 inset-x-0 flex flex-col items-center gap-1 z-20 pointer-events-auto">
           <button id="onnxEngineBtn" onclick="toggleOrLoadOnnxModel()" class="bg-[#242A2F] text-cream text-[9.5px] font-mono px-3 py-1 rounded-full border border-cream/20 shadow-sm flex items-center gap-1.5 hover:bg-black transition-all">
             <span id="onnxDot" class="w-2 h-2 rounded-full bg-mustard"></span>
-            <span id="onnxStatusText">ResNet-18 ONNX 연결 준비 (터치 시 활성화)</span>
+            <span id="onnxStatusText">ResNet-18 ONNX 모델 미다운로드 (스캔 시작 때 약 44.7MB 안내 후 받음)</span>
           </button>
         </div>
       </div>
 
       
+      <details id="dataFlowNotice" class="text-[10px] font-bold text-charcoal/70 bg-white/70 border border-charcoal/20 rounded-lg p-2 leading-relaxed"><summary class="cursor-pointer font-black">※ 데이터 안내 (사진·검색어·모델 파일)</summary>촬영하거나 선택한 사진은 이 브라우저 안에서만 분석되고 서버로 보내지 않습니다(확인한 코드 기준). 도서명 검색어는 문정초 장서 확인을 위해 Cloudflare Worker를 거쳐 독서로(read365.edunet.net)로 전달되고, 같은 검색 결과는 최대 10분 임시 캐시됩니다. 앱 코드에는 검색어를 따로 저장하거나 로그로 남기는 기능이 없고 Workers 로그도 꺼져 있습니다. Cloudflare와 독서로 쪽 기록 여부는 확인하지 못했습니다. 분석 모델 파일(약 44.7MB)은 스캔을 시작할 때 동의하면 내려받습니다.</details>
+
       <!-- OOD (Out-of-Distribution) / Non-Book Floor Detection Alert Box -->
       <div id="nonBookAlertBox" class="hidden bg-[#FCFBF7] border-2 border-charcoal rounded-2xl p-4 brutal-card flex flex-col gap-3 shadow-brutal transition-all">
         <!-- Top Monospace Meta Path & Reject Indicator -->
@@ -1422,11 +1424,9 @@
         }, 300);
       }
 
-      // 카탈로그 512차원 임베딩 및 ONNX 모델 백그라운드 프리로드
+      // 카탈로그 512차원 임베딩 백그라운드 프리로드
       loadCatalogEmbeddings();
-      setTimeout(() => {
-        loadOnnxModel();
-      }, 1200);
+      // 모델(약 44.7MB)은 자동으로 받지 않고, 스캔을 시작할 때 동의를 받은 뒤 내려받는다.
     });
 
     // ==========================================
@@ -1957,6 +1957,52 @@
       'https://raw.githubusercontent.com/yn2511/booklens/main/models/booklens_resnet18.onnx',
       'models/booklens_resnet18.onnx' // 로컬 개발 서버용 폴백
     ];
+
+    let modelConsentGiven = false;
+    function askModelDownloadConsent() {
+      return new Promise((resolve) => {
+        const ov = document.createElement('div');
+        ov.id = 'modelConsentOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;';
+        const box = document.createElement('div');
+        box.style.cssText = 'background:#fff;border:3px solid #242A2F;border-radius:16px;max-width:340px;width:100%;padding:16px;font-family:inherit;color:#242A2F;';
+        const t = document.createElement('div');
+        t.style.cssText = 'font-weight:900;font-size:14px;margin-bottom:8px;';
+        t.textContent = '분석 모델을 내려받을까요?';
+        const d = document.createElement('div');
+        d.style.cssText = 'font-size:12px;line-height:1.5;font-weight:700;margin-bottom:12px;';
+        d.textContent = '표지 분석을 하려면 약 44.7MB 모델 파일을 이 기기로 내려받아요. 모바일 데이터에서는 데이터가 쓰일 수 있어요. 사진은 서버로 보내지 않고 이 브라우저 안에서만 분석해요.';
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
+        const no = document.createElement('button');
+        no.id = 'modelConsentNo'; no.type = 'button'; no.textContent = '취소';
+        no.style.cssText = 'padding:8px 12px;border:2px solid #242A2F;border-radius:10px;background:#fff;font-weight:900;font-size:12px;';
+        const yes = document.createElement('button');
+        yes.id = 'modelConsentYes'; yes.type = 'button'; yes.textContent = '받고 분석하기';
+        yes.style.cssText = 'padding:8px 12px;border:2px solid #242A2F;border-radius:10px;background:#F4B63F;font-weight:900;font-size:12px;';
+        const done = (v) => { ov.remove(); resolve(v); };
+        no.onclick = () => done(false);
+        yes.onclick = () => done(true);
+        row.appendChild(no); row.appendChild(yes);
+        box.appendChild(t); box.appendChild(d); box.appendChild(row);
+        ov.appendChild(box);
+        document.body.appendChild(ov);
+      });
+    }
+    // 이미 받았으면 true. 아니면 동의를 받고(한 번), 받는 중이면 끝날 때까지 기다린다. 취소하면 false.
+    async function ensureModelConsent() {
+      if (ortSession || modelConsentGiven) return true;
+      const ok = await askModelDownloadConsent();
+      if (ok) modelConsentGiven = true;
+      return ok;
+    }
+    async function ensureModelReady() {
+      if (ortSession) return true;
+      if (!(await ensureModelConsent())) return false;
+      if (!ortSession && !isModelLoading) await loadOnnxModel();
+      while (isModelLoading) await new Promise((r) => setTimeout(r, 200));
+      return true; // 받기에 실패하면 기존 간이 분석 모드로 진행(화면에 'ONNX 미로드' 표시)
+    }
 
     async function toggleOrLoadOnnxModel() {
       if (ortSession) {
@@ -3259,6 +3305,8 @@
       const shutterBtnText = document.getElementById('shutterBtnText');
 
       if (!isWebcamRunning) {
+        if (!(await ensureModelConsent())) return;
+        if (!ortSession && !isModelLoading) loadOnnxModel();
         try {
           webcamStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
@@ -3286,6 +3334,7 @@
         }
       } else {
         // Trigger realistic shutter aperture snap and flash!
+        if (!(await ensureModelReady())) return;
         triggerShutterSnapAnimation(async () => {
           laser.classList.add('hidden');
           const cvResult = await analyzeImageCanvas(video);
@@ -3341,6 +3390,13 @@
 
         const img = new Image();
         img.onload = async () => {
+          if (!(await ensureModelReady())) {
+            preview.style.display = 'none';
+            preview.classList.add('hidden');
+            idleStage.style.display = 'flex';
+            idleStage.classList.remove('hidden');
+            return;
+          }
           const cvResult = await analyzeImageCanvas(img);
           setTimeout(() => {
             handleScanResult(cvResult);
