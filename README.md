@@ -149,6 +149,7 @@
 ### (3) Grad-CAM (실제 역전파)
 ![실제 역전파 Grad-CAM 저장 출력](docs/gradcam_real_results.png)
 `layer4[-1]`에 forward/backward hook을 걸어 채널별 기울기 평균을 활성화 맵에 곱한 정규 Grad-CAM입니다(`docs/gradcam_real_results.png`).
+그림의 각 행은 위부터 그림책(99.9%)·줄글책(94.1%)·만화책(99.9%) 테스트 샘플입니다.
 - 주의: 이 그림의 제목 줄(`True:` / `Pred:`)은 Colab matplotlib에 한글 폰트가 없어 □□□로 저장됐습니다. **히트맵과 표지 사진 픽셀은 원본 그대로이며 손대지 않았습니다.** 클래스별 수치는 위 지표표와 혼동 행렬로 확인할 수 있습니다.
 
 ### (4) OOD 게이트 실측 (2026-11-14)
@@ -246,6 +247,11 @@ pip install -r requirements.txt
 python3 -m http.server 8080
 # http://localhost:8080 접속
 ```
+
+### (4) 실행 범위와 데이터 조건
+- **서비스 추론**: 포함된 ONNX 가중치(`models/`)와 카탈로그(`data/`)만으로 위 (3)-2번 절차로 실행할 수 있습니다.
+- **학습 결과 확인**: 두 노트북에 저장된 실행 출력(에포크별 손실·검증 지표, 테스트 지표, 혼동 행렬)으로 확인할 수 있습니다.
+- **재학습·테스트 재실행**: 원본 `book_dataset`이 필요합니다. 노트북은 Google Drive의 `/content/drive/MyDrive/기계학습프로그래밍 8주차 강의자료/과제3/book_dataset`, `/content/drive/MyDrive/과제3/book_dataset`, `/content/drive/MyDrive/book_dataset` 순으로 탐색하고, 없으면 드라이브 전체에서 `book_dataset`을 찾습니다. 폴더 안에는 `picture_book`·`text_book`·`comic_book` 세 클래스 폴더가 있어야 합니다. 원본 494장은 이용조건상 저장소와 제출 ZIP에 재배포하지 않습니다(2절 (4)).
 
 ---
 
