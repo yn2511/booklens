@@ -153,7 +153,7 @@
           <line x1="23" y1="9" x2="17" y2="15"></line>
           <line x1="17" y1="9" x2="23" y2="15"></line>
         </svg>
-        <span class="hidden sm:inline">소리 ON</span>
+        <span id="soundToggleLabel" class="hidden sm:inline">소리 ON</span>
       </button>
 
       <!-- Library Guide Onboarding Trigger -->
@@ -469,7 +469,7 @@
         </div>
 
         <h2 class="font-black text-lg text-charcoal mb-1">ResNet-18 실환경 심층 추론 중</h2>
-        <p class="text-xs text-charcoal/70 font-bold mb-4">조명 반사 및 각도 왜곡을 실시간 정규화하고 있습니다</p>
+        <p class="text-xs text-charcoal/70 font-bold mb-4">표지를 분석하고 있습니다</p>
 
         <div class="w-full bg-stage rounded-xl border-2 border-charcoal h-6 p-0.5 overflow-hidden mb-5">
           <div id="analysisProgressBar" class="h-full bg-coral rounded-lg progress-striped transition-all duration-300 w-[5%] flex items-center justify-end pr-2">
@@ -569,7 +569,7 @@
         <div id="relatedOutcomeList" class="flex flex-col gap-1.5"></div>
         <div id="relatedOutcomeEmpty" class="hidden text-[11px] font-bold text-charcoal/60 bg-white/70 border border-charcoal/20 rounded-lg p-2.5 leading-relaxed"></div>
         <div id="dlsLiveCard" class="hidden flex flex-col gap-2 bg-white/70 border border-charcoal/20 rounded-lg p-2.5">
-          <div class="text-[11px] font-bold text-charcoal/70 leading-relaxed">문정초 확인 목록(21권)에 없는 책이에요. 제목으로 학교 도서관 전체 장서를 바로 확인해 보세요.</div>
+          <div class="text-[11px] font-bold text-charcoal/70 leading-relaxed">표지 추천 카탈로그(21권)에 없는 책이에요. 소장 여부는 서울문정초 장서 스냅샷(2026-11-19 · 21,501종)과 독서로 실시간 검색으로 확인할 수 있어요.</div>
           <div class="flex gap-1.5">
             <input id="dlsLiveInput" type="text" aria-label="제목으로 문정초 장서 확인" placeholder="제목으로 문정초 장서 확인" maxlength="80" class="flex-1 min-w-0 font-mono text-[11px] font-bold border border-charcoal/30 rounded-lg px-2 py-1.5 bg-white placeholder:text-charcoal/40 focus:outline-none focus:border-charcoal" />
             <button id="dlsLiveBtn" type="button" class="text-[11px] font-black text-charcoal border-2 border-charcoal rounded-lg px-2.5 py-1.5 bg-cream shadow-brutal-sm hover:-translate-y-0.5 transition-transform shrink-0">확인</button>
@@ -766,7 +766,7 @@
         <div class="bg-white p-2.5 rounded-xl border border-charcoal/20 flex flex-col gap-1.5 shadow-xs">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-mono text-charcoal font-black flex items-center gap-1">
-              <span>문정초 독서로 DLS 소장 서지 대조 (내장 21권 + 실시간 검색)</span>
+              <span>문정초 독서로 DLS 소장 서지 대조 (내장 21권 + 소장 스냅샷 + 실시간 검색)</span>
             </span>
             <span class="text-[9px] font-mono text-charcoal/60 font-bold">서울문정초 글샘터</span>
           </div>
@@ -1466,6 +1466,8 @@
 
       btn.setAttribute('aria-label', isMuted ? '소리 켜기 (현재 음소거)' : '소리 끄기 (현재 소리 켜짐)');
       btn.setAttribute('aria-pressed', String(!isMuted));
+      const lbl = document.getElementById('soundToggleLabel');
+      if (lbl) lbl.textContent = isMuted ? '소리 OFF' : '소리 ON';
       const soundKey = isMuted ? 'icon_sound_off' : 'icon_sound_on';
       if (icon && ASSET_DATA[soundKey]) {
         icon.src = ASSET_DATA[soundKey];
@@ -2686,6 +2688,83 @@
       return catalogLoadPromise;
     }
 
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // =========================================================================
+    // 문정초 전체 소장 스냅샷 (독서로 공개 장서검색 2026-11-19 수집, 고유 서명 21,501종)
+    // 표지 추천 임베딩 카탈로그(21권)와는 별개 데이터다. 대출 상태는 실시간 조회 기준.
+    // 스냅샷에 없다고 소장이 아닌 것은 아니다(수집 방법상 일부 누락 가능).
+    // =========================================================================
+    const HOLDINGS_URLS = [
+      'data/holdings_munjeong.json',
+      'https://raw.githubusercontent.com/yn2511/booklens/main/data/holdings_munjeong.json'
+    ];
+    const HOLDINGS_SNAPSHOT_DATE = '2026-11-19';
+    let HOLDINGS = null;
+    let holdingsLoadPromise = null;
+    async function loadHoldings() {
+      if (HOLDINGS) return HOLDINGS;
+      if (holdingsLoadPromise) return holdingsLoadPromise;
+      holdingsLoadPromise = (async () => {
+        for (const url of HOLDINGS_URLS) {
+          try {
+            const res = await fetch(url, { cache: 'default' });
+            if (!res.ok) continue;
+            const data = await res.json();
+            if (data && Array.isArray(data.books) && data.books.length) {
+              HOLDINGS = data.books.map(r => ({
+                title: r[0], author: r[1], publisher: r[2], year: r[3],
+                isbn: r[4], classNo: r[5], callNo: r[6], location: r[7],
+                copies: r[8], coverUrl: r[9]
+              }));
+              return HOLDINGS;
+            }
+          } catch (_) {}
+        }
+        return [];
+      })();
+      return holdingsLoadPromise;
+    }
+    function searchHoldingsSnapshot(query, limit) {
+      const q = normalizeTitle(query);
+      if (!q || !HOLDINGS || !HOLDINGS.length) return [];
+      const max = limit || 5;
+      const exact = [], similar = [];
+      for (const b of HOLDINGS) {
+        const t = normalizeTitle(b.title);
+        if (!t) continue;
+        if (t === q) { exact.push(b); if (exact.length >= max) break; }
+        else if (t.indexOf(q) >= 0) similar.push(b);
+        else if (t.length >= 3 && q.indexOf(t) >= 0) similar.push(b);
+      }
+      exact.forEach(b => { b._match = 'exact'; });
+      similar.forEach(b => { b._match = 'similar'; });
+      return exact.concat(similar).slice(0, max);
+    }
+    function renderHoldingsSnapshotHtml(hits) {
+      if (!hits.length) return '';
+      const rows = hits.map(b => `
+        <div class="flex items-center gap-2.5 border border-charcoal/15 rounded-lg bg-white px-2 py-1.5">
+          ${b.coverUrl ? `<img src="${escHtml(b.coverUrl)}" alt="" loading="lazy" class="w-8 h-11 object-cover rounded border border-charcoal/30 flex-shrink-0 bg-white" onerror="this.remove()">` : ''}
+          <div class="min-w-0 flex-1">
+            <div class="font-black text-[11px] text-charcoal truncate">${escHtml(b.title)}</div>
+            <div class="text-[10px] text-charcoal/70 font-bold truncate">${escHtml(b.author || '저자 미기재')}${b.publisher ? ' · ' + escHtml(b.publisher) : ''}${b.year ? ' (' + escHtml(b.year) + ')' : ''}</div>
+            <div class="text-[9px] font-mono text-charcoal/60 truncate">청구기호 ${escHtml(b.callNo || '-')} · ${escHtml(b.location || '도서관')}${b.copies > 1 ? ' · ' + b.copies + '권' : ''}</div>
+          </div>
+        </div>`).join('');
+      return `
+        <div class="flex flex-col gap-1.5 border-t border-charcoal/10 pt-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-mono text-[9px] bg-mint/40 text-charcoal font-black px-1.5 py-0.5 rounded border border-mint/80">${hits.some(b => b._match === 'exact') ? '문정초 소장 확인' : '유사 제목의 소장 도서'}</span>
+            <span class="font-mono text-[9px] text-charcoal/60 font-bold">독서로 스냅샷 ${HOLDINGS_SNAPSHOT_DATE} · ${(HOLDINGS ? HOLDINGS.length : 0).toLocaleString('ko-KR')}종 수록</span>
+          </div>
+          ${rows}
+          <p class="text-[9px] text-charcoal/50 font-medium">${hits.some(b => b._match !== 'exact') ? '제목이 정확히 일치하지 않는 결과는 비슷한 제목의 도서입니다. ' : ''}스냅샷은 수집일의 소장 기록이고, 대출 상태와 최신 소장 여부는 실시간 조회 기준입니다.</p>
+        </div>`;
+    }
+
     function cosineSimilarity(a, b) {
       if (!a || !b || a.length !== b.length) return 0;
       let dot = 0, na = 0, nb = 0;
@@ -2765,6 +2844,7 @@
       rEl.className = 'text-[11px] font-bold text-charcoal/60 leading-relaxed';
       rEl.innerText = '문정초 장서 확인 중...';
       if (btn) btn.disabled = true;
+      try { await loadHoldings(); } catch (_) {}
       try {
         const r = await fetch(DLS_PROXY_URL + '?title=' + encodeURIComponent(title));
         if (!r.ok) throw new Error('proxy_' + r.status);
@@ -2776,12 +2856,25 @@
           rEl.className = 'text-[11px] font-bold text-charcoal leading-relaxed';
           rEl.innerHTML = `「${b.title}」 문정초 도서관에 있어요${more}. <br><span class="font-mono text-[10px] text-charcoal/70">청구기호 ${b.callNo || '-'} · ${b.location || '도서관'} · ${b.loanStatus || '대출상태는 도서관에서 확인'}</span>`;
         } else {
+          const hits = searchHoldingsSnapshot(title, 1).filter(b => b._match === 'exact');
           rEl.className = 'text-[11px] font-bold text-charcoal leading-relaxed';
-          rEl.innerText = `「${title}」은(는) 문정초 도서관에 없는 책이에요. (독서로 실시간 검색 기준)`;
+          if (hits.length) {
+            const h = hits[0];
+            rEl.innerHTML = `실시간 검색에서는 찾지 못했지만, 소장 스냅샷(${HOLDINGS_SNAPSHOT_DATE})에는 「${escHtml(h.title)}」이(가) 있어요. <br><span class="font-mono text-[10px] text-charcoal/70">청구기호 ${escHtml(h.callNo || '-')} · ${escHtml(h.location || '도서관')} · 대출상태는 도서관에서 확인</span>`;
+          } else {
+            rEl.innerText = `「${title}」은(는) 독서로 실시간 검색과 소장 스냅샷(${HOLDINGS_SNAPSHOT_DATE})에서 모두 확인되지 않았어요. 제목을 조금 바꿔 다시 확인해 보세요.`;
+          }
         }
       } catch (e) {
-        rEl.className = 'text-[11px] font-bold text-charcoal/60 leading-relaxed';
-        rEl.innerText = '지금은 학교 도서관(독서로) 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.';
+        const hits = searchHoldingsSnapshot(title, 1).filter(b => b._match === 'exact');
+        if (hits.length) {
+          const h = hits[0];
+          rEl.className = 'text-[11px] font-bold text-charcoal leading-relaxed';
+          rEl.innerHTML = `실시간 연결은 원활하지 않지만, 소장 스냅샷(${HOLDINGS_SNAPSHOT_DATE})에는 「${escHtml(h.title)}」이(가) 있어요. <br><span class="font-mono text-[10px] text-charcoal/70">청구기호 ${escHtml(h.callNo || '-')} · ${escHtml(h.location || '도서관')} · 대출상태는 나중에 다시 확인</span>`;
+        } else {
+          rEl.className = 'text-[11px] font-bold text-charcoal/60 leading-relaxed';
+          rEl.innerText = '지금은 학교 도서관(독서로) 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.';
+        }
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -2828,7 +2921,7 @@
         listEl.innerHTML = '';
         if (emptyEl) {
           emptyEl.classList.remove('hidden');
-          emptyEl.innerText = '문정초 소장 21권 중 비교 가능한 다른 도서가 없습니다.';
+          emptyEl.innerText = '표지 추천 카탈로그(21권) 중 비교 가능한 다른 도서가 없습니다.';
         }
         return;
       }
@@ -2907,7 +3000,7 @@
         listEl.innerHTML = '';
         if (emptyEl) {
           emptyEl.classList.remove('hidden');
-          emptyEl.innerText = '문정초 소장 21권 중 비교 가능한 다른 도서가 없습니다.';
+          emptyEl.innerText = '표지 추천 카탈로그(21권) 중 비교 가능한 다른 도서가 없습니다.';
         }
         return;
       }
@@ -2965,7 +3058,10 @@
         return;
       }
 
-      // 내장 21권에 없는 검색어는 독서로 실시간 검색으로 대조
+      // 내장 21권에 없는 검색어는 소장 스냅샷 → 독서로 실시간 검색 순으로 대조
+      try { await loadHoldings(); } catch (_) {}
+      const holdingsHits = searchHoldingsSnapshot(query, 3);
+      const snapshotHtml = renderHoldingsSnapshotHtml(holdingsHits);
       try {
         const r = await fetch(DLS_PROXY_URL + '?title=' + encodeURIComponent(query));
         if (!r.ok) throw new Error('proxy_' + r.status);
@@ -2988,6 +3084,15 @@
               <p class="text-[10px] font-mono text-charcoal/70">청구기호 ${b.callNo || '-'} · ${b.location || '서울문정초 도서관 (글샘터)'} · ISBN ${b.isbn || '미기재'}</p>
               <p class="text-[9px] text-charcoal/50 font-medium">내장 서지 21권 밖의 도서라 시연용 도슨트 리포트는 제공하지 않습니다. 실제 표지를 촬영해 스캔해 보세요.</p>
             </div>
+            ${snapshotHtml}
+          `;
+        } else if (snapshotHtml) {
+          previewCard.innerHTML = `
+            <div class="flex items-center gap-2 border-b border-charcoal/15 pb-1.5">
+              <span class="font-mono text-[9px] bg-charcoal/10 text-charcoal/70 font-black px-1.5 py-0.5 rounded border border-charcoal/30">실시간 검색에서는 못 찾음</span>
+              <span class="font-mono text-[10px] text-charcoal/60 font-bold">검색어: "${escHtml(query)}"</span>
+            </div>
+            ${snapshotHtml}
           `;
         } else {
           previewCard.innerHTML = `
@@ -2999,7 +3104,7 @@
               <span class="font-mono text-[9px] bg-charcoal/10 text-charcoal/70 font-bold px-1.5 py-0.5 rounded">문정초 글샘터</span>
             </div>
             <div class="py-2.5 flex flex-col gap-2 text-center">
-              <p class="text-xs font-black text-charcoal">「${query}」은(는) 독서로 실시간 검색에서도 나오지 않았어요.</p>
+              <p class="text-xs font-black text-charcoal">「${query}」은(는) 독서로 실시간 검색과 소장 스냅샷(2026-11-19)에서 모두 확인되지 않았어요.</p>
               <p class="text-[10px] text-charcoal/70 font-medium">오타가 없는지 확인하거나, 문정초 글샘터 소장 도서를 선택해 보세요:</p>
               <div class="flex flex-wrap items-center justify-center gap-1.5 pt-1">
                 <button onclick="setAndSearchInput('키다리 아저씨')" class="bg-white hover:bg-mustard/30 px-2 py-1 rounded-lg border border-charcoal/30 text-[10px] font-bold text-charcoal shadow-xs transition-all">키다리 아저씨</button>
@@ -3012,7 +3117,11 @@
           `;
         }
       } catch (e) {
-        previewCard.innerHTML = `<div class="py-2 text-center text-[11px] font-bold text-charcoal/60">지금은 독서로 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.</div>`;
+        if (snapshotHtml) {
+          previewCard.innerHTML = `<div class="py-1 text-[11px] font-bold text-charcoal/60">실시간 대출 상태는 지금 확인할 수 없어요. 아래는 소장 스냅샷 기준입니다.</div>` + snapshotHtml;
+        } else {
+          previewCard.innerHTML = `<div class="py-2 text-center text-[11px] font-bold text-charcoal/60">지금은 독서로 연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.</div>`;
+        }
         searchedBookMetadata = null;
       }
     }
@@ -3145,7 +3254,14 @@
       }
 
       if (!book && !live) {
-        if (dlsExplanationEl) dlsExplanationEl.innerText = `「${query}」을(를) 내장 목록과 독서로 실시간 검색 모두에서 찾지 못했습니다. 오타를 확인해 주세요.`;
+        try { await loadHoldings(); } catch (_) {}
+        const snapHits = searchHoldingsSnapshot(query, 1).filter(b => b._match === 'exact');
+        if (snapHits.length) {
+          const h = snapHits[0];
+          if (dlsExplanationEl) dlsExplanationEl.innerText = `내장 목록·실시간 검색에는 없지만 소장 스냅샷(${HOLDINGS_SNAPSHOT_DATE})에는 「${h.title}」 · 청구기호 ${h.callNo || '미표기'} · ${h.location || '도서관'}이(가) 있습니다. 최신 상태는 실시간 조회로 확인해 주세요.`;
+        } else if (dlsExplanationEl) {
+          dlsExplanationEl.innerText = `「${query}」을(를) 내장 목록, 소장 스냅샷(${HOLDINGS_SNAPSHOT_DATE}), 독서로 실시간 검색 모두에서 찾지 못했습니다. 오타를 확인해 주세요.`;
+        }
         return;
       }
 
@@ -3775,7 +3891,7 @@
           dlsMetaKdcEl.innerText = '미조회';
           dlsMetaTypeEl.innerText = '내장 21권 목록에 없음';
           dlsFinalVerdictEl.innerText = `${cvResult.winnerLabel} · 비전 판정 (서지 대조 전)`;
-          dlsExplanationEl.innerText = '문정초 소장 21권 목록과 일치하는 표지가 아닙니다. 아래 입력칸에 실제 도서명을 넣어 독서로 실시간 대조를 실행해 보세요.';
+          dlsExplanationEl.innerText = '표지 추천 카탈로그(21권)와 일치하는 표지가 아닙니다. 소장 여부는 아래 입력칸에 실제 도서명을 넣어 소장 스냅샷·독서로 실시간 대조로 확인해 보세요.';
           dlsStatusBadgeEl.innerText = 'DLS 대기';
         }
         dlsStatusBadgeEl.className = 'font-mono text-[9px] bg-charcoal/10 text-charcoal/70 font-black px-2 py-0.5 rounded border border-charcoal/25 shrink-0';
